@@ -177,6 +177,7 @@ const ClassSchema = z.object({
   name: z.string(),
   normalizedName: z.string(),
   schoolId: z.string(),
+  tags: z.array(z.string()),
 });
 
 // Interface for documents in the `districts` collection
@@ -190,6 +191,12 @@ const DistrictSchema = z.object({
   tags: z.array(z.string()),
   subGroups: z.array(z.string()).optional(),
   schools: z.array(z.string()).optional(),
+});
+
+const DistrictPartialSchema = DistrictSchema.pick({
+  name: true,
+  normalizedName: true,
+  tags: true,
 });
 
 // Interface for documents in the `groups` collection
@@ -287,6 +294,7 @@ export {
   ClaimsSchema,
   ClassSchema,
   DistrictSchema,
+  DistrictPartialSchema,
   GroupSchema,
   LegalInfoSchema,
   LegalSchema,
@@ -312,6 +320,7 @@ export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
+export type DistrictPartialType = z.infer<typeof DistrictPartialSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;

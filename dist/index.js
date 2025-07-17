@@ -161,6 +161,7 @@ const ClassSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     schoolId: z.string(),
+    tags: z.array(z.string()),
 });
 // Interface for documents in the `districts` collection
 const DistrictSchema = z.object({
@@ -173,6 +174,11 @@ const DistrictSchema = z.object({
     tags: z.array(z.string()),
     subGroups: z.array(z.string()).optional(),
     schools: z.array(z.string()).optional(),
+});
+const DistrictPartialSchema = DistrictSchema.pick({
+    name: true,
+    normalizedName: true,
+    tags: true,
 });
 // Interface for documents in the `groups` collection
 const GroupSchema = z.object({
@@ -251,5 +257,5 @@ const UserSchema = z.object({
     testData: z.boolean().optional(),
 });
 // Export all schemas
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, DistrictSchema, DistrictPartialSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 //# sourceMappingURL=index.js.map
