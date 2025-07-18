@@ -286,6 +286,36 @@ const UserSchema = z.object({
     userType: z.enum(["admin", "teacher", "student", "parent"]),
     testData: z.boolean().optional(),
 });
+const OrgSchema = z.object({
+    archived: z.boolean(),
+    classes: z.array(z.string()).optional(),
+    createdAt: TimestampSchema,
+    createdBy: z.string(),
+    districtId: z.string(),
+    id: z.string(),
+    name: z.string(),
+    normalizedName: z.string(),
+    parentOrgId: z.string(),
+    parentOrgType: z.literal("district"),
+    schoolId: z.string(),
+    schools: z.array(z.string()).optional(),
+    subGroups: z.array(z.string()).optional(),
+    tags: z.array(z.string()).optional(),
+    type: z.string(),
+    updatedAt: TimestampSchema,
+});
+const CreateOrgSchema = OrgSchema.pick({
+    districtId: true,
+    id: true,
+    name: true,
+    normalizedName: true,
+    parentOrgId: true,
+    parentOrgType: true,
+    schoolId: true,
+    subGroups: true,
+    tags: true,
+    type: true,
+});
 // Export all schemas
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateOrgSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, OrgSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 //# sourceMappingURL=index.js.map

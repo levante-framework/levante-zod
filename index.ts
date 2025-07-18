@@ -315,6 +315,38 @@ const UserSchema = z.object({
   testData: z.boolean().optional(),
 });
 
+const OrgSchema = z.object({
+  archived: z.boolean(),
+  classes: z.array(z.string()).optional(),
+  createdAt: TimestampSchema,
+  createdBy: z.string(),
+  districtId: z.string(),
+  id: z.string(),
+  name: z.string(),
+  normalizedName: z.string(),
+  parentOrgId: z.string(),
+  parentOrgType: z.literal("district"),
+  schoolId: z.string(),
+  schools: z.array(z.string()).optional(),
+  subGroups: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+  type: z.string(),
+  updatedAt: TimestampSchema,
+});
+
+const CreateOrgSchema = OrgSchema.pick({
+  districtId: true,
+  id: true,
+  name: true,
+  normalizedName: true,
+  parentOrgId: true,
+  parentOrgType: true,
+  schoolId: true,
+  subGroups: true,
+  tags: true,
+  type: true,
+});
+
 // Export all schemas
 export {
   AdminDataSchema,
@@ -329,6 +361,7 @@ export {
   CreateClassSchema,
   CreateDistrictSchema,
   CreateGroupSchema,
+  CreateOrgSchema,
   CreateSchoolSchema,
   DistrictSchema,
   GroupSchema,
@@ -336,6 +369,7 @@ export {
   LegalSchema,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
+  OrgSchema,
   ReadOrgSchema,
   SchoolSchema,
   StatSchema,
@@ -358,6 +392,7 @@ export type ClassType = z.infer<typeof ClassSchema>;
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
 export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
 export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
+export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
@@ -365,6 +400,7 @@ export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
+export type OrgType = z.infer<typeof OrgSchema>;
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
