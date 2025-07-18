@@ -162,6 +162,7 @@ const ClassSchema = z.object({
     normalizedName: z.string(),
     schoolId: z.string(),
     tags: z.array(z.string()).optional(),
+    type: z.string(),
 });
 const ClassPartialSchema = ClassSchema.pick({
     name: true,
@@ -169,6 +170,7 @@ const ClassPartialSchema = ClassSchema.pick({
     tags: true,
     districtId: true,
     schoolId: true,
+    type: true,
 });
 // Interface for documents in the `districts` collection
 const DistrictSchema = z.object({
@@ -179,6 +181,7 @@ const DistrictSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     tags: z.array(z.string()).optional(),
+    type: z.string(),
     subGroups: z.array(z.string()).optional(),
     schools: z.array(z.string()).optional(),
 });
@@ -187,6 +190,7 @@ const DistrictPartialSchema = DistrictSchema.pick({
     normalizedName: true,
     tags: true,
     subGroups: true,
+    type: true,
 });
 // Interface for documents in the `groups` collection
 const GroupSchema = z.object({
@@ -199,6 +203,7 @@ const GroupSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     tags: z.array(z.string()).optional(),
+    type: z.string(),
 });
 const GroupPartialSchema = GroupSchema.pick({
     name: true,
@@ -206,6 +211,7 @@ const GroupPartialSchema = GroupSchema.pick({
     tags: true,
     parentOrgId: true,
     parentOrgType: true,
+    type: true,
 });
 // Tracks versions of legal documents using GitHub as a reference point.
 const LegalSchema = z.object({});
@@ -236,12 +242,14 @@ const SchoolSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     tags: z.array(z.string()).optional(),
+    type: z.string(),
 });
 const SchoolPartialSchema = SchoolSchema.pick({
     name: true,
     normalizedName: true,
     tags: true,
     districtId: true,
+    type: true,
 });
 // Interface for the stats subcollection of `administrations`
 const StatSchema = z.object({

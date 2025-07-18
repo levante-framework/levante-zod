@@ -211,6 +211,7 @@ declare const ClassSchema: z.ZodObject<{
     normalizedName: z.ZodString;
     schoolId: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    type: z.ZodString;
 }, z.core.$strip>;
 declare const ClassPartialSchema: z.ZodObject<{
     name: z.ZodString;
@@ -218,6 +219,7 @@ declare const ClassPartialSchema: z.ZodObject<{
     districtId: z.ZodString;
     normalizedName: z.ZodString;
     schoolId: z.ZodString;
+    type: z.ZodString;
 }, z.core.$strip>;
 declare const DistrictSchema: z.ZodObject<{
     archived: z.ZodBoolean;
@@ -227,6 +229,7 @@ declare const DistrictSchema: z.ZodObject<{
     name: z.ZodString;
     normalizedName: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    type: z.ZodString;
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
     schools: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
@@ -234,6 +237,7 @@ declare const DistrictPartialSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     normalizedName: z.ZodString;
+    type: z.ZodString;
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
 declare const GroupSchema: z.ZodObject<{
@@ -246,11 +250,13 @@ declare const GroupSchema: z.ZodObject<{
     name: z.ZodString;
     normalizedName: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    type: z.ZodString;
 }, z.core.$strip>;
 declare const GroupPartialSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     normalizedName: z.ZodString;
+    type: z.ZodString;
     parentOrgId: z.ZodString;
     parentOrgType: z.ZodLiteral<"district">;
 }, z.core.$strip>;
@@ -291,12 +297,14 @@ declare const SchoolSchema: z.ZodObject<{
     name: z.ZodString;
     normalizedName: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    type: z.ZodString;
 }, z.core.$strip>;
 declare const SchoolPartialSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     districtId: z.ZodString;
     normalizedName: z.ZodString;
+    type: z.ZodString;
 }, z.core.$strip>;
 declare const StatSchema: z.ZodObject<{
     assignment: z.ZodRecord<z.ZodString, z.ZodNumber>;
