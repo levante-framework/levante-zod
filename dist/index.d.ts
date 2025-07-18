@@ -220,6 +220,7 @@ declare const DistrictSchema: z.ZodObject<{
     name: z.ZodString;
     normalizedName: z.ZodString;
     tags: z.ZodArray<z.ZodString>;
+    type: z.ZodOptional<z.ZodString>;
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
     schools: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
@@ -227,6 +228,7 @@ declare const DistrictPartialSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodArray<z.ZodString>;
     normalizedName: z.ZodString;
+    type: z.ZodOptional<z.ZodString>;
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
 declare const GroupSchema: z.ZodObject<{

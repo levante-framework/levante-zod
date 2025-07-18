@@ -172,6 +172,7 @@ const DistrictSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     tags: z.array(z.string()),
+    type: z.string().optional(),
     subGroups: z.array(z.string()).optional(),
     schools: z.array(z.string()).optional(),
 });
