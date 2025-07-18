@@ -306,7 +306,6 @@ const OrgSchema = z.object({
 });
 const CreateOrgSchema = OrgSchema.pick({
     districtId: true,
-    id: true,
     name: true,
     normalizedName: true,
     parentOrgId: true,

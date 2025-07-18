@@ -402,7 +402,6 @@ declare const OrgSchema: z.ZodObject<{
 declare const CreateOrgSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
-    id: z.ZodString;
     districtId: z.ZodString;
     normalizedName: z.ZodString;
     schoolId: z.ZodString;
