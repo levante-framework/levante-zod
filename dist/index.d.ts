@@ -227,6 +227,7 @@ declare const DistrictPartialSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodArray<z.ZodString>;
     normalizedName: z.ZodString;
+    subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
 declare const GroupSchema: z.ZodObject<{
     archived: z.ZodBoolean;

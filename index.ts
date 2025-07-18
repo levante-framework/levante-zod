@@ -196,7 +196,9 @@ const DistrictSchema = z.object({
 const DistrictPartialSchema = DistrictSchema.pick({
   name: true,
   normalizedName: true,
+  subGroups: true,
   tags: true,
+  type: true,
 });
 
 // Interface for documents in the `groups` collection
