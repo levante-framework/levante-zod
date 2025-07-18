@@ -181,7 +181,7 @@ const ClassSchema = z.object({
   type: z.string(),
 });
 
-const ClassPartialSchema = ClassSchema.pick({
+const CreateClassSchema = ClassSchema.pick({
   name: true,
   normalizedName: true,
   tags: true,
@@ -204,7 +204,7 @@ const DistrictSchema = z.object({
   schools: z.array(z.string()).optional(),
 });
 
-const DistrictPartialSchema = DistrictSchema.pick({
+const CreateDistrictSchema = DistrictSchema.pick({
   name: true,
   normalizedName: true,
   tags: true,
@@ -226,7 +226,7 @@ const GroupSchema = z.object({
   type: z.string(),
 });
 
-const GroupPartialSchema = GroupSchema.pick({
+const CreateGroupSchema = GroupSchema.pick({
   name: true,
   normalizedName: true,
   tags: true,
@@ -269,7 +269,7 @@ const SchoolSchema = z.object({
   type: z.string(),
 });
 
-const SchoolPartialSchema = SchoolSchema.pick({
+const CreateSchoolSchema = SchoolSchema.pick({
   name: true,
   normalizedName: true,
   tags: true,
@@ -325,18 +325,18 @@ export {
   AssignedOrgSchema,
   AssignmentAssessmentSchema,
   ClaimsSchema,
-  ClassPartialSchema,
   ClassSchema,
-  DistrictPartialSchema,
+  CreateClassSchema,
+  CreateDistrictSchema,
+  CreateGroupSchema,
+  CreateSchoolSchema,
   DistrictSchema,
-  GroupPartialSchema,
   GroupSchema,
   LegalInfoSchema,
   LegalSchema,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   ReadOrgSchema,
-  SchoolPartialSchema,
   SchoolSchema,
   StatSchema,
   TimestampSchema,
@@ -354,18 +354,18 @@ export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
-export type ClassPartialType = z.infer<typeof ClassPartialSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
-export type DistrictPartialType = z.infer<typeof DistrictPartialSchema>;
+export type CreateClassType = z.infer<typeof CreateClassSchema>;
+export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
+export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
+export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
-export type GroupPartialType = z.infer<typeof GroupPartialSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
-export type SchoolPartialType = z.infer<typeof SchoolPartialSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;

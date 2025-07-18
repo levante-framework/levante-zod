@@ -164,7 +164,7 @@ const ClassSchema = z.object({
     tags: z.array(z.string()).optional(),
     type: z.string(),
 });
-const ClassPartialSchema = ClassSchema.pick({
+const CreateClassSchema = ClassSchema.pick({
     name: true,
     normalizedName: true,
     tags: true,
@@ -185,7 +185,7 @@ const DistrictSchema = z.object({
     subGroups: z.array(z.string()).optional(),
     schools: z.array(z.string()).optional(),
 });
-const DistrictPartialSchema = DistrictSchema.pick({
+const CreateDistrictSchema = DistrictSchema.pick({
     name: true,
     normalizedName: true,
     tags: true,
@@ -205,7 +205,7 @@ const GroupSchema = z.object({
     tags: z.array(z.string()).optional(),
     type: z.string(),
 });
-const GroupPartialSchema = GroupSchema.pick({
+const CreateGroupSchema = GroupSchema.pick({
     name: true,
     normalizedName: true,
     tags: true,
@@ -244,7 +244,7 @@ const SchoolSchema = z.object({
     tags: z.array(z.string()).optional(),
     type: z.string(),
 });
-const SchoolPartialSchema = SchoolSchema.pick({
+const CreateSchoolSchema = SchoolSchema.pick({
     name: true,
     normalizedName: true,
     tags: true,
@@ -287,5 +287,5 @@ const UserSchema = z.object({
     testData: z.boolean().optional(),
 });
 // Export all schemas
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassPartialSchema, ClassSchema, DistrictPartialSchema, DistrictSchema, GroupPartialSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolPartialSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 //# sourceMappingURL=index.js.map

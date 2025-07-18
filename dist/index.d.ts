@@ -213,7 +213,7 @@ declare const ClassSchema: z.ZodObject<{
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     type: z.ZodString;
 }, z.core.$strip>;
-declare const ClassPartialSchema: z.ZodObject<{
+declare const CreateClassSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     districtId: z.ZodString;
@@ -233,7 +233,7 @@ declare const DistrictSchema: z.ZodObject<{
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
     schools: z.ZodOptional<z.ZodArray<z.ZodString>>;
 }, z.core.$strip>;
-declare const DistrictPartialSchema: z.ZodObject<{
+declare const CreateDistrictSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     normalizedName: z.ZodString;
@@ -252,7 +252,7 @@ declare const GroupSchema: z.ZodObject<{
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     type: z.ZodString;
 }, z.core.$strip>;
-declare const GroupPartialSchema: z.ZodObject<{
+declare const CreateGroupSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     normalizedName: z.ZodString;
@@ -299,7 +299,7 @@ declare const SchoolSchema: z.ZodObject<{
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     type: z.ZodString;
 }, z.core.$strip>;
-declare const SchoolPartialSchema: z.ZodObject<{
+declare const CreateSchoolSchema: z.ZodObject<{
     name: z.ZodString;
     tags: z.ZodOptional<z.ZodArray<z.ZodString>>;
     districtId: z.ZodString;
@@ -381,7 +381,7 @@ declare const UserSchema: z.ZodObject<{
     }>;
     testData: z.ZodOptional<z.ZodBoolean>;
 }, z.core.$strip>;
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassPartialSchema, ClassSchema, DistrictPartialSchema, DistrictSchema, GroupPartialSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolPartialSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
@@ -390,18 +390,18 @@ export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
-export type ClassPartialType = z.infer<typeof ClassPartialSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
-export type DistrictPartialType = z.infer<typeof DistrictPartialSchema>;
+export type CreateClassType = z.infer<typeof CreateClassSchema>;
+export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
+export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
+export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
-export type GroupPartialType = z.infer<typeof GroupPartialSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
-export type SchoolPartialType = z.infer<typeof SchoolPartialSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
