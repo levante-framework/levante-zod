@@ -309,7 +309,6 @@ const CreateOrgSchema = OrgSchema.pick({
     name: true,
     normalizedName: true,
     parentOrgId: true,
-    parentOrgType: true,
     schoolId: true,
     subGroups: true,
     tags: true,

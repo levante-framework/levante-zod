@@ -408,7 +408,6 @@ declare const CreateOrgSchema: z.ZodObject<{
     type: z.ZodString;
     subGroups: z.ZodOptional<z.ZodArray<z.ZodString>>;
     parentOrgId: z.ZodString;
-    parentOrgType: z.ZodLiteral<"district">;
 }, z.core.$strip>;
 export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateOrgSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, OrgSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
