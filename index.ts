@@ -79,7 +79,7 @@ const AdministrationSchema = z.object({
   readOrgs: OrgRefMapSchema,
   schools: z.array(z.string()),
   sequential: z.boolean(),
-  tags: z.array(z.string()),
+  tags: z.array(z.string()).optional(),
   testData: z.boolean(),
 });
 
@@ -177,7 +177,15 @@ const ClassSchema = z.object({
   name: z.string(),
   normalizedName: z.string(),
   schoolId: z.string(),
-  tags: z.array(z.string()),
+  tags: z.array(z.string()).optional(),
+});
+
+const ClassPartialSchema = ClassSchema.pick({
+  name: true,
+  normalizedName: true,
+  tags: true,
+  districtId: true,
+  schoolId: true,
 });
 
 // Interface for documents in the `districts` collection
@@ -188,8 +196,7 @@ const DistrictSchema = z.object({
   updatedAt: TimestampSchema,
   name: z.string(),
   normalizedName: z.string(),
-  tags: z.array(z.string()),
-  type: z.string().optional(),
+  tags: z.array(z.string()).optional(),
   subGroups: z.array(z.string()).optional(),
   schools: z.array(z.string()).optional(),
 });
@@ -197,9 +204,8 @@ const DistrictSchema = z.object({
 const DistrictPartialSchema = DistrictSchema.pick({
   name: true,
   normalizedName: true,
-  subGroups: true,
   tags: true,
-  type: true,
+  subGroups: true,
 });
 
 // Interface for documents in the `groups` collection
@@ -212,7 +218,15 @@ const GroupSchema = z.object({
   parentOrgType: z.literal("district"),
   name: z.string(),
   normalizedName: z.string(),
-  tags: z.array(z.string()),
+  tags: z.array(z.string()).optional(),
+});
+
+const GroupPartialSchema = GroupSchema.pick({
+  name: true,
+  normalizedName: true,
+  tags: true,
+  parentOrgId: true,
+  parentOrgType: true,
 });
 
 // Tracks versions of legal documents using GitHub as a reference point.
@@ -245,6 +259,14 @@ const SchoolSchema = z.object({
   id: z.string(),
   name: z.string(),
   normalizedName: z.string(),
+  tags: z.array(z.string()).optional(),
+});
+
+const SchoolPartialSchema = SchoolSchema.pick({
+  name: true,
+  normalizedName: true,
+  tags: true,
+  districtId: true,
 });
 
 // Interface for the stats subcollection of `administrations`
@@ -295,15 +317,18 @@ export {
   AssignedOrgSchema,
   AssignmentAssessmentSchema,
   ClaimsSchema,
+  ClassPartialSchema,
   ClassSchema,
-  DistrictSchema,
   DistrictPartialSchema,
+  DistrictSchema,
+  GroupPartialSchema,
   GroupSchema,
   LegalInfoSchema,
   LegalSchema,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   ReadOrgSchema,
+  SchoolPartialSchema,
   SchoolSchema,
   StatSchema,
   TimestampSchema,
@@ -315,24 +340,27 @@ export {
 // Export types derived from schemas
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
-export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
 export type AssessmentConditionsType = z.infer<typeof AssessmentConditionsSchema>;
+export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
+export type ClassPartialType = z.infer<typeof ClassPartialSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
-export type DistrictType = z.infer<typeof DistrictSchema>;
 export type DistrictPartialType = z.infer<typeof DistrictPartialSchema>;
+export type DistrictType = z.infer<typeof DistrictSchema>;
+export type GroupPartialType = z.infer<typeof GroupPartialSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
-export type LegalType = z.infer<typeof LegalSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
+export type LegalType = z.infer<typeof LegalSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
+export type SchoolPartialType = z.infer<typeof SchoolPartialSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
-export type UserType = z.infer<typeof UserSchema>;
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
+export type UserType = z.infer<typeof UserSchema>;

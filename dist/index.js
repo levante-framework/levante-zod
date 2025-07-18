@@ -69,7 +69,7 @@ const AdministrationSchema = z.object({
     readOrgs: OrgRefMapSchema,
     schools: z.array(z.string()),
     sequential: z.boolean(),
-    tags: z.array(z.string()),
+    tags: z.array(z.string()).optional(),
     testData: z.boolean(),
 });
 // Interface for documents in the `assignedOrgs` subcollection of `administrations`
@@ -161,7 +161,14 @@ const ClassSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     schoolId: z.string(),
-    tags: z.array(z.string()),
+    tags: z.array(z.string()).optional(),
+});
+const ClassPartialSchema = ClassSchema.pick({
+    name: true,
+    normalizedName: true,
+    tags: true,
+    districtId: true,
+    schoolId: true,
 });
 // Interface for documents in the `districts` collection
 const DistrictSchema = z.object({
@@ -171,17 +178,15 @@ const DistrictSchema = z.object({
     updatedAt: TimestampSchema,
     name: z.string(),
     normalizedName: z.string(),
-    tags: z.array(z.string()),
-    type: z.string().optional(),
+    tags: z.array(z.string()).optional(),
     subGroups: z.array(z.string()).optional(),
     schools: z.array(z.string()).optional(),
 });
 const DistrictPartialSchema = DistrictSchema.pick({
     name: true,
     normalizedName: true,
-    subGroups: true,
     tags: true,
-    type: true,
+    subGroups: true,
 });
 // Interface for documents in the `groups` collection
 const GroupSchema = z.object({
@@ -193,7 +198,14 @@ const GroupSchema = z.object({
     parentOrgType: z.literal("district"),
     name: z.string(),
     normalizedName: z.string(),
-    tags: z.array(z.string()),
+    tags: z.array(z.string()).optional(),
+});
+const GroupPartialSchema = GroupSchema.pick({
+    name: true,
+    normalizedName: true,
+    tags: true,
+    parentOrgId: true,
+    parentOrgType: true,
 });
 // Tracks versions of legal documents using GitHub as a reference point.
 const LegalSchema = z.object({});
@@ -223,6 +235,13 @@ const SchoolSchema = z.object({
     id: z.string(),
     name: z.string(),
     normalizedName: z.string(),
+    tags: z.array(z.string()).optional(),
+});
+const SchoolPartialSchema = SchoolSchema.pick({
+    name: true,
+    normalizedName: true,
+    tags: true,
+    districtId: true,
 });
 // Interface for the stats subcollection of `administrations`
 const StatSchema = z.object({
@@ -260,5 +279,5 @@ const UserSchema = z.object({
     testData: z.boolean().optional(),
 });
 // Export all schemas
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, DistrictSchema, DistrictPartialSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassPartialSchema, ClassSchema, DistrictPartialSchema, DistrictSchema, GroupPartialSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, ReadOrgSchema, SchoolPartialSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 //# sourceMappingURL=index.js.map
