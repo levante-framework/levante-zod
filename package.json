@@ -1,5 +1,5 @@
 {
-  "name": "levante-zod",
+  "name": "@levante-framework/levante-zod",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
@@ -18,7 +18,8 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish": "npm run build && npm publish --access public"
   },
   "keywords": [],
   "author": "",
