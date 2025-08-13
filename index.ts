@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
@@ -93,7 +93,7 @@ const AssignedOrgSchema = z.object({
   legal: LegalInfoSchema,
   name: z.string(),
   orgId: z.string(),
-  orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+  orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
   timestamp: TimestampSchema,
@@ -219,7 +219,7 @@ const GroupSchema = z.object({
   updatedAt: TimestampSchema,
   createdBy: z.string(),
   parentOrgId: z.string(),
-  parentOrgType: z.literal("district"),
+  parentOrgType: z.literal('district'),
   name: z.string(),
   normalizedName: z.string(),
   tags: z.array(z.string()).optional(),
@@ -248,7 +248,7 @@ const ReadOrgSchema = z.object({
   legal: LegalInfoSchema,
   name: z.string(),
   orgId: z.string(),
-  orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+  orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
   timestamp: TimestampSchema,
@@ -311,8 +311,27 @@ const UserSchema = z.object({
   legal: UserLegalSchema,
   schools: OrgAssociationMapSchema,
   sso: z.string().optional(),
-  userType: z.enum(["admin", "teacher", "student", "parent"]),
+  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
   testData: z.boolean().optional(),
+});
+
+const CreateUserSchema = z.object({
+  id: z.string(),
+  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
+  month: z.string().optional(),
+  year: z.string().optional(),
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+  site: z.string(),
+  school: z.string().optional(),
+  class: z.string().optional(),
+  cohort: z.string().optional(),
+  orgIds: z.object({
+    schools: z.array(z.string()),
+    classes: z.array(z.string()),
+    districts: z.array(z.string()).nonempty(),
+    groups: z.array(z.string()),
+  }),
 });
 
 const OrgSchema = z.object({
@@ -325,7 +344,7 @@ const OrgSchema = z.object({
   name: z.string(),
   normalizedName: z.string(),
   parentOrgId: z.string(),
-  parentOrgType: z.literal("district"),
+  parentOrgType: z.literal('district'),
   schoolId: z.string(),
   schools: z.array(z.string()).optional(),
   subGroups: z.array(z.string()).optional(),
@@ -361,6 +380,7 @@ export {
   CreateGroupSchema,
   CreateOrgSchema,
   CreateSchoolSchema,
+  CreateUserSchema,
   DistrictSchema,
   GroupSchema,
   LegalInfoSchema,
@@ -392,6 +412,7 @@ export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
 export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
+export type CreateUserType = z.infer<typeof CreateUserSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
