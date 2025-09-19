@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
 // Generic structure for organization references used in multiple places
@@ -82,7 +82,7 @@ const AssignedOrgSchema = z.object({
     legal: LegalInfoSchema,
     name: z.string(),
     orgId: z.string(),
-    orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+    orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
     publicName: z.string(),
     testData: z.boolean(),
     timestamp: TimestampSchema,
@@ -171,6 +171,7 @@ const CreateClassSchema = ClassSchema.pick({
     districtId: true,
     schoolId: true,
     type: true,
+    createdBy: true,
 });
 // Interface for documents in the `districts` collection
 const DistrictSchema = z.object({
@@ -191,6 +192,7 @@ const CreateDistrictSchema = DistrictSchema.pick({
     tags: true,
     subGroups: true,
     type: true,
+    createdBy: true,
 });
 // Interface for documents in the `groups` collection
 const GroupSchema = z.object({
@@ -199,7 +201,7 @@ const GroupSchema = z.object({
     updatedAt: TimestampSchema,
     createdBy: z.string(),
     parentOrgId: z.string(),
-    parentOrgType: z.literal("district"),
+    parentOrgType: z.literal('district'),
     name: z.string(),
     normalizedName: z.string(),
     tags: z.array(z.string()).optional(),
@@ -212,6 +214,7 @@ const CreateGroupSchema = GroupSchema.pick({
     parentOrgId: true,
     parentOrgType: true,
     type: true,
+    createdBy: true,
 });
 // Tracks versions of legal documents using GitHub as a reference point.
 const LegalSchema = z.object({});
@@ -225,7 +228,7 @@ const ReadOrgSchema = z.object({
     legal: LegalInfoSchema,
     name: z.string(),
     orgId: z.string(),
-    orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+    orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
     publicName: z.string(),
     testData: z.boolean(),
     timestamp: TimestampSchema,
@@ -250,6 +253,7 @@ const CreateSchoolSchema = SchoolSchema.pick({
     tags: true,
     districtId: true,
     type: true,
+    createdBy: true,
 });
 // Interface for the stats subcollection of `administrations`
 const StatSchema = z.object({
@@ -283,8 +287,26 @@ const UserSchema = z.object({
     legal: UserLegalSchema,
     schools: OrgAssociationMapSchema,
     sso: z.string().optional(),
-    userType: z.enum(["admin", "teacher", "student", "parent"]),
+    userType: z.enum(['admin', 'teacher', 'student', 'parent']),
     testData: z.boolean().optional(),
+});
+const CreateUserSchema = z.object({
+    id: z.string(),
+    userType: z.enum(['admin', 'teacher', 'student', 'parent']),
+    month: z.string().optional(),
+    year: z.string().optional(),
+    caregiverId: z.string().optional(),
+    teacherId: z.string().optional(),
+    site: z.string(),
+    school: z.string().optional(),
+    class: z.string().optional(),
+    cohort: z.string().optional(),
+    orgIds: z.object({
+        schools: z.array(z.string()),
+        classes: z.array(z.string()),
+        districts: z.array(z.string()).nonempty(),
+        groups: z.array(z.string()),
+    }),
 });
 const OrgSchema = z.object({
     archived: z.boolean(),
@@ -296,7 +318,7 @@ const OrgSchema = z.object({
     name: z.string(),
     normalizedName: z.string(),
     parentOrgId: z.string(),
-    parentOrgType: z.literal("district"),
+    parentOrgType: z.literal('district'),
     schoolId: z.string(),
     schools: z.array(z.string()).optional(),
     subGroups: z.array(z.string()).optional(),
@@ -315,5 +337,5 @@ const CreateOrgSchema = OrgSchema.pick({
     type: true,
 });
 // Export all schemas
-export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateOrgSchema, CreateSchoolSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, OrgSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
+export { AdminDataSchema, AdministrationSchema, AssessmentConditionRuleSchema, AssessmentConditionsSchema, AssessmentSchema, AssignedOrgSchema, AssignmentAssessmentSchema, ClaimsSchema, ClassSchema, CreateClassSchema, CreateDistrictSchema, CreateGroupSchema, CreateOrgSchema, CreateSchoolSchema, CreateUserSchema, DistrictSchema, GroupSchema, LegalInfoSchema, LegalSchema, OrgAssociationMapSchema, OrgRefMapSchema, OrgSchema, ReadOrgSchema, SchoolSchema, StatSchema, TimestampSchema, UserClaimsSchema, UserLegalSchema, UserSchema, };
 //# sourceMappingURL=index.js.map
