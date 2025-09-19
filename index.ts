@@ -188,6 +188,7 @@ const CreateClassSchema = ClassSchema.pick({
   districtId: true,
   schoolId: true,
   type: true,
+  createdBy: true,
 });
 
 // Interface for documents in the `districts` collection
@@ -210,6 +211,7 @@ const CreateDistrictSchema = DistrictSchema.pick({
   tags: true,
   subGroups: true,
   type: true,
+  createdBy: true,
 });
 
 // Interface for documents in the `groups` collection
@@ -233,6 +235,7 @@ const CreateGroupSchema = GroupSchema.pick({
   parentOrgId: true,
   parentOrgType: true,
   type: true,
+  createdBy: true,
 });
 
 // Tracks versions of legal documents using GitHub as a reference point.
@@ -275,6 +278,7 @@ const CreateSchoolSchema = SchoolSchema.pick({
   tags: true,
   districtId: true,
   type: true,
+  createdBy: true,
 });
 
 // Interface for the stats subcollection of `administrations`
