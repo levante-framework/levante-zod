@@ -366,6 +366,7 @@ const CreateOrgSchema = OrgSchema.pick({
   subGroups: true,
   tags: true,
   type: true,
+  createdBy: true,
 });
 
 // Export all schemas
