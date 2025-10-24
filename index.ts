@@ -369,15 +369,164 @@ const CreateOrgSchema = OrgSchema.pick({
   createdBy: true,
 });
 
+// CSV User Validation Schemas
+
+// Base schema for common CSV fields
+const BaseCsvUserSchema = z.object({
+  id: z.string().min(1, 'ID is required').trim(),
+  userType: z.enum(['child', 'caregiver', 'teacher', 'admin'], {
+    message: 'userType must be one of: child, caregiver, teacher, admin'
+  }),
+});
+
+// Schema for AddUsers CSV validation
+const AddUsersCsvSchema = BaseCsvUserSchema.extend({
+  userType: z.enum(['child', 'caregiver', 'teacher'], {
+    message: 'userType must be one of: child, caregiver, teacher'
+  }),
+  // Required for child users
+  month: z.string().optional().refine((val) => {
+    if (!val) return true; // Optional field
+    const month = parseInt(val);
+    return month >= 1 && month <= 12;
+  }, 'Month must be between 1 and 12'),
+  year: z.string().optional().refine((val) => {
+    if (!val) return true; // Optional field
+    const year = parseInt(val);
+    const currentYear = new Date().getFullYear();
+    return year >= 1900 && year <= currentYear;
+  }, `Year must be between 1900 and ${new Date().getFullYear()}`),
+  // Optional relationship fields
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+  // Required site field
+  site: z.string().min(1, 'Site is required').trim(),
+  // Optional organizational fields (cohort OR school+class)
+  cohort: z.string().optional(),
+  school: z.string().optional(),
+  class: z.string().optional(),
+}).refine((data) => {
+  // Child users must have month and year
+  if (data.userType === 'child') {
+    return data.month && data.year;
+  }
+  return true;
+}, {
+  message: 'Child users must have month and year',
+  path: ['month', 'year']
+}).refine((data) => {
+  // Must have either cohort OR (site + school)
+  const hasCohort = data.cohort && data.cohort.trim() !== '';
+  const hasSchool = data.school && data.school.trim() !== '';
+  const hasSite = data.site && data.site.trim() !== '';
+  
+  return hasCohort || (hasSite && hasSchool);
+}, {
+  message: 'Must have either cohort OR (site + school)',
+  path: ['cohort', 'school']
+}).refine((data) => {
+  // If class is provided, school must also be provided
+  if (data.class && data.class.trim() !== '') {
+    return data.school && data.school.trim() !== '';
+  }
+  return true;
+}, {
+  message: 'Class requires school to be specified',
+  path: ['school']
+});
+
+// Schema for LinkUsers CSV validation
+const LinkUsersCsvSchema = BaseCsvUserSchema.extend({
+  uid: z.string().min(1, 'UID is required').trim(),
+  // Optional relationship fields
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+});
+
+// Schema for validating CSV file structure (headers)
+const CsvHeadersSchema = z.object({
+  headers: z.array(z.string()),
+  requiredHeaders: z.array(z.string()),
+  optionalHeaders: z.array(z.string()).optional(),
+});
+
+// Validation helper functions
+const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
+  success: boolean;
+  data?: T[];
+  errors?: Array<{
+    row: number;
+    errors: z.ZodError;
+  }>;
+} => {
+  const results: T[] = [];
+  const errors: Array<{ row: number; errors: z.ZodError }> = [];
+
+  data.forEach((row, index) => {
+    const result = schema.safeParse(row);
+    if (result.success) {
+      results.push(result.data);
+    } else {
+      errors.push({ row: index + 1, errors: result.error });
+    }
+  });
+
+  if (errors.length === 0) {
+    return {
+      success: true,
+      data: results,
+    };
+  } else {
+    return {
+      success: false,
+      errors: errors,
+    };
+  }
+};
+
+const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
+const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
+
+// Helper to normalize CSV headers (case-insensitive)
+const normalizeCsvHeaders = (headers: string[]): string[] => {
+  return headers.map(header => header.toLowerCase().trim());
+};
+
+// Helper to check if required headers are present
+const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
+  success: boolean;
+  missingHeaders?: string[];
+} => {
+  const normalizedHeaders = normalizeCsvHeaders(headers);
+  const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
+  
+  const missingHeaders = normalizedRequired.filter(
+    required => !normalizedHeaders.includes(required)
+  );
+
+  if (missingHeaders.length === 0) {
+    return {
+      success: true,
+    };
+  } else {
+    return {
+      success: false,
+      missingHeaders: missingHeaders,
+    };
+  }
+};
+
 // Export all schemas
 export {
   AdminDataSchema,
+  AddUsersCsvSchema,
   AdministrationSchema,
   AssessmentConditionRuleSchema,
   AssessmentConditionsSchema,
   AssessmentSchema,
   AssignedOrgSchema,
   AssignmentAssessmentSchema,
+  BaseCsvUserSchema,
   ClaimsSchema,
   ClassSchema,
   CreateClassSchema,
@@ -386,10 +535,13 @@ export {
   CreateOrgSchema,
   CreateSchoolSchema,
   CreateUserSchema,
+  CsvHeadersSchema,
   DistrictSchema,
   GroupSchema,
   LegalInfoSchema,
   LegalSchema,
+  LinkUsersCsvSchema,
+  normalizeCsvHeaders,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   OrgSchema,
@@ -400,9 +552,14 @@ export {
   UserClaimsSchema,
   UserLegalSchema,
   UserSchema,
+  validateAddUsersCsv,
+  validateCsvData,
+  validateCsvHeaders,
+  validateLinkUsersCsv,
 };
 
 // Export types derived from schemas
+export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
@@ -410,6 +567,7 @@ export type AssessmentConditionsType = z.infer<typeof AssessmentConditionsSchema
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
+export type BaseCsvUserType = z.infer<typeof BaseCsvUserSchema>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
@@ -418,10 +576,12 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
+export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
+export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
