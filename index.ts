@@ -371,16 +371,9 @@ const CreateOrgSchema = OrgSchema.pick({
 
 // CSV User Validation Schemas
 
-// Base schema for common CSV fields
-const BaseCsvUserSchema = z.object({
-  id: z.string().min(1, 'ID is required').trim(),
-  userType: z.enum(['child', 'caregiver', 'teacher', 'admin'], {
-    message: 'userType must be one of: child, caregiver, teacher, admin'
-  }),
-});
-
 // Schema for AddUsers CSV validation
-const AddUsersCsvSchema = BaseCsvUserSchema.extend({
+const AddUsersCsvSchema = z.object({
+  id: z.string().min(1, 'ID is required').trim(),
   userType: z.enum(['child', 'caregiver', 'teacher'], {
     message: 'userType must be one of: child, caregiver, teacher'
   }),
@@ -436,7 +429,11 @@ const AddUsersCsvSchema = BaseCsvUserSchema.extend({
 });
 
 // Schema for LinkUsers CSV validation
-const LinkUsersCsvSchema = BaseCsvUserSchema.extend({
+const LinkUsersCsvSchema = z.object({
+  id: z.string().min(1, 'ID is required').trim(),
+  userType: z.enum(['child', 'caregiver', 'teacher'], {
+    message: 'userType must be one of: child, caregiver, teacher'
+  }),
   uid: z.string().min(1, 'UID is required').trim(),
   // Optional relationship fields
   caregiverId: z.string().optional(),
@@ -526,7 +523,6 @@ export {
   AssessmentSchema,
   AssignedOrgSchema,
   AssignmentAssessmentSchema,
-  BaseCsvUserSchema,
   ClaimsSchema,
   ClassSchema,
   CreateClassSchema,
@@ -567,7 +563,6 @@ export type AssessmentConditionsType = z.infer<typeof AssessmentConditionsSchema
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
-export type BaseCsvUserType = z.infer<typeof BaseCsvUserSchema>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
