@@ -371,6 +371,21 @@ const CreateOrgSchema = OrgSchema.pick({
 
 // CSV User Validation Schemas
 
+// Parse comma-separated values
+const parseCommaSeparated = (value: string | undefined): string[] => {
+  if (!value) return [];
+  return value.split(',').map(s => s.trim()).filter(s => s);
+};
+
+// Normalize CSV data for case-insensitive field matching
+const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = {};
+  Object.keys(data).forEach(key => {
+    normalized[key.toLowerCase()] = data[key];
+  });
+  return normalized;
+};
+
 // Schema for AddUsers CSV validation
 const AddUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
@@ -379,22 +394,19 @@ const AddUsersCsvSchema = z.object({
   }),
   // Required for child users
   month: z.string().optional().refine((val) => {
-    if (!val) return true; // Optional field
+    if (!val) return true;
     const month = parseInt(val);
     return month >= 1 && month <= 12;
   }, 'Month must be between 1 and 12'),
   year: z.string().optional().refine((val) => {
-    if (!val) return true; // Optional field
+    if (!val) return true;
     const year = parseInt(val);
     const currentYear = new Date().getFullYear();
     return year >= 1900 && year <= currentYear;
   }, `Year must be between 1900 and ${new Date().getFullYear()}`),
-  // Optional relationship fields
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
-  // Required site field
-  site: z.string().min(1, 'Site is required').trim(),
-  // Optional organizational fields (cohort OR school+class)
+  site: z.string().optional(),
   cohort: z.string().optional(),
   school: z.string().optional(),
   class: z.string().optional(),
@@ -408,24 +420,29 @@ const AddUsersCsvSchema = z.object({
   message: 'Child users must have month and year',
   path: ['month', 'year']
 }).refine((data) => {
-  // Must have either cohort OR (site + school)
-  const hasCohort = data.cohort && data.cohort.trim() !== '';
-  const hasSchool = data.school && data.school.trim() !== '';
-  const hasSite = data.site && data.site.trim() !== '';
+  // Parse comma-separated values
+  const sites = parseCommaSeparated(data.site);
+  const cohorts = parseCommaSeparated(data.cohort);
+  const schools = parseCommaSeparated(data.school);
+  const classes = parseCommaSeparated(data.class);
   
-  return hasCohort || (hasSite && hasSchool);
-}, {
-  message: 'Must have either cohort OR (site + school)',
-  path: ['cohort', 'school']
-}).refine((data) => {
-  // If class is provided, school must also be provided
-  if (data.class && data.class.trim() !== '') {
-    return data.school && data.school.trim() !== '';
+  // Site is required for all users
+  if (sites.length === 0) {
+    return false;
   }
+  // Must have either cohort OR school
+  if (cohorts.length === 0 && schools.length === 0) {
+    return false;
+  }
+  // If class is provided, school must also be provided
+  if (classes.length > 0 && schools.length === 0) {
+    return false;
+  }
+  
   return true;
 }, {
-  message: 'Class requires school to be specified',
-  path: ['school']
+  message: 'Site is required. Must have either cohort OR school. School required if class provided.',
+  path: ['site', 'cohort', 'school', 'class']
 });
 
 // Schema for LinkUsers CSV validation
@@ -440,7 +457,7 @@ const LinkUsersCsvSchema = z.object({
   teacherId: z.string().optional(),
 });
 
-// Schema for validating CSV file structure (headers)
+// Validating CSV file structure (headers)
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
@@ -450,49 +467,55 @@ const CsvHeadersSchema = z.object({
 // Validation helper functions
 const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   success: boolean;
-  data?: T[];
-  errors?: Array<{
+  data: T[];
+  errors: Array<{
     row: number;
-    errors: z.ZodError;
+    field: string;
+    message: string;
   }>;
 } => {
   const results: T[] = [];
-  const errors: Array<{ row: number; errors: z.ZodError }> = [];
+  const errors: Array<{ row: number; field: string; message: string }> = [];
 
   data.forEach((row, index) => {
-    const result = schema.safeParse(row);
+    const normalizedRow = normalizeCsvData(row as Record<string, unknown>);
+    const result = schema.safeParse(normalizedRow);
     if (result.success) {
       results.push(result.data);
     } else {
-      errors.push({ row: index + 1, errors: result.error });
+      result.error.issues.forEach(issue => {
+        errors.push({
+          row: index + 1,
+          field: issue.path.join('.'),
+          message: issue.message
+        });
+      });
     }
   });
 
-  if (errors.length === 0) {
-    return {
-      success: true,
-      data: results,
-    };
-  } else {
-    return {
-      success: false,
-      errors: errors,
-    };
-  }
+  return {
+    success: errors.length === 0,
+    errors: errors,
+    data: results,
+  };
 };
 
 const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
 const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
 
-// Helper to normalize CSV headers (case-insensitive)
+// Normalize CSV headers (case-insensitive)
 const normalizeCsvHeaders = (headers: string[]): string[] => {
   return headers.map(header => header.toLowerCase().trim());
 };
 
-// Helper to check if required headers are present
+// Check if required headers are present
 const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
   success: boolean;
-  missingHeaders?: string[];
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+  data: string[];
 } => {
   const normalizedHeaders = normalizeCsvHeaders(headers);
   const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
@@ -501,16 +524,16 @@ const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
     required => !normalizedHeaders.includes(required)
   );
 
-  if (missingHeaders.length === 0) {
-    return {
-      success: true,
-    };
-  } else {
-    return {
-      success: false,
-      missingHeaders: missingHeaders,
-    };
-  }
+  const errors = missingHeaders.map(header => ({
+    field: header,
+    message: `Missing required header: ${header}`
+  }));
+
+  return {
+    success: missingHeaders.length === 0,
+    errors: errors,
+    data: normalizedHeaders,
+  };
 };
 
 // Export all schemas
@@ -537,10 +560,12 @@ export {
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvSchema,
+  normalizeCsvData,
   normalizeCsvHeaders,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   OrgSchema,
+  parseCommaSeparated,
   ReadOrgSchema,
   SchoolSchema,
   StatSchema,
