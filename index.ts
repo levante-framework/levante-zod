@@ -386,7 +386,7 @@ const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown
   return normalized;
 };
 
-// Schema for AddUsers CSV validation
+// AddUsers CSV
 const AddUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
   userType: z.enum(['child', 'caregiver', 'teacher'], {
@@ -411,7 +411,6 @@ const AddUsersCsvSchema = z.object({
   school: z.string().optional(),
   class: z.string().optional(),
 }).refine((data) => {
-  // Child users must have month and year
   if (data.userType === 'child') {
     return data.month && data.year;
   }
@@ -420,21 +419,17 @@ const AddUsersCsvSchema = z.object({
   message: 'Child users must have month and year',
   path: ['month', 'year']
 }).refine((data) => {
-  // Parse comma-separated values
   const sites = parseCommaSeparated(data.site);
   const cohorts = parseCommaSeparated(data.cohort);
   const schools = parseCommaSeparated(data.school);
   const classes = parseCommaSeparated(data.class);
   
-  // Site is required for all users
   if (sites.length === 0) {
     return false;
   }
-  // Must have either cohort OR school
   if (cohorts.length === 0 && schools.length === 0) {
     return false;
   }
-  // If class is provided, school must also be provided
   if (classes.length > 0 && schools.length === 0) {
     return false;
   }
@@ -445,26 +440,25 @@ const AddUsersCsvSchema = z.object({
   path: ['site', 'cohort', 'school', 'class']
 });
 
-// Schema for LinkUsers CSV validation
+// LinkUsers CSV
 const LinkUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
   userType: z.enum(['child', 'caregiver', 'teacher'], {
     message: 'userType must be one of: child, caregiver, teacher'
   }),
   uid: z.string().min(1, 'UID is required').trim(),
-  // Optional relationship fields
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
 });
 
-// Validating CSV file structure (headers)
+// Validating CSV file
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
   optionalHeaders: z.array(z.string()).optional(),
 });
 
-// Validation helper functions
+// Validation helper
 const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   success: boolean;
   data: T[];
