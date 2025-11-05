@@ -400,16 +400,22 @@ const AddUsersCsvSchema = z.object({
   }, 'Month must be between 1 and 12'),
   year: z.string().optional().refine((val) => {
     if (!val) return true;
-    const year = parseInt(val);
-    const currentYear = new Date().getFullYear();
-    return year >= 1900 && year <= currentYear;
-  }, `Year must be between 1900 and ${new Date().getFullYear()}`),
+    return /^\d{4}$/.test(val);
+  }, 'year must be a four-digit number'),
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
   site: z.string().optional(),
   cohort: z.string().optional(),
   school: z.string().optional(),
   class: z.string().optional(),
+}).refine((data) => {
+  if (data.site && data.site.includes(',')) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Site must contain only one value (comma-separated values not allowed)',
+  path: ['site']
 }).refine((data) => {
   if (data.userType === 'child') {
     return data.month && data.year;
@@ -419,14 +425,35 @@ const AddUsersCsvSchema = z.object({
   message: 'Child users must have month and year',
   path: ['month', 'year']
 }).refine((data) => {
-  const sites = parseCommaSeparated(data.site);
+  if (data.userType === 'child' && data.month && data.year) {
+    const birthMonth = parseInt(data.month);
+    const birthYear = parseInt(data.year);
+    
+    if (!isNaN(birthMonth) && !isNaN(birthYear)) {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
+      
+      let age = currentYear - birthYear;
+      
+      if (currentMonth < birthMonth) {
+        age--;
+      }
+      
+      if (age >= 18) {
+        return false;
+      }
+    }
+  }
+  return true;
+}, {
+  message: 'Child users must be under 18 years old',
+  path: ['year', 'month']
+}).refine((data) => {
   const cohorts = parseCommaSeparated(data.cohort);
   const schools = parseCommaSeparated(data.school);
   const classes = parseCommaSeparated(data.class);
   
-  if (sites.length === 0) {
-    return false;
-  }
   if (cohorts.length === 0 && schools.length === 0) {
     return false;
   }
@@ -436,8 +463,8 @@ const AddUsersCsvSchema = z.object({
   
   return true;
 }, {
-  message: 'Site is required. Must have either cohort OR school. School required if class provided.',
-  path: ['site', 'cohort', 'school', 'class']
+  message: 'Must have either cohort OR school. School required if class provided.',
+  path: ['cohort', 'school', 'class']
 });
 
 // LinkUsers CSV
