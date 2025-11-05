@@ -104,13 +104,7 @@ const AssignmentAssessmentSchema = z.object({
   progress: z.object({
     survey: z.string(),
     publicName: z.string(),
-    readOrgs: z.object({
-      classes: z.array(z.string()),
-      districts: z.array(z.string()),
-      families: z.array(z.string()),
-      groups: z.array(z.string()),
-      schools: z.array(z.string()),
-    }),
+    readOrgs: OrgRefMapSchema,
     sequential: z.boolean(),
     started: z.boolean(),
     testData: z.boolean(),
@@ -425,9 +419,9 @@ const AddUsersCsvSchema = z.object({
   message: 'Child users must have month and year',
   path: ['month', 'year']
 }).refine((data) => {
-  if (data.userType === 'child' && data.month && data.year) {
-    const birthMonth = parseInt(data.month);
-    const birthYear = parseInt(data.year);
+  if (data.userType === 'child') {
+    const birthMonth = parseInt(data.month!);
+    const birthYear = parseInt(data.year!);
     
     if (!isNaN(birthMonth) && !isNaN(birthYear)) {
       const today = new Date();
