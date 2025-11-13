@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, ZodIssueCode } from 'zod';
 
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
@@ -363,30 +363,63 @@ const CreateOrgSchema = OrgSchema.pick({
   createdBy: true,
 });
 
-// CSV User Validation Schemas
-
-// Parse comma-separated values
 const parseCommaSeparated = (value: string | undefined): string[] => {
   if (!value) return [];
   return value.split(',').map(s => s.trim()).filter(s => s);
 };
 
-// Normalize CSV data for case-insensitive field matching
 const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
   Object.keys(data).forEach(key => {
-    normalized[key.toLowerCase()] = data[key];
+    const value = data[key];
+    const normalizedKey = key.toLowerCase();
+    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
   });
   return normalized;
 };
 
-// AddUsers CSV
+const calculateAge = (birthMonth: number, birthYear: number): number => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  let age = currentYear - birthYear;
+  if (currentMonth < birthMonth) {
+    age--;
+  }
+  return age;
+};
+
+const validateChildAge = (month: string | undefined, year: string | undefined): boolean => {
+  if (!month || !year) return true;
+  const birthMonth = parseInt(month);
+  const birthYear = parseInt(year);
+  if (isNaN(birthMonth) || isNaN(birthYear)) return true;
+  return calculateAge(birthMonth, birthYear) < 18;
+};
+
 const AddUsersCsvSchema = z.object({
-  id: z.string().min(1, 'ID is required').trim(),
-  userType: z.enum(['child', 'caregiver', 'teacher'], {
-    message: 'userType must be one of: child, caregiver, teacher'
-  }),
-  // Required for child users
+  id: z.string().trim().optional(),
+  usertype: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null || val === '') return '';
+      return typeof val === 'string' ? val.trim().toLowerCase() : String(val);
+    },
+    z.string().superRefine((val, ctx) => {
+      if (!val || val.trim() === '') {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: 'userType is required'
+        });
+        return;
+      }
+      if (!['child', 'caregiver', 'teacher'].includes(val)) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: 'userType must be one of: child, caregiver, teacher'
+        });
+      }
+    })
+  ),
   month: z.string().optional().refine((val) => {
     if (!val) return true;
     const month = parseInt(val);
@@ -395,7 +428,7 @@ const AddUsersCsvSchema = z.object({
   year: z.string().optional().refine((val) => {
     if (!val) return true;
     return /^\d{4}$/.test(val);
-  }, 'year must be a four-digit number'),
+  }, 'Year must be a four-digit number'),
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
   site: z.string().optional(),
@@ -411,7 +444,7 @@ const AddUsersCsvSchema = z.object({
   message: 'Site must contain only one value (comma-separated values not allowed)',
   path: ['site']
 }).refine((data) => {
-  if (data.userType === 'child') {
+  if (data.usertype === 'child') {
     return data.month && data.year;
   }
   return true;
@@ -419,25 +452,8 @@ const AddUsersCsvSchema = z.object({
   message: 'Child users must have month and year',
   path: ['month', 'year']
 }).refine((data) => {
-  if (data.userType === 'child') {
-    const birthMonth = parseInt(data.month!);
-    const birthYear = parseInt(data.year!);
-    
-    if (!isNaN(birthMonth) && !isNaN(birthYear)) {
-      const today = new Date();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth() + 1;
-      
-      let age = currentYear - birthYear;
-      
-      if (currentMonth < birthMonth) {
-        age--;
-      }
-      
-      if (age >= 18) {
-        return false;
-      }
-    }
+  if (data.usertype === 'child') {
+    return validateChildAge(data.month, data.year);
   }
   return true;
 }, {
@@ -459,27 +475,104 @@ const AddUsersCsvSchema = z.object({
 }, {
   message: 'Must have either cohort OR school. School required if class provided.',
   path: ['cohort', 'school', 'class']
-});
+}).passthrough();
 
-// LinkUsers CSV
+const AddUsersSubmitSchema = z.object({
+  id: z.string().trim().optional(),
+  userType: z.enum(['child', 'parent', 'teacher'], {
+    message: 'userType must be one of: child, parent, teacher'
+  }),
+  month: z.string().optional(),
+  year: z.string().optional(),
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+  parentId: z.string().optional(),
+  orgIds: z.object({
+    districts: z.array(z.string().min(1)).min(1, 'At least one district is required'),
+    groups: z.array(z.string().min(1)).optional(),
+    schools: z.array(z.string().min(1)).optional(),
+    classes: z.array(z.string().min(1)).optional(),
+  }).refine((orgIds) => {
+    const hasGroups = orgIds.groups && orgIds.groups.length > 0;
+    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+    return hasGroups || hasSchools;
+  }, {
+    message: 'Must have either groups OR schools in orgIds',
+    path: ['orgIds']
+  }).refine((orgIds) => {
+    const hasClasses = orgIds.classes && orgIds.classes.length > 0;
+    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+    if (hasClasses && !hasSchools) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'Schools required in orgIds if classes are provided',
+    path: ['orgIds']
+  }),
+}).refine((data) => {
+  if (data.userType === 'child') {
+    return data.month && data.year;
+  }
+  return true;
+}, {
+  message: 'Child users must have month and year',
+  path: ['month', 'year']
+}).refine((data) => {
+  if (data.userType === 'child') {
+    return validateChildAge(data.month, data.year);
+  }
+  return true;
+}, {
+  message: 'Child users must be under 18 years old',
+  path: ['year', 'month']
+}).refine((data) => {
+  if (data.month) {
+    const month = parseInt(data.month);
+    if (isNaN(month) || month < 1 || month > 12) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: 'Month must be between 1 and 12',
+  path: ['month']
+}).refine((data) => {
+  if (data.year) {
+    if (!/^\d{4}$/.test(data.year)) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: 'Year must be a four-digit number',
+  path: ['year']
+}).passthrough();
+
 const LinkUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
-  userType: z.enum(['child', 'caregiver', 'teacher'], {
-    message: 'userType must be one of: child, caregiver, teacher'
-  }),
+  userType: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null || val === '') return undefined;
+      return typeof val === 'string' ? val.trim().toLowerCase() : val;
+    },
+    z.string().min(1, 'userType is required').pipe(
+      z.enum(['child', 'caregiver', 'teacher'], {
+        message: 'userType must be one of: child, caregiver, teacher'
+      })
+    )
+  ),
   uid: z.string().min(1, 'UID is required').trim(),
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
 });
 
-// Validating CSV file
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
   optionalHeaders: z.array(z.string()).optional(),
 });
 
-// Validation helper
 const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   success: boolean;
   data: T[];
@@ -499,10 +592,12 @@ const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
       results.push(result.data);
     } else {
       result.error.issues.forEach(issue => {
+        const fieldPath = issue.path.join('.');
+        const message = issue.message || 'Invalid input';
         errors.push({
           row: index + 1,
-          field: issue.path.join('.'),
-          message: issue.message
+          field: fieldPath,
+          message: message
         });
       });
     }
@@ -518,12 +613,39 @@ const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
 const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
 const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
 
-// Normalize CSV headers (case-insensitive)
+const validateAddUsersSubmit = (data: unknown): {
+  success: boolean;
+  data?: z.infer<typeof AddUsersSubmitSchema>;
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+} => {
+  const result = AddUsersSubmitSchema.safeParse(data);
+  
+  if (result.success) {
+    return {
+      success: true,
+      data: result.data,
+      errors: [],
+    };
+  }
+  
+  const errors = result.error.issues.map(issue => ({
+    field: issue.path.join('.'),
+    message: issue.message,
+  }));
+  
+  return {
+    success: false,
+    errors,
+  };
+};
+
 const normalizeCsvHeaders = (headers: string[]): string[] => {
   return headers.map(header => header.toLowerCase().trim());
 };
 
-// Check if required headers are present
 const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
   success: boolean;
   errors: Array<{
@@ -551,10 +673,10 @@ const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
   };
 };
 
-// Export all schemas
 export {
   AdminDataSchema,
   AddUsersCsvSchema,
+  AddUsersSubmitSchema,
   AdministrationSchema,
   AssessmentConditionRuleSchema,
   AssessmentConditionsSchema,
@@ -589,13 +711,14 @@ export {
   UserLegalSchema,
   UserSchema,
   validateAddUsersCsv,
+  validateAddUsersSubmit,
   validateCsvData,
   validateCsvHeaders,
   validateLinkUsersCsv,
 };
 
-// Export types derived from schemas
 export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
+export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
