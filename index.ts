@@ -436,14 +436,6 @@ const AddUsersCsvSchema = z.object({
   school: z.string().optional(),
   class: z.string().optional(),
 }).refine((data) => {
-  if (data.site && data.site.includes(',')) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Site must contain only one value (comma-separated values not allowed)',
-  path: ['site']
-}).refine((data) => {
   if (data.usertype === 'child') {
     return data.month && data.year;
   }
@@ -673,6 +665,165 @@ const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
   };
 };
 
+const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
+  hasMultipleSites: boolean;
+  uniqueSites: string[];
+} => {
+  const siteSet = new Set<string>();
+  
+  parsedData.forEach((user) => {
+    const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+    if (siteField && user[siteField]) {
+      const siteValue = String(user[siteField]);
+      const sites = siteValue
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s);
+      sites.forEach(site => siteSet.add(site));
+    }
+  });
+  
+  return {
+    hasMultipleSites: siteSet.size > 1,
+    uniqueSites: Array.from(siteSet),
+  };
+};
+
+const validateAddUsersFileUpload = (
+  parsedData: Record<string, unknown>[],
+  shouldUsePermissions: boolean
+): {
+  success: boolean;
+  errors: Array<{
+    user: Record<string, unknown>;
+    error: string;
+  }>;
+  data: Record<string, unknown>[];
+  hasMultipleSites: boolean;
+  uniqueSites: string[];
+  headerErrors?: Array<{
+    field: string;
+    message: string;
+  }>;
+} => {
+  if (!parsedData || parsedData.length === 0) {
+    return {
+      success: false,
+      errors: [],
+      data: [],
+      hasMultipleSites: false,
+      uniqueSites: [],
+    };
+  }
+
+  parsedData.forEach((user) => {
+    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
+    if (userTypeField && typeof user[userTypeField] === 'string') {
+      user[userTypeField] = (user[userTypeField] as string).trim();
+    }
+  });
+
+  const firstRow = parsedData[0];
+  const headers = Object.keys(firstRow);
+  const lowerCaseHeaders = headers.map((col) => col.toLowerCase());
+
+  const requiredHeaders = ['usertype'];
+  const hasChild = parsedData.some((user) => {
+    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
+    const userTypeValue = userTypeField ? user[userTypeField] : null;
+    return userTypeValue && typeof userTypeValue === 'string' && userTypeValue.toLowerCase() === 'child';
+  });
+
+  if (hasChild) {
+    requiredHeaders.push('month', 'year');
+  }
+
+  const hasCohort = lowerCaseHeaders.includes('cohort');
+  const hasSchool = lowerCaseHeaders.includes('school');
+  if (!hasCohort && !hasSchool) {
+    requiredHeaders.push('cohort', 'school');
+  }
+
+  if (!shouldUsePermissions) {
+    requiredHeaders.push('site');
+  }
+
+  const headerValidation = validateCsvHeaders(lowerCaseHeaders, requiredHeaders);
+  if (!headerValidation.success) {
+    return {
+      success: false,
+      errors: [],
+      data: [],
+      hasMultipleSites: false,
+      uniqueSites: [],
+      headerErrors: headerValidation.errors,
+    };
+  }
+
+  const usersToValidate = parsedData.filter((user) => {
+    const idField = Object.keys(user).find((key) => key.toLowerCase() === 'id');
+    return !idField || !user[idField];
+  });
+
+  const validation = validateAddUsersCsv(usersToValidate);
+  const siteInfo = detectMultipleSites(parsedData);
+
+  const usersWithZodErrors = new Set<Record<string, unknown>>();
+  const errors: Array<{ user: Record<string, unknown>; error: string }> = [];
+
+  if (!validation.success) {
+    const errorsByUser = new Map<Record<string, unknown>, string[]>();
+    validation.errors.forEach((error) => {
+      const userIndex = error.row - 1;
+      if (userIndex >= 0 && userIndex < usersToValidate.length) {
+        const user = usersToValidate[userIndex];
+        usersWithZodErrors.add(user);
+        if (!errorsByUser.has(user)) {
+          errorsByUser.set(user, []);
+        }
+        const fieldName = error.field === 'usertype' ? 'userType' : error.field;
+        errorsByUser.get(user)!.push(`${fieldName}: ${error.message}`);
+      }
+    });
+    errorsByUser.forEach((errorMessages, user) => {
+      errors.push({
+        user,
+        error: errorMessages.join('; '),
+      });
+    });
+  }
+
+  if (!shouldUsePermissions) {
+    usersToValidate.forEach((user) => {
+      if (usersWithZodErrors.has(user)) return;
+
+      const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+      const siteValue = siteField ? user[siteField] : null;
+      const hasSite =
+        siteValue &&
+        String(siteValue)
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s).length > 0;
+
+      if (!hasSite) {
+        errors.push({
+          user,
+          error: 'Site: Site is required',
+        });
+      }
+    });
+  }
+
+  return {
+    success: errors.length === 0,
+    errors,
+    data: parsedData,
+    hasMultipleSites: siteInfo.hasMultipleSites,
+    uniqueSites: siteInfo.uniqueSites,
+  };
+};
+
 export {
   AdminDataSchema,
   AddUsersCsvSchema,
@@ -711,6 +862,7 @@ export {
   UserLegalSchema,
   UserSchema,
   validateAddUsersCsv,
+  validateAddUsersFileUpload,
   validateAddUsersSubmit,
   validateCsvData,
   validateCsvHeaders,
