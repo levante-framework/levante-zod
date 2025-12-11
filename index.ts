@@ -367,6 +367,8 @@ const CreateOrgSchema = OrgSchema.pick({
   tags: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string(),
 });
 
 // Export all schemas
@@ -405,11 +407,17 @@ export {
 // Export types derived from schemas
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
-export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
-export type AssessmentConditionsType = z.infer<typeof AssessmentConditionsSchema>;
+export type AssessmentConditionRuleType = z.infer<
+  typeof AssessmentConditionRuleSchema
+>;
+export type AssessmentConditionsType = z.infer<
+  typeof AssessmentConditionsSchema
+>;
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
-export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
+export type AssignmentAssessmentType = z.infer<
+  typeof AssignmentAssessmentSchema
+>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
