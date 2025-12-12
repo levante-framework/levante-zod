@@ -368,7 +368,7 @@ const CreateOrgSchema = OrgSchema.pick({
   type: true,
   createdBy: true,
 }).extend({
-  siteId: z.string(),
+  siteId: z.string().optional(),
 });
 
 // Export all schemas
