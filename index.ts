@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z, ZodIssueCode } from 'zod';
 
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
@@ -104,13 +104,7 @@ const AssignmentAssessmentSchema = z.object({
   progress: z.object({
     survey: z.string(),
     publicName: z.string(),
-    readOrgs: z.object({
-      classes: z.array(z.string()),
-      districts: z.array(z.string()),
-      families: z.array(z.string()),
-      groups: z.array(z.string()),
-      schools: z.array(z.string()),
-    }),
+    readOrgs: OrgRefMapSchema,
     sequential: z.boolean(),
     started: z.boolean(),
     testData: z.boolean(),
@@ -371,9 +365,471 @@ const CreateOrgSchema = OrgSchema.pick({
   siteId: z.string().optional(),
 });
 
-// Export all schemas
+const parseCommaSeparated = (value: string | undefined): string[] => {
+  if (!value) return [];
+  return value.split(',').map(s => s.trim()).filter(s => s);
+};
+
+const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
+  const normalized: Record<string, unknown> = {};
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    const normalizedKey = key.toLowerCase();
+    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
+  });
+  return normalized;
+};
+
+const calculateAge = (birthMonth: number, birthYear: number): number => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  let age = currentYear - birthYear;
+  if (currentMonth < birthMonth) {
+    age--;
+  }
+  return age;
+};
+
+const validateChildAge = (month: string | undefined, year: string | undefined): boolean => {
+  if (!month || !year) return true;
+  const birthMonth = parseInt(month);
+  const birthYear = parseInt(year);
+  if (isNaN(birthMonth) || isNaN(birthYear)) return true;
+  return calculateAge(birthMonth, birthYear) < 18;
+};
+
+const AddUsersCsvSchema = z.object({
+  id: z.string().trim().optional(),
+  usertype: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null || val === '') return '';
+      return typeof val === 'string' ? val.trim().toLowerCase() : String(val);
+    },
+    z.string().superRefine((val, ctx) => {
+      if (!val || val.trim() === '') {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: 'userType is required'
+        });
+        return;
+      }
+      if (!['child', 'caregiver', 'teacher'].includes(val)) {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message: 'userType must be one of: child, caregiver, teacher'
+        });
+      }
+    })
+  ),
+  month: z.string().optional().refine((val) => {
+    if (!val) return true;
+    const month = parseInt(val);
+    return month >= 1 && month <= 12;
+  }, 'Month must be between 1 and 12'),
+  year: z.string().optional().refine((val) => {
+    if (!val) return true;
+    return /^\d{4}$/.test(val);
+  }, 'Year must be a four-digit number'),
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+  site: z.string().optional(),
+  cohort: z.string().optional(),
+  school: z.string().optional(),
+  class: z.string().optional(),
+}).refine((data) => {
+  if (data.usertype === 'child') {
+    return data.month && data.year;
+  }
+  return true;
+}, {
+  message: 'Child users must have month and year',
+  path: ['month', 'year']
+}).refine((data) => {
+  if (data.usertype === 'child') {
+    return validateChildAge(data.month, data.year);
+  }
+  return true;
+}, {
+  message: 'Child users must be under 18 years old',
+  path: ['year', 'month']
+}).refine((data) => {
+  const cohorts = parseCommaSeparated(data.cohort);
+  const schools = parseCommaSeparated(data.school);
+  const classes = parseCommaSeparated(data.class);
+  
+  if (cohorts.length === 0 && schools.length === 0) {
+    return false;
+  }
+  if (classes.length > 0 && schools.length === 0) {
+    return false;
+  }
+  
+  return true;
+}, {
+  message: 'Must have either cohort OR school. School required if class provided.',
+  path: ['cohort', 'school', 'class']
+}).passthrough();
+
+const AddUsersSubmitSchema = z.object({
+  id: z.string().trim().optional(),
+  userType: z.enum(['child', 'parent', 'teacher'], {
+    message: 'userType must be one of: child, parent, teacher'
+  }),
+  month: z.string().optional(),
+  year: z.string().optional(),
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+  parentId: z.string().optional(),
+  orgIds: z.object({
+    districts: z.array(z.string().min(1)).min(1, 'At least one district is required'),
+    groups: z.array(z.string().min(1)).optional(),
+    schools: z.array(z.string().min(1)).optional(),
+    classes: z.array(z.string().min(1)).optional(),
+  }).refine((orgIds) => {
+    const hasGroups = orgIds.groups && orgIds.groups.length > 0;
+    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+    return hasGroups || hasSchools;
+  }, {
+    message: 'Must have either groups OR schools in orgIds',
+    path: ['orgIds']
+  }).refine((orgIds) => {
+    const hasClasses = orgIds.classes && orgIds.classes.length > 0;
+    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+    if (hasClasses && !hasSchools) {
+      return false;
+    }
+    return true;
+  }, {
+    message: 'Schools required in orgIds if classes are provided',
+    path: ['orgIds']
+  }),
+}).refine((data) => {
+  if (data.userType === 'child') {
+    return data.month && data.year;
+  }
+  return true;
+}, {
+  message: 'Child users must have month and year',
+  path: ['month', 'year']
+}).refine((data) => {
+  if (data.userType === 'child') {
+    return validateChildAge(data.month, data.year);
+  }
+  return true;
+}, {
+  message: 'Child users must be under 18 years old',
+  path: ['year', 'month']
+}).refine((data) => {
+  if (data.month) {
+    const month = parseInt(data.month);
+    if (isNaN(month) || month < 1 || month > 12) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: 'Month must be between 1 and 12',
+  path: ['month']
+}).refine((data) => {
+  if (data.year) {
+    if (!/^\d{4}$/.test(data.year)) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: 'Year must be a four-digit number',
+  path: ['year']
+}).passthrough();
+
+const LinkUsersCsvSchema = z.object({
+  id: z.string().min(1, 'ID is required').trim(),
+  userType: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null || val === '') return undefined;
+      return typeof val === 'string' ? val.trim().toLowerCase() : val;
+    },
+    z.string().min(1, 'userType is required').pipe(
+      z.enum(['child', 'caregiver', 'teacher'], {
+        message: 'userType must be one of: child, caregiver, teacher'
+      })
+    )
+  ),
+  uid: z.string().min(1, 'UID is required').trim(),
+  caregiverId: z.string().optional(),
+  teacherId: z.string().optional(),
+});
+
+const CsvHeadersSchema = z.object({
+  headers: z.array(z.string()),
+  requiredHeaders: z.array(z.string()),
+  optionalHeaders: z.array(z.string()).optional(),
+});
+
+const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
+  success: boolean;
+  data: T[];
+  errors: Array<{
+    row: number;
+    field: string;
+    message: string;
+  }>;
+} => {
+  const results: T[] = [];
+  const errors: Array<{ row: number; field: string; message: string }> = [];
+
+  data.forEach((row, index) => {
+    const normalizedRow = normalizeCsvData(row as Record<string, unknown>);
+    const result = schema.safeParse(normalizedRow);
+    if (result.success) {
+      results.push(result.data);
+    } else {
+      result.error.issues.forEach(issue => {
+        const fieldPath = issue.path.join('.');
+        const message = issue.message || 'Invalid input';
+        errors.push({
+          row: index + 1,
+          field: fieldPath,
+          message: message
+        });
+      });
+    }
+  });
+
+  return {
+    success: errors.length === 0,
+    errors: errors,
+    data: results,
+  };
+};
+
+const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
+const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
+
+const validateAddUsersSubmit = (data: unknown): {
+  success: boolean;
+  data?: z.infer<typeof AddUsersSubmitSchema>;
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+} => {
+  const result = AddUsersSubmitSchema.safeParse(data);
+  
+  if (result.success) {
+    return {
+      success: true,
+      data: result.data,
+      errors: [],
+    };
+  }
+  
+  const errors = result.error.issues.map(issue => ({
+    field: issue.path.join('.'),
+    message: issue.message,
+  }));
+  
+  return {
+    success: false,
+    errors,
+  };
+};
+
+const normalizeCsvHeaders = (headers: string[]): string[] => {
+  return headers.map(header => header.toLowerCase().trim());
+};
+
+const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
+  success: boolean;
+  errors: Array<{
+    field: string;
+    message: string;
+  }>;
+  data: string[];
+} => {
+  const normalizedHeaders = normalizeCsvHeaders(headers);
+  const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
+  
+  const missingHeaders = normalizedRequired.filter(
+    required => !normalizedHeaders.includes(required)
+  );
+
+  const errors = missingHeaders.map(header => ({
+    field: header,
+    message: `Missing required header: ${header}`
+  }));
+
+  return {
+    success: missingHeaders.length === 0,
+    errors: errors,
+    data: normalizedHeaders,
+  };
+};
+
+const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
+  hasMultipleSites: boolean;
+  uniqueSites: string[];
+} => {
+  const siteSet = new Set<string>();
+  
+  parsedData.forEach((user) => {
+    const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+    if (siteField && user[siteField]) {
+      const siteValue = String(user[siteField]);
+      const sites = siteValue
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s);
+      sites.forEach(site => siteSet.add(site));
+    }
+  });
+  
+  return {
+    hasMultipleSites: siteSet.size > 1,
+    uniqueSites: Array.from(siteSet),
+  };
+};
+
+const validateAddUsersFileUpload = (
+  parsedData: Record<string, unknown>[],
+  shouldUsePermissions: boolean
+): {
+  success: boolean;
+  errors: Array<{
+    user: Record<string, unknown>;
+    error: string;
+  }>;
+  data: Record<string, unknown>[];
+  hasMultipleSites: boolean;
+  uniqueSites: string[];
+  headerErrors?: Array<{
+    field: string;
+    message: string;
+  }>;
+} => {
+  if (!parsedData || parsedData.length === 0) {
+    return {
+      success: false,
+      errors: [],
+      data: [],
+      hasMultipleSites: false,
+      uniqueSites: [],
+    };
+  }
+
+  parsedData.forEach((user) => {
+    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
+    if (userTypeField && typeof user[userTypeField] === 'string') {
+      user[userTypeField] = (user[userTypeField] as string).trim();
+    }
+  });
+
+  const firstRow = parsedData[0];
+  const headers = Object.keys(firstRow);
+  const lowerCaseHeaders = headers.map((col) => col.toLowerCase());
+
+  const requiredHeaders = ['usertype'];
+  const hasChild = parsedData.some((user) => {
+    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
+    const userTypeValue = userTypeField ? user[userTypeField] : null;
+    return userTypeValue && typeof userTypeValue === 'string' && userTypeValue.toLowerCase() === 'child';
+  });
+
+  if (hasChild) {
+    requiredHeaders.push('month', 'year');
+  }
+
+  const hasCohort = lowerCaseHeaders.includes('cohort');
+  const hasSchool = lowerCaseHeaders.includes('school');
+  if (!hasCohort && !hasSchool) {
+    requiredHeaders.push('cohort', 'school');
+  }
+
+  if (!shouldUsePermissions) {
+    requiredHeaders.push('site');
+  }
+
+  const headerValidation = validateCsvHeaders(lowerCaseHeaders, requiredHeaders);
+  if (!headerValidation.success) {
+    return {
+      success: false,
+      errors: [],
+      data: [],
+      hasMultipleSites: false,
+      uniqueSites: [],
+      headerErrors: headerValidation.errors,
+    };
+  }
+
+  const usersToValidate = parsedData.filter((user) => {
+    const idField = Object.keys(user).find((key) => key.toLowerCase() === 'id');
+    return !idField || !user[idField];
+  });
+
+  const validation = validateAddUsersCsv(usersToValidate);
+  const siteInfo = detectMultipleSites(parsedData);
+
+  const usersWithZodErrors = new Set<Record<string, unknown>>();
+  const errors: Array<{ user: Record<string, unknown>; error: string }> = [];
+
+  if (!validation.success) {
+    const errorsByUser = new Map<Record<string, unknown>, string[]>();
+    validation.errors.forEach((error) => {
+      const userIndex = error.row - 1;
+      if (userIndex >= 0 && userIndex < usersToValidate.length) {
+        const user = usersToValidate[userIndex];
+        usersWithZodErrors.add(user);
+        if (!errorsByUser.has(user)) {
+          errorsByUser.set(user, []);
+        }
+        const fieldName = error.field === 'usertype' ? 'userType' : error.field;
+        errorsByUser.get(user)!.push(`${fieldName}: ${error.message}`);
+      }
+    });
+    errorsByUser.forEach((errorMessages, user) => {
+      errors.push({
+        user,
+        error: errorMessages.join('; '),
+      });
+    });
+  }
+
+  if (!shouldUsePermissions) {
+    usersToValidate.forEach((user) => {
+      if (usersWithZodErrors.has(user)) return;
+
+      const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+      const siteValue = siteField ? user[siteField] : null;
+      const hasSite =
+        siteValue &&
+        String(siteValue)
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s).length > 0;
+
+      if (!hasSite) {
+        errors.push({
+          user,
+          error: 'Site: Site is required',
+        });
+      }
+    });
+  }
+
+  return {
+    success: errors.length === 0,
+    errors,
+    data: parsedData,
+    hasMultipleSites: siteInfo.hasMultipleSites,
+    uniqueSites: siteInfo.uniqueSites,
+  };
+};
+
 export {
   AdminDataSchema,
+  AddUsersCsvSchema,
+  AddUsersSubmitSchema,
   AdministrationSchema,
   AssessmentConditionRuleSchema,
   AssessmentConditionsSchema,
@@ -388,13 +844,18 @@ export {
   CreateOrgSchema,
   CreateSchoolSchema,
   CreateUserSchema,
+  CsvHeadersSchema,
   DistrictSchema,
   GroupSchema,
   LegalInfoSchema,
   LegalSchema,
+  LinkUsersCsvSchema,
+  normalizeCsvData,
+  normalizeCsvHeaders,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   OrgSchema,
+  parseCommaSeparated,
   ReadOrgSchema,
   SchoolSchema,
   StatSchema,
@@ -402,9 +863,16 @@ export {
   UserClaimsSchema,
   UserLegalSchema,
   UserSchema,
+  validateAddUsersCsv,
+  validateAddUsersFileUpload,
+  validateAddUsersSubmit,
+  validateCsvData,
+  validateCsvHeaders,
+  validateLinkUsersCsv,
 };
 
-// Export types derived from schemas
+export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
+export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<
@@ -426,10 +894,12 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
+export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
+export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
