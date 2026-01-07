@@ -189,6 +189,8 @@ const CreateClassSchema = ClassSchema.pick({
   schoolId: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for documents in the `districts` collection
@@ -212,6 +214,8 @@ const CreateDistrictSchema = DistrictSchema.pick({
   subGroups: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for documents in the `groups` collection
@@ -236,6 +240,8 @@ const CreateGroupSchema = GroupSchema.pick({
   parentOrgType: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Tracks versions of legal documents using GitHub as a reference point.
@@ -279,6 +285,8 @@ const CreateSchoolSchema = SchoolSchema.pick({
   districtId: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for the stats subcollection of `administrations`
