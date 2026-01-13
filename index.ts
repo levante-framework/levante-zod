@@ -368,12 +368,23 @@ const parseCommaSeparated = (value: string | undefined): string[] => {
   return value.split(',').map(s => s.trim()).filter(s => s);
 };
 
-const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
+const getSchemaKeyMap = (schema: z.ZodSchema<unknown>): Map<string, string> => {
+  if (schema instanceof z.ZodObject) {
+    const keys = Object.keys(schema.shape);
+    return new Map(keys.map(key => [key.toLowerCase(), key]));
+  }
+  return new Map();
+};
+
+const normalizeCsvData = (
+  data: Record<string, unknown>,
+  keyMap: Map<string, string>,
+): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
   Object.keys(data).forEach(key => {
     const value = data[key];
-    const normalizedKey = key.toLowerCase();
-    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
+    const mappedKey = keyMap.get(key.toLowerCase()) ?? key;
+    normalized[mappedKey] = value === '' || value === null ? undefined : value;
   });
   return normalized;
 };
@@ -577,8 +588,10 @@ const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   const results: T[] = [];
   const errors: Array<{ row: number; field: string; message: string }> = [];
 
+  const keyMap = getSchemaKeyMap(schema);
+
   data.forEach((row, index) => {
-    const normalizedRow = normalizeCsvData(row as Record<string, unknown>);
+    const normalizedRow = normalizeCsvData(row as Record<string, unknown>, keyMap);
     const result = schema.safeParse(normalizedRow);
     if (result.success) {
       results.push(result.data);
