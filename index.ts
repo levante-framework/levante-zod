@@ -368,23 +368,12 @@ const parseCommaSeparated = (value: string | undefined): string[] => {
   return value.split(',').map(s => s.trim()).filter(s => s);
 };
 
-const getSchemaKeyMap = (schema: z.ZodSchema<unknown>): Map<string, string> => {
-  if (schema instanceof z.ZodObject) {
-    const keys = Object.keys(schema.shape);
-    return new Map(keys.map(key => [key.toLowerCase(), key]));
-  }
-  return new Map();
-};
-
-const normalizeCsvData = (
-  data: Record<string, unknown>,
-  keyMap: Map<string, string>,
-): Record<string, unknown> => {
+const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
   Object.keys(data).forEach(key => {
     const value = data[key];
-    const mappedKey = keyMap.get(key.toLowerCase()) ?? key;
-    normalized[mappedKey] = value === '' || value === null ? undefined : value;
+    const normalizedKey = key.toLowerCase();
+    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
   });
   return normalized;
 };
@@ -466,14 +455,14 @@ const AddUsersCsvSchema = z.object({
   const cohorts = parseCommaSeparated(data.cohort);
   const schools = parseCommaSeparated(data.school);
   const classes = parseCommaSeparated(data.class);
-  
+
   if (cohorts.length === 0 && schools.length === 0) {
     return false;
   }
   if (classes.length > 0 && schools.length === 0) {
     return false;
   }
-  
+
   return true;
 }, {
   message: 'Must have either cohort OR school. School required if class provided.',
@@ -588,10 +577,8 @@ const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   const results: T[] = [];
   const errors: Array<{ row: number; field: string; message: string }> = [];
 
-  const keyMap = getSchemaKeyMap(schema);
-
   data.forEach((row, index) => {
-    const normalizedRow = normalizeCsvData(row as Record<string, unknown>, keyMap);
+    const normalizedRow = normalizeCsvData(row as Record<string, unknown>);
     const result = schema.safeParse(normalizedRow);
     if (result.success) {
       results.push(result.data);
@@ -627,7 +614,7 @@ const validateAddUsersSubmit = (data: unknown): {
   }>;
 } => {
   const result = AddUsersSubmitSchema.safeParse(data);
-  
+
   if (result.success) {
     return {
       success: true,
@@ -635,12 +622,12 @@ const validateAddUsersSubmit = (data: unknown): {
       errors: [],
     };
   }
-  
+
   const errors = result.error.issues.map(issue => ({
     field: issue.path.join('.'),
     message: issue.message,
   }));
-  
+
   return {
     success: false,
     errors,
@@ -661,7 +648,7 @@ const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
 } => {
   const normalizedHeaders = normalizeCsvHeaders(headers);
   const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
-  
+
   const missingHeaders = normalizedRequired.filter(
     required => !normalizedHeaders.includes(required)
   );
@@ -683,7 +670,7 @@ const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
   uniqueSites: string[];
 } => {
   const siteSet = new Set<string>();
-  
+
   parsedData.forEach((user) => {
     const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
     if (siteField && user[siteField]) {
@@ -695,7 +682,7 @@ const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
       sites.forEach(site => siteSet.add(site));
     }
   });
-  
+
   return {
     hasMultipleSites: siteSet.size > 1,
     uniqueSites: Array.from(siteSet),
@@ -794,8 +781,10 @@ const validateAddUsersFileUpload = (
         if (!errorsByUser.has(user)) {
           errorsByUser.set(user, []);
         }
-        const fieldName = error.field === 'usertype' ? 'userType' : error.field;
-        errorsByUser.get(user)!.push(`${fieldName}: ${error.message}`);
+        // Only show field name if it's a single field, not a multi-field path like "year.month"
+        const hasMultipleFields = error.field.includes('.');
+        const errorMessage = hasMultipleFields ? error.message : `${error.field === 'usertype' ? 'userType' : error.field}: ${error.message}`;
+        errorsByUser.get(user)!.push(errorMessage);
       }
     });
     errorsByUser.forEach((errorMessages, user) => {
