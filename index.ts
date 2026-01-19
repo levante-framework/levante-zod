@@ -805,13 +805,6 @@ const validateAddUsersFileUpload = (
     };
   }
 
-  parsedData.forEach((user) => {
-    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
-    if (userTypeField && typeof user[userTypeField] === 'string') {
-      user[userTypeField] = (user[userTypeField] as string).trim();
-    }
-  });
-
   const firstRow = parsedData[0];
   const headers = Object.keys(firstRow);
   const lowerCaseHeaders = headers.map((col) => col.toLowerCase());
