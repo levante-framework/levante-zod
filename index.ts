@@ -368,11 +368,27 @@ const parseCommaSeparated = (value: string | undefined): string[] => {
   return value.split(',').map(s => s.trim()).filter(s => s);
 };
 
+const csvFieldMap: Record<string, string> = {
+  id: 'id',
+  uid: 'uid',
+  usertype: 'usertype',
+  usertypeid: 'usertype',
+  month: 'month',
+  year: 'year',
+  caregiverid: 'caregiverId',
+  teacherid: 'teacherId',
+  parentid: 'parentId',
+  site: 'site',
+  cohort: 'cohort',
+  school: 'school',
+  class: 'class',
+};
+
 const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
-  Object.keys(data).forEach(key => {
+  Object.keys(data).forEach((key) => {
     const value = data[key];
-    const normalizedKey = key.toLowerCase();
+    const normalizedKey = csvFieldMap[key.toLowerCase()] ?? key;
     normalized[normalizedKey] = value === '' || value === null ? undefined : value;
   });
   return normalized;
