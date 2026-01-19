@@ -438,147 +438,140 @@ const CommaSeparatedSchema = z
   .union([z.string(), z.undefined()])
   .transform((value) => parseCommaSeparated(value));
 
-const AddUsersCsvSchema = z.object({
-  id: z.string().trim().optional(),
-  usertype: NormalizedUserTypeSchema,
-  month: MonthSchema,
-  year: YearSchema,
-  caregiverId: z.string().optional(),
-  teacherId: z.string().optional(),
-  site: z.string().optional(),
-  cohort: CommaSeparatedSchema,
-  school: CommaSeparatedSchema,
-  class: CommaSeparatedSchema,
-}).check(
-  z.superRefine((data, ctx) => {
-    if (data.usertype === 'child' && (!data.month || !data.year)) {
-      const isMissingMonth = !data.month;
-      const isMissingYear = !data.year;
+interface AddUserBirthdateInput {
+  userType: 'child' | 'parent' | 'teacher';
+  month?: number | undefined;
+  year?: number | undefined;
+}
 
-      if (isMissingMonth) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must have month and year',
-          path: ['month'],
+type AddUserBirthdateOutput = AddUserBirthdateInput & Record<string, unknown>;
+
+const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(schema: T) =>
+  schema.check(
+    z.superRefine((data: AddUserBirthdateOutput, ctx) => {
+      if (data.userType === 'child' && (!data.month || !data.year)) {
+        const isMissingMonth = !data.month;
+        const isMissingYear = !data.year;
+
+        if (isMissingMonth) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Child users must have month and year',
+            path: ['month'],
+          });
+        }
+        if (isMissingYear) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Child users must have month and year',
+            path: ['year'],
+          });
+        }
+      }
+
+      const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
+      if (data.userType === 'child' && ageErrorFields.length > 0) {
+        ageErrorFields.forEach((field) => {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Child users must be under 18 years old',
+            path: [field],
+          });
         });
       }
-      if (isMissingYear) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must have month and year',
-          path: ['year'],
-        });
-      }
-    }
+    })
+  );
 
-    const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
-    if (data.usertype === 'child' && ageErrorFields.length > 0) {
-      ageErrorFields.forEach((field) => {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must be under 18 years old',
-          path: [field],
-        });
-      });
-    }
+const AddUsersCsvSchema = addChildUserRules(
+  z
+    .object({
+      id: z.string().trim().optional(),
+      usertype: NormalizedUserTypeSchema,
+      month: MonthSchema,
+      year: YearSchema,
+      caregiverId: z.string().optional(),
+      teacherId: z.string().optional(),
+      site: z.string().optional(),
+      cohort: CommaSeparatedSchema,
+      school: CommaSeparatedSchema,
+      class: CommaSeparatedSchema,
+    })
+    .check(
+      z.superRefine((data, ctx) => {
+        const cohorts = data.cohort;
+        const schools = data.school;
+        const classes = data.class;
 
-    const cohorts = data.cohort;
-    const schools = data.school;
-    const classes = data.class;
+        if (cohorts.length === 0 && schools.length === 0) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Must have either cohort OR school. School required if class provided.',
+            path: ['cohort'],
+          });
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Must have either cohort OR school. School required if class provided.',
+            path: ['school'],
+          });
+        }
 
-    if (cohorts.length === 0 && schools.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have either cohort OR school. School required if class provided.',
-        path: ['cohort'],
-      });
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have either cohort OR school. School required if class provided.',
-        path: ['school'],
-      });
-    }
+        if (classes.length > 0 && schools.length === 0) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Must have either cohort OR school. School required if class provided.',
+            path: ['class'],
+          });
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Must have either cohort OR school. School required if class provided.',
+            path: ['school'],
+          });
+        }
+      })
+    )
+    .transform(({ usertype, ...rest }) => ({
+      ...rest,
+      userType: usertype,
+    }))
+);
 
-    if (classes.length > 0 && schools.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have either cohort OR school. School required if class provided.',
-        path: ['class'],
-      });
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have either cohort OR school. School required if class provided.',
-        path: ['school'],
-      });
-    }
+const AddUsersSubmitSchema = addChildUserRules(
+  z.object({
+    id: z.string().trim().optional(),
+    userType: NormalizedUserTypeSchema,
+    month: MonthSchema,
+    year: YearSchema,
+    caregiverId: z.string().optional(),
+    teacherId: z.string().optional(),
+    parentId: z.string().optional(),
+    orgIds: z
+      .object({
+        districts: z.array(z.string().min(1)).min(1, 'At least one district is required'),
+        groups: z.array(z.string().min(1)).optional(),
+        schools: z.array(z.string().min(1)).optional(),
+        classes: z.array(z.string().min(1)).optional(),
+      })
+      .refine((orgIds) => {
+        const hasGroups = orgIds.groups && orgIds.groups.length > 0;
+        const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+        return hasGroups || hasSchools;
+      }, {
+        message: 'Must have either groups OR schools in orgIds',
+        path: ['orgIds']
+      })
+      .refine((orgIds) => {
+        const hasClasses = orgIds.classes && orgIds.classes.length > 0;
+        const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+        if (hasClasses && !hasSchools) {
+          return false;
+        }
+        return true;
+      }, {
+        message: 'Schools required in orgIds if classes are provided',
+        path: ['orgIds']
+      }),
   })
-).passthrough();
-
-const AddUsersSubmitSchema = z.object({
-  id: z.string().trim().optional(),
-  userType: NormalizedUserTypeSchema,
-  month: MonthSchema,
-  year: YearSchema,
-  caregiverId: z.string().optional(),
-  teacherId: z.string().optional(),
-  parentId: z.string().optional(),
-  orgIds: z.object({
-    districts: z.array(z.string().min(1)).min(1, 'At least one district is required'),
-    groups: z.array(z.string().min(1)).optional(),
-    schools: z.array(z.string().min(1)).optional(),
-    classes: z.array(z.string().min(1)).optional(),
-  }).refine((orgIds) => {
-    const hasGroups = orgIds.groups && orgIds.groups.length > 0;
-    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
-    return hasGroups || hasSchools;
-  }, {
-    message: 'Must have either groups OR schools in orgIds',
-    path: ['orgIds']
-  }).refine((orgIds) => {
-    const hasClasses = orgIds.classes && orgIds.classes.length > 0;
-    const hasSchools = orgIds.schools && orgIds.schools.length > 0;
-    if (hasClasses && !hasSchools) {
-      return false;
-    }
-    return true;
-  }, {
-    message: 'Schools required in orgIds if classes are provided',
-    path: ['orgIds']
-  }),
-}).check(
-  z.superRefine((data, ctx) => {
-    if (data.userType === 'child' && (!data.month || !data.year)) {
-      const isMissingMonth = !data.month;
-      const isMissingYear = !data.year;
-
-      if (isMissingMonth) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must have month and year',
-          path: ['month'],
-        });
-      }
-      if (isMissingYear) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must have month and year',
-          path: ['year'],
-        });
-      }
-    }
-
-    const submitAgeErrorFields = getChildAgeErrorFields(data.month, data.year);
-    if (data.userType === 'child' && submitAgeErrorFields.length > 0) {
-      submitAgeErrorFields.forEach((field) => {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Child users must be under 18 years old',
-          path: [field],
-        });
-      });
-    }
-  })
-).passthrough();
+);
 
 const LinkUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
