@@ -1,4 +1,4 @@
-import { z, ZodIssueCode } from 'zod';
+import { z } from 'zod';
 
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
@@ -378,23 +378,19 @@ const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown
   return normalized;
 };
 
-const calculateAge = (birthMonth: number, birthYear: number): number => {
+const getChildAgeErrorFields = (month: string | undefined, year: string | undefined): Array<'month' | 'year'> => {
+  if (!month || !year) return [];
+  const birthMonth = parseInt(month);
+  const birthYear = parseInt(year);
+  if (isNaN(birthMonth) || isNaN(birthYear)) return [];
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1;
-  let age = currentYear - birthYear;
-  if (currentMonth < birthMonth) {
-    age--;
-  }
-  return age;
-};
+  const yearDiff = currentYear - birthYear;
 
-const validateChildAge = (month: string | undefined, year: string | undefined): boolean => {
-  if (!month || !year) return true;
-  const birthMonth = parseInt(month);
-  const birthYear = parseInt(year);
-  if (isNaN(birthMonth) || isNaN(birthYear)) return true;
-  return calculateAge(birthMonth, birthYear) < 18;
+  if (yearDiff > 18) return ['month', 'year'];
+  if (yearDiff < 18) return [];
+  return currentMonth >= birthMonth ? ['month'] : [];
 };
 
 const AddUsersCsvSchema = z.object({
@@ -402,20 +398,21 @@ const AddUsersCsvSchema = z.object({
   usertype: z.preprocess(
     (val) => {
       if (val === undefined || val === null || val === '') return '';
-      return typeof val === 'string' ? val.trim().toLowerCase() : String(val);
+      const normalized = typeof val === 'string' ? val.trim().toLowerCase() : String(val);
+      return normalized === 'caregiver' ? 'parent' : normalized;
     },
     z.string().superRefine((val, ctx) => {
       if (!val || val.trim() === '') {
         ctx.addIssue({
-          code: ZodIssueCode.custom,
+          code: 'custom',
           message: 'userType is required'
         });
         return;
       }
-      if (!['child', 'caregiver', 'teacher'].includes(val)) {
+      if (!['child', 'parent', 'teacher'].includes(val)) {
         ctx.addIssue({
-          code: ZodIssueCode.custom,
-          message: 'userType must be one of: child, caregiver, teacher'
+          code: 'custom',
+          message: 'userType must be one of: child, parent, teacher'
         });
       }
     })
@@ -435,38 +432,67 @@ const AddUsersCsvSchema = z.object({
   cohort: z.string().optional(),
   school: z.string().optional(),
   class: z.string().optional(),
-}).refine((data) => {
-  if (data.usertype === 'child') {
-    return data.month && data.year;
+}).superRefine((data, ctx) => {
+  if (data.usertype === 'child' && (!data.month || !data.year)) {
+    const isMissingMonth = !data.month;
+    const isMissingYear = !data.year;
+
+    if (isMissingMonth) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must have month and year',
+        path: ['month'],
+      });
+    }
+    if (isMissingYear) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must have month and year',
+        path: ['year'],
+      });
+    }
   }
-  return true;
-}, {
-  message: 'Child users must have month and year',
-  path: ['month', 'year']
-}).refine((data) => {
-  if (data.usertype === 'child') {
-    return validateChildAge(data.month, data.year);
+
+  const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
+  if (data.usertype === 'child' && ageErrorFields.length > 0) {
+    ageErrorFields.forEach((field) => {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must be under 18 years old',
+        path: [field],
+      });
+    });
   }
-  return true;
-}, {
-  message: 'Child users must be under 18 years old',
-  path: ['year', 'month']
-}).refine((data) => {
+
   const cohorts = parseCommaSeparated(data.cohort);
   const schools = parseCommaSeparated(data.school);
   const classes = parseCommaSeparated(data.class);
 
   if (cohorts.length === 0 && schools.length === 0) {
-    return false;
-  }
-  if (classes.length > 0 && schools.length === 0) {
-    return false;
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Must have either cohort OR school. School required if class provided.',
+      path: ['cohort'],
+    });
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Must have either cohort OR school. School required if class provided.',
+      path: ['school'],
+    });
   }
 
-  return true;
-}, {
-  message: 'Must have either cohort OR school. School required if class provided.',
-  path: ['cohort', 'school', 'class']
+  if (classes.length > 0 && schools.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Must have either cohort OR school. School required if class provided.',
+      path: ['class'],
+    });
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Must have either cohort OR school. School required if class provided.',
+      path: ['school'],
+    });
+  }
 }).passthrough();
 
 const AddUsersSubmitSchema = z.object({
@@ -502,22 +528,37 @@ const AddUsersSubmitSchema = z.object({
     message: 'Schools required in orgIds if classes are provided',
     path: ['orgIds']
   }),
-}).refine((data) => {
-  if (data.userType === 'child') {
-    return data.month && data.year;
+}).superRefine((data, ctx) => {
+  if (data.userType === 'child' && (!data.month || !data.year)) {
+    const isMissingMonth = !data.month;
+    const isMissingYear = !data.year;
+
+    if (isMissingMonth) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must have month and year',
+        path: ['month'],
+      });
+    }
+    if (isMissingYear) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must have month and year',
+        path: ['year'],
+      });
+    }
   }
-  return true;
-}, {
-  message: 'Child users must have month and year',
-  path: ['month', 'year']
-}).refine((data) => {
-  if (data.userType === 'child') {
-    return validateChildAge(data.month, data.year);
+
+  const submitAgeErrorFields = getChildAgeErrorFields(data.month, data.year);
+  if (data.userType === 'child' && submitAgeErrorFields.length > 0) {
+    submitAgeErrorFields.forEach((field) => {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Child users must be under 18 years old',
+        path: [field],
+      });
+    });
   }
-  return true;
-}, {
-  message: 'Child users must be under 18 years old',
-  path: ['year', 'month']
 }).refine((data) => {
   if (data.month) {
     const month = parseInt(data.month);
@@ -546,11 +587,12 @@ const LinkUsersCsvSchema = z.object({
   userType: z.preprocess(
     (val) => {
       if (val === undefined || val === null || val === '') return undefined;
-      return typeof val === 'string' ? val.trim().toLowerCase() : val;
+      const normalized = typeof val === 'string' ? val.trim().toLowerCase() : String(val);
+      return normalized === 'caregiver' ? 'parent' : normalized;
     },
     z.string().min(1, 'userType is required').pipe(
-      z.enum(['child', 'caregiver', 'teacher'], {
-        message: 'userType must be one of: child, caregiver, teacher'
+      z.enum(['child', 'parent', 'teacher'], {
+        message: 'userType must be one of: child, parent, teacher'
       })
     )
   ),
@@ -564,6 +606,77 @@ const CsvHeadersSchema = z.object({
   requiredHeaders: z.array(z.string()),
   optionalHeaders: z.array(z.string()).optional(),
 });
+
+const formatIssueFields = (fields: string[]): string => {
+  const uniqueFields = Array.from(new Set(fields));
+  const hasMonth = uniqueFields.includes('month');
+  const hasYear = uniqueFields.includes('year');
+  const remainingFields = uniqueFields.filter(field => field !== 'month' && field !== 'year');
+
+  if (hasMonth && hasYear) {
+    remainingFields.unshift('month and year');
+  } else if (hasMonth) {
+    remainingFields.unshift('month');
+  } else if (hasYear) {
+    remainingFields.unshift('year');
+  }
+
+  return remainingFields.join(', ');
+};
+
+const combineIssues = (issues: z.ZodIssue[]): Array<{ field: string; message: string }> => {
+  const grouped = new Map<string, { fields: Set<string>; order: number }>();
+
+  issues.forEach((issue, index) => {
+    const message = issue.message ?? 'Invalid input';
+    if (message.trim() === '') return;
+    const field = issue.path.join('.');
+
+    if (!grouped.has(message)) {
+      grouped.set(message, { fields: new Set(), order: index });
+    }
+
+    if (field) {
+      grouped.get(message)!.fields.add(field);
+    }
+  });
+
+  return Array.from(grouped.entries())
+    .sort((a, b) => a[1].order - b[1].order)
+    .map(([message, data]) => ({
+      field: formatIssueFields(Array.from(data.fields)),
+      message,
+    }));
+};
+
+const normalizeFieldLabel = (field: string): string => {
+  if (field === 'usertype') return 'userType';
+  return field;
+};
+
+const combineFieldErrors = (errors: Array<{ field: string; message: string }>): string[] => {
+  const grouped = new Map<string, { fields: Set<string>; order: number }>();
+
+  errors.forEach((error, index) => {
+    const message = error.message ?? 'Invalid input';
+    if (message.trim() === '') return;
+
+    if (!grouped.has(message)) {
+      grouped.set(message, { fields: new Set(), order: index });
+    }
+
+    if (error.field) {
+      grouped.get(message)!.fields.add(normalizeFieldLabel(error.field));
+    }
+  });
+
+  return Array.from(grouped.entries())
+    .sort((a, b) => a[1].order - b[1].order)
+    .map(([message, data]) => {
+      const field = formatIssueFields(Array.from(data.fields));
+      return field ? `${field}: ${message}` : message;
+    });
+};
 
 const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   success: boolean;
@@ -583,13 +696,12 @@ const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
     if (result.success) {
       results.push(result.data);
     } else {
-      result.error.issues.forEach(issue => {
-        const fieldPath = issue.path.join('.');
-        const message = issue.message || 'Invalid input';
+      const combinedIssues = combineIssues(result.error.issues);
+      combinedIssues.forEach(issue => {
         errors.push({
           row: index + 1,
-          field: fieldPath,
-          message: message
+          field: issue.field,
+          message: issue.message
         });
       });
     }
@@ -623,10 +735,7 @@ const validateAddUsersSubmit = (data: unknown): {
     };
   }
 
-  const errors = result.error.issues.map(issue => ({
-    field: issue.path.join('.'),
-    message: issue.message,
-  }));
+  const errors = combineIssues(result.error.issues);
 
   return {
     success: false,
@@ -772,7 +881,7 @@ const validateAddUsersFileUpload = (
   const errors: Array<{ user: Record<string, unknown>; error: string }> = [];
 
   if (!validation.success) {
-    const errorsByUser = new Map<Record<string, unknown>, string[]>();
+    const errorsByUser = new Map<Record<string, unknown>, Array<{ field: string; message: string }>>();
     validation.errors.forEach((error) => {
       const userIndex = error.row - 1;
       if (userIndex >= 0 && userIndex < usersToValidate.length) {
@@ -781,13 +890,11 @@ const validateAddUsersFileUpload = (
         if (!errorsByUser.has(user)) {
           errorsByUser.set(user, []);
         }
-        // Only show field name if it's a single field, not a multi-field path like "year.month"
-        const hasMultipleFields = error.field.includes('.');
-        const errorMessage = hasMultipleFields ? error.message : `${error.field === 'usertype' ? 'userType' : error.field}: ${error.message}`;
-        errorsByUser.get(user)!.push(errorMessage);
+        errorsByUser.get(user)!.push({ field: error.field, message: error.message });
       }
     });
-    errorsByUser.forEach((errorMessages, user) => {
+    errorsByUser.forEach((userErrors, user) => {
+      const errorMessages = combineFieldErrors(userErrors);
       errors.push({
         user,
         error: errorMessages.join('; '),
