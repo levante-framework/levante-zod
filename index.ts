@@ -401,21 +401,23 @@ const AddUsersCsvSchema = z.object({
       const normalized = typeof val === 'string' ? val.trim().toLowerCase() : String(val);
       return normalized === 'caregiver' ? 'parent' : normalized;
     },
-    z.string().superRefine((val, ctx) => {
-      if (!val || val.trim() === '') {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'userType is required'
-        });
-        return;
-      }
-      if (!['child', 'parent', 'teacher'].includes(val)) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'userType must be one of: child, parent, teacher'
-        });
-      }
-    })
+    z.string().check(
+      z.superRefine((val, ctx) => {
+        if (!val || val.trim() === '') {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'userType is required'
+          });
+          return;
+        }
+        if (!['child', 'parent', 'teacher'].includes(val)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'userType must be one of: child, parent, teacher'
+          });
+        }
+      })
+    )
   ),
   month: z.string().optional().refine((val) => {
     if (!val) return true;
@@ -432,68 +434,70 @@ const AddUsersCsvSchema = z.object({
   cohort: z.string().optional(),
   school: z.string().optional(),
   class: z.string().optional(),
-}).superRefine((data, ctx) => {
-  if (data.usertype === 'child' && (!data.month || !data.year)) {
-    const isMissingMonth = !data.month;
-    const isMissingYear = !data.year;
+}).check(
+  z.superRefine((data, ctx) => {
+    if (data.usertype === 'child' && (!data.month || !data.year)) {
+      const isMissingMonth = !data.month;
+      const isMissingYear = !data.year;
 
-    if (isMissingMonth) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Child users must have month and year',
-        path: ['month'],
+      if (isMissingMonth) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['month'],
+        });
+      }
+      if (isMissingYear) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['year'],
+        });
+      }
+    }
+
+    const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
+    if (data.usertype === 'child' && ageErrorFields.length > 0) {
+      ageErrorFields.forEach((field) => {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must be under 18 years old',
+          path: [field],
+        });
       });
     }
-    if (isMissingYear) {
+
+    const cohorts = parseCommaSeparated(data.cohort);
+    const schools = parseCommaSeparated(data.school);
+    const classes = parseCommaSeparated(data.class);
+
+    if (cohorts.length === 0 && schools.length === 0) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Child users must have month and year',
-        path: ['year'],
+        message: 'Must have either cohort OR school. School required if class provided.',
+        path: ['cohort'],
+      });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must have either cohort OR school. School required if class provided.',
+        path: ['school'],
       });
     }
-  }
 
-  const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
-  if (data.usertype === 'child' && ageErrorFields.length > 0) {
-    ageErrorFields.forEach((field) => {
+    if (classes.length > 0 && schools.length === 0) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Child users must be under 18 years old',
-        path: [field],
+        message: 'Must have either cohort OR school. School required if class provided.',
+        path: ['class'],
       });
-    });
-  }
-
-  const cohorts = parseCommaSeparated(data.cohort);
-  const schools = parseCommaSeparated(data.school);
-  const classes = parseCommaSeparated(data.class);
-
-  if (cohorts.length === 0 && schools.length === 0) {
-    ctx.addIssue({
-      code: 'custom',
-      message: 'Must have either cohort OR school. School required if class provided.',
-      path: ['cohort'],
-    });
-    ctx.addIssue({
-      code: 'custom',
-      message: 'Must have either cohort OR school. School required if class provided.',
-      path: ['school'],
-    });
-  }
-
-  if (classes.length > 0 && schools.length === 0) {
-    ctx.addIssue({
-      code: 'custom',
-      message: 'Must have either cohort OR school. School required if class provided.',
-      path: ['class'],
-    });
-    ctx.addIssue({
-      code: 'custom',
-      message: 'Must have either cohort OR school. School required if class provided.',
-      path: ['school'],
-    });
-  }
-}).passthrough();
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must have either cohort OR school. School required if class provided.',
+        path: ['school'],
+      });
+    }
+  })
+).passthrough();
 
 const AddUsersSubmitSchema = z.object({
   id: z.string().trim().optional(),
@@ -528,38 +532,40 @@ const AddUsersSubmitSchema = z.object({
     message: 'Schools required in orgIds if classes are provided',
     path: ['orgIds']
   }),
-}).superRefine((data, ctx) => {
-  if (data.userType === 'child' && (!data.month || !data.year)) {
-    const isMissingMonth = !data.month;
-    const isMissingYear = !data.year;
+}).check(
+  z.superRefine((data, ctx) => {
+    if (data.userType === 'child' && (!data.month || !data.year)) {
+      const isMissingMonth = !data.month;
+      const isMissingYear = !data.year;
 
-    if (isMissingMonth) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Child users must have month and year',
-        path: ['month'],
+      if (isMissingMonth) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['month'],
+        });
+      }
+      if (isMissingYear) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['year'],
+        });
+      }
+    }
+
+    const submitAgeErrorFields = getChildAgeErrorFields(data.month, data.year);
+    if (data.userType === 'child' && submitAgeErrorFields.length > 0) {
+      submitAgeErrorFields.forEach((field) => {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must be under 18 years old',
+          path: [field],
+        });
       });
     }
-    if (isMissingYear) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Child users must have month and year',
-        path: ['year'],
-      });
-    }
-  }
-
-  const submitAgeErrorFields = getChildAgeErrorFields(data.month, data.year);
-  if (data.userType === 'child' && submitAgeErrorFields.length > 0) {
-    submitAgeErrorFields.forEach((field) => {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Child users must be under 18 years old',
-        path: [field],
-      });
-    });
-  }
-}).refine((data) => {
+  })
+).refine((data) => {
   if (data.month) {
     const month = parseInt(data.month);
     if (isNaN(month) || month < 1 || month > 12) {
