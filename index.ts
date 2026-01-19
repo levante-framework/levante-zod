@@ -378,11 +378,10 @@ const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown
   return normalized;
 };
 
-const getChildAgeErrorFields = (month: string | undefined, year: string | undefined): Array<'month' | 'year'> => {
+const getChildAgeErrorFields = (month: number | undefined, year: number | undefined): Array<'month' | 'year'> => {
   if (!month || !year) return [];
-  const birthMonth = parseInt(month);
-  const birthYear = parseInt(year);
-  if (isNaN(birthMonth) || isNaN(birthYear)) return [];
+  const birthMonth = month;
+  const birthYear = year;
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1;
@@ -393,47 +392,63 @@ const getChildAgeErrorFields = (month: string | undefined, year: string | undefi
   return currentMonth >= birthMonth ? ['month'] : [];
 };
 
+const NormalizedUserTypeSchema = z
+  .string()
+  .trim()
+  .min(1, 'userType is required')
+  .transform((value) => value.toLowerCase())
+  .transform((value) => (value === 'caregiver' ? 'parent' : value))
+  .pipe(
+    z.enum(['child', 'parent', 'teacher'], {
+      message: 'userType must be one of: child, parent, teacher'
+    })
+  );
+
+const MonthSchema = z
+  .union([z.string(), z.number(), z.undefined()])
+  .transform((value) => {
+    if (value === undefined || value === '') return undefined;
+    return typeof value === 'number' ? value : Number(value);
+  })
+  .pipe(
+    z
+      .number()
+      .int()
+      .min(1, 'Month must be between 1 and 12')
+      .max(12, 'Month must be between 1 and 12')
+      .optional()
+  );
+
+const YearSchema = z
+  .union([z.string(), z.number(), z.undefined()])
+  .transform((value) => {
+    if (value === undefined || value === '') return undefined;
+    return typeof value === 'number' ? value : Number(value);
+  })
+  .pipe(
+    z
+      .number()
+      .int()
+      .min(1000, 'Year must be a four-digit number')
+      .max(9999, 'Year must be a four-digit number')
+      .optional()
+  );
+
+const CommaSeparatedSchema = z
+  .union([z.string(), z.undefined()])
+  .transform((value) => parseCommaSeparated(value));
+
 const AddUsersCsvSchema = z.object({
   id: z.string().trim().optional(),
-  usertype: z.preprocess(
-    (val) => {
-      if (val === undefined || val === null || val === '') return '';
-      const normalized = typeof val === 'string' ? val.trim().toLowerCase() : String(val);
-      return normalized === 'caregiver' ? 'parent' : normalized;
-    },
-    z.string().check(
-      z.superRefine((val, ctx) => {
-        if (!val || val.trim() === '') {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'userType is required'
-          });
-          return;
-        }
-        if (!['child', 'parent', 'teacher'].includes(val)) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'userType must be one of: child, parent, teacher'
-          });
-        }
-      })
-    )
-  ),
-  month: z.string().optional().refine((val) => {
-    if (!val) return true;
-    const month = parseInt(val);
-    return month >= 1 && month <= 12;
-  }, 'Month must be between 1 and 12'),
-  year: z.string().optional().refine((val) => {
-    if (!val) return true;
-    return /^\d{4}$/.test(val);
-  }, 'Year must be a four-digit number'),
+  usertype: NormalizedUserTypeSchema,
+  month: MonthSchema,
+  year: YearSchema,
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
   site: z.string().optional(),
-  cohort: z.string().optional(),
-  school: z.string().optional(),
-  class: z.string().optional(),
+  cohort: CommaSeparatedSchema,
+  school: CommaSeparatedSchema,
+  class: CommaSeparatedSchema,
 }).check(
   z.superRefine((data, ctx) => {
     if (data.usertype === 'child' && (!data.month || !data.year)) {
@@ -467,9 +482,9 @@ const AddUsersCsvSchema = z.object({
       });
     }
 
-    const cohorts = parseCommaSeparated(data.cohort);
-    const schools = parseCommaSeparated(data.school);
-    const classes = parseCommaSeparated(data.class);
+    const cohorts = data.cohort;
+    const schools = data.school;
+    const classes = data.class;
 
     if (cohorts.length === 0 && schools.length === 0) {
       ctx.addIssue({
@@ -501,11 +516,9 @@ const AddUsersCsvSchema = z.object({
 
 const AddUsersSubmitSchema = z.object({
   id: z.string().trim().optional(),
-  userType: z.enum(['child', 'parent', 'teacher'], {
-    message: 'userType must be one of: child, parent, teacher'
-  }),
-  month: z.string().optional(),
-  year: z.string().optional(),
+  userType: NormalizedUserTypeSchema,
+  month: MonthSchema,
+  year: YearSchema,
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
   parentId: z.string().optional(),
@@ -565,43 +578,11 @@ const AddUsersSubmitSchema = z.object({
       });
     }
   })
-).refine((data) => {
-  if (data.month) {
-    const month = parseInt(data.month);
-    if (isNaN(month) || month < 1 || month > 12) {
-      return false;
-    }
-  }
-  return true;
-}, {
-  message: 'Month must be between 1 and 12',
-  path: ['month']
-}).refine((data) => {
-  if (data.year) {
-    if (!/^\d{4}$/.test(data.year)) {
-      return false;
-    }
-  }
-  return true;
-}, {
-  message: 'Year must be a four-digit number',
-  path: ['year']
-}).passthrough();
+).passthrough();
 
 const LinkUsersCsvSchema = z.object({
   id: z.string().min(1, 'ID is required').trim(),
-  userType: z.preprocess(
-    (val) => {
-      if (val === undefined || val === null || val === '') return undefined;
-      const normalized = typeof val === 'string' ? val.trim().toLowerCase() : String(val);
-      return normalized === 'caregiver' ? 'parent' : normalized;
-    },
-    z.string().min(1, 'userType is required').pipe(
-      z.enum(['child', 'parent', 'teacher'], {
-        message: 'userType must be one of: child, parent, teacher'
-      })
-    )
-  ),
+  userType: NormalizedUserTypeSchema,
   uid: z.string().min(1, 'UID is required').trim(),
   caregiverId: z.string().optional(),
   teacherId: z.string().optional(),
