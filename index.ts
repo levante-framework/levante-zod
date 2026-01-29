@@ -183,6 +183,8 @@ const CreateClassSchema = ClassSchema.pick({
   schoolId: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for documents in the `districts` collection
@@ -206,6 +208,8 @@ const CreateDistrictSchema = DistrictSchema.pick({
   subGroups: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for documents in the `groups` collection
@@ -230,6 +234,8 @@ const CreateGroupSchema = GroupSchema.pick({
   parentOrgType: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Tracks versions of legal documents using GitHub as a reference point.
@@ -273,6 +279,8 @@ const CreateSchoolSchema = SchoolSchema.pick({
   districtId: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 // Interface for the stats subcollection of `administrations`
@@ -361,6 +369,8 @@ const CreateOrgSchema = OrgSchema.pick({
   tags: true,
   type: true,
   createdBy: true,
+}).extend({
+  siteId: z.string().optional(),
 });
 
 const parseCommaSeparated = (value: string | undefined): string[] => {
@@ -971,11 +981,17 @@ export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
 export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
-export type AssessmentConditionRuleType = z.infer<typeof AssessmentConditionRuleSchema>;
-export type AssessmentConditionsType = z.infer<typeof AssessmentConditionsSchema>;
+export type AssessmentConditionRuleType = z.infer<
+  typeof AssessmentConditionRuleSchema
+>;
+export type AssessmentConditionsType = z.infer<
+  typeof AssessmentConditionsSchema
+>;
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
-export type AssignmentAssessmentType = z.infer<typeof AssignmentAssessmentSchema>;
+export type AssignmentAssessmentType = z.infer<
+  typeof AssignmentAssessmentSchema
+>;
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
 export type ClassType = z.infer<typeof ClassSchema>;
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
