@@ -517,8 +517,8 @@ const NormalizedUserTypeSchema = z
   .transform((value) => (value === 'caregiver' ? 'parent' : value))
   .pipe(
     z.enum(['child', 'parent', 'teacher'], {
-      message: 'userType must be one of: child, parent, teacher'
-    })
+      message: 'userType must be one of: child, caregiver, teacher',
+    }),
   );
 
 const MonthSchema = z
@@ -969,12 +969,12 @@ const validateAddUsersFileUpload = (
     };
   }
 
-  const usersToValidate = parsedData.filter((user) => {
+  const usersWithoutId = parsedData.filter((user) => {
     const idField = Object.keys(user).find((key) => key.toLowerCase() === 'id');
     return !idField || !user[idField];
   });
 
-  const validation = validateAddUsersCsv(usersToValidate);
+  const validation = validateAddUsersCsv(parsedData);
   const siteInfo = detectMultipleSites(parsedData);
 
   const usersWithZodErrors = new Set<Record<string, unknown>>();
@@ -984,8 +984,8 @@ const validateAddUsersFileUpload = (
     const errorsByUser = new Map<Record<string, unknown>, Array<{ field: string; message: string }>>();
     validation.errors.forEach((error) => {
       const userIndex = error.row - 1;
-      if (userIndex >= 0 && userIndex < usersToValidate.length) {
-        const user = usersToValidate[userIndex];
+      if (userIndex >= 0 && userIndex < parsedData.length) {
+        const user = parsedData[userIndex];
         usersWithZodErrors.add(user);
         if (!errorsByUser.has(user)) {
           errorsByUser.set(user, []);
@@ -1003,7 +1003,7 @@ const validateAddUsersFileUpload = (
   }
 
   if (!shouldUsePermissions) {
-    usersToValidate.forEach((user) => {
+    usersWithoutId.forEach((user) => {
       if (usersWithZodErrors.has(user)) return;
 
       const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
