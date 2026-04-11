@@ -18,7 +18,8 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "publish": "npm run build && npm publish --access public"
   },
   "keywords": [],
@@ -27,7 +28,8 @@
   "description": "",
   "devDependencies": {
     "@types/node": "^24.0.14",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "h3-js": "^4.4.0",
