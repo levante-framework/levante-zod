@@ -65,7 +65,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump version and tag
-        run: npm version ${{ inputs.release-type }} --message "chore: release v%s [skip ci]"
+        env:
+          RELEASE_TYPE: ${{ inputs.release-type }}
+        run: npm version $RELEASE_TYPE --message "chore: release v%s [skip ci]"
 
       - name: Push commit and tag
         if: ${{ !inputs.dry-run }}
