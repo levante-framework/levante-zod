@@ -10,6 +10,7 @@
       "import": "./dist/index.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist"
   ],
@@ -21,10 +22,20 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "levante"
+  ],
+  "author": "levante-framework",
+  "license": "MIT",
+  "description": "Data validation schemas for the LEVANTE platform",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levante-framework/levante-zod.git"
+  },
+  "homepage": "https://github.com/levante-framework/levante-zod#readme",
+  "bugs": {
+    "url": "https://github.com/levante-framework/levante-zod/issues"
+  },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.2",
     "@biomejs/biome": "2.4.11",
@@ -36,5 +47,8 @@
   "dependencies": {
     "h3-js": "^4.4.0",
     "zod": "^4.0.5"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
