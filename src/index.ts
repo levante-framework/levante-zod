@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { cellToLatLng, getResolution } from 'h3-js';
+import { normalizeCsvData, normalizeCsvHeaders, validateCsvData, validateCsvHeaders } from './csv';
+import { combineIssues, formatIssueFields } from './issues';
 
 // Type alias for Firestore Timestamp
 const TimestampSchema = z.iso.datetime();
@@ -469,32 +471,6 @@ const parseCommaSeparated = (value: string | undefined): string[] => {
   return value.split(',').map(s => s.trim()).filter(s => s);
 };
 
-const csvFieldMap: Record<string, string> = {
-  id: 'id',
-  uid: 'uid',
-  usertype: 'usertype',
-  usertypeid: 'usertype',
-  month: 'month',
-  year: 'year',
-  caregiverid: 'caregiverId',
-  teacherid: 'teacherId',
-  parentid: 'parentId',
-  site: 'site',
-  cohort: 'cohort',
-  school: 'school',
-  class: 'class',
-};
-
-const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
-  const normalized: Record<string, unknown> = {};
-  Object.keys(data).forEach((key) => {
-    const value = data[key];
-    const normalizedKey = csvFieldMap[key.toLowerCase()] ?? key;
-    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
-  });
-  return normalized;
-};
-
 const getChildAgeErrorFields = (month: number | undefined, year: number | undefined): Array<'month' | 'year'> => {
   if (!month || !year) return [];
   const birthMonth = month;
@@ -709,48 +685,6 @@ const CsvHeadersSchema = z.object({
   optionalHeaders: z.array(z.string()).optional(),
 });
 
-const formatIssueFields = (fields: string[]): string => {
-  const uniqueFields = Array.from(new Set(fields));
-  const hasMonth = uniqueFields.includes('month');
-  const hasYear = uniqueFields.includes('year');
-  const remainingFields = uniqueFields.filter(field => field !== 'month' && field !== 'year');
-
-  if (hasMonth && hasYear) {
-    remainingFields.unshift('month and year');
-  } else if (hasMonth) {
-    remainingFields.unshift('month');
-  } else if (hasYear) {
-    remainingFields.unshift('year');
-  }
-
-  return remainingFields.join(', ');
-};
-
-const combineIssues = (issues: z.ZodIssue[]): Array<{ field: string; message: string }> => {
-  const grouped = new Map<string, { fields: Set<string>; order: number }>();
-
-  issues.forEach((issue, index) => {
-    const message = issue.message ?? 'Invalid input';
-    if (message.trim() === '') return;
-    const field = issue.path.join('.');
-
-    if (!grouped.has(message)) {
-      grouped.set(message, { fields: new Set(), order: index });
-    }
-
-    if (field) {
-      grouped.get(message)!.fields.add(field);
-    }
-  });
-
-  return Array.from(grouped.entries())
-    .sort((a, b) => a[1].order - b[1].order)
-    .map(([message, data]) => ({
-      field: formatIssueFields(Array.from(data.fields)),
-      message,
-    }));
-};
-
 const normalizeFieldLabel = (field: string): string => {
   if (field === 'usertype') return 'userType';
   return field;
@@ -780,42 +714,6 @@ const combineFieldErrors = (errors: Array<{ field: string; message: string }>): 
     });
 };
 
-const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
-  success: boolean;
-  data: T[];
-  errors: Array<{
-    row: number;
-    field: string;
-    message: string;
-  }>;
-} => {
-  const results: T[] = [];
-  const errors: Array<{ row: number; field: string; message: string }> = [];
-
-  data.forEach((row, index) => {
-    const normalizedRow = normalizeCsvData(row as Record<string, unknown>);
-    const result = schema.safeParse(normalizedRow);
-    if (result.success) {
-      results.push(result.data);
-    } else {
-      const combinedIssues = combineIssues(result.error.issues);
-      combinedIssues.forEach(issue => {
-        errors.push({
-          row: index + 1,
-          field: issue.field,
-          message: issue.message
-        });
-      });
-    }
-  });
-
-  return {
-    success: errors.length === 0,
-    errors: errors,
-    data: results,
-  };
-};
-
 const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
 const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
 
@@ -842,37 +740,6 @@ const validateAddUsersSubmit = (data: unknown): {
   return {
     success: false,
     errors,
-  };
-};
-
-const normalizeCsvHeaders = (headers: string[]): string[] => {
-  return headers.map(header => header.toLowerCase().trim());
-};
-
-const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
-  success: boolean;
-  errors: Array<{
-    field: string;
-    message: string;
-  }>;
-  data: string[];
-} => {
-  const normalizedHeaders = normalizeCsvHeaders(headers);
-  const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
-
-  const missingHeaders = normalizedRequired.filter(
-    required => !normalizedHeaders.includes(required)
-  );
-
-  const errors = missingHeaders.map(header => ({
-    field: header,
-    message: `Missing required header: ${header}`
-  }));
-
-  return {
-    success: missingHeaders.length === 0,
-    errors: errors,
-    data: normalizedHeaders,
   };
 };
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { normalizeCsvData, normalizeCsvHeaders, validateCsvData, validateCsvHeaders } from '../index';
+import { normalizeCsvData, normalizeCsvHeaders, validateCsvData, validateCsvHeaders } from '../src/csv';
 
 describe('normalizeCsvData', () => {
   it('should map alias keys to their canonical field names', () => {
