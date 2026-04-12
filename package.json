@@ -1,40 +1,41 @@
 {
   "name": "@levante-framework/levante-zod",
   "version": "1.0.9",
+  "description": "Data validation schemas for the LEVANTE platform",
+  "license": "MIT",
+  "author": "levante-framework",
+  "homepage": "https://github.com/levante-framework/levante-zod#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levante-framework/levante-zod.git"
+  },
+  "bugs": {
+    "url": "https://github.com/levante-framework/levante-zod/issues"
+  },
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "sideEffects": false,
+  "main": "dist/index.js",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
     "check": "biome check",
     "check:fix": "biome check --write",
+    "dev": "tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": [
-    "levante"
-  ],
-  "author": "levante-framework",
-  "license": "MIT",
-  "description": "Data validation schemas for the LEVANTE platform",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/levante-framework/levante-zod.git"
-  },
-  "homepage": "https://github.com/levante-framework/levante-zod#readme",
-  "bugs": {
-    "url": "https://github.com/levante-framework/levante-zod/issues"
+  "sideEffects": false,
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "h3-js": "^4.4.0",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.2",
@@ -44,10 +45,9 @@
     "typescript": "^5.8.3",
     "vitest": "^4.1.4"
   },
-  "dependencies": {
-    "h3-js": "^4.4.0",
-    "zod": "^4.0.5"
-  },
+  "keywords": [
+    "levante"
+  ],
   "engines": {
     "node": ">=24"
   }
