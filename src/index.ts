@@ -1,6 +1,11 @@
-import { z } from 'zod';
 import { cellToLatLng, getResolution } from 'h3-js';
-import { normalizeCsvData, normalizeCsvHeaders, validateCsvData, validateCsvHeaders } from './csv';
+import { z } from 'zod';
+import {
+  normalizeCsvData,
+  normalizeCsvHeaders,
+  validateCsvData,
+  validateCsvHeaders,
+} from './csv';
 import { combineIssues, formatIssueFields } from './issues';
 
 // Type alias for Firestore Timestamp
@@ -13,88 +18,98 @@ const H3CellSchema = z.object({
   resolution: z.number().int().min(0).max(15),
 });
 
-const LocationSchema = z.object({
-  schemaVersion: z.literal('location_v1'),
-  latLon: z.object({
-    lat: z.number().min(-90).max(90),
-    lon: z.number().min(-180).max(180),
-    source: LatLonSourceSchema,
-    blurRadiusMeters: z.number().positive().optional(),
-  }).optional(),
-  h3: z.object({
-    scheme: z.literal('h3_v1'),
-    baseline: H3CellSchema,
-    effective: H3CellSchema,
-    populationThreshold: z.number().int().positive(),
-  }),
-  populationSource: z.enum(['kontur', 'worldpop', 'unknown']).optional(),
-  computedAt: z.iso.datetime().optional(),
-}).check(z.superRefine((value, ctx) => {
-  try {
-    const baselineResolution = getResolution(value.h3.baseline.cellId);
-    if (baselineResolution !== value.h3.baseline.resolution) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['h3', 'baseline', 'resolution'],
-        message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
-      });
-    }
-  } catch {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['h3', 'baseline', 'cellId'],
-      message: 'Invalid baseline H3 cellId',
-    });
-  }
+const LocationSchema = z
+  .object({
+    schemaVersion: z.literal('location_v1'),
+    latLon: z
+      .object({
+        lat: z.number().min(-90).max(90),
+        lon: z.number().min(-180).max(180),
+        source: LatLonSourceSchema,
+        blurRadiusMeters: z.number().positive().optional(),
+      })
+      .optional(),
+    h3: z.object({
+      scheme: z.literal('h3_v1'),
+      baseline: H3CellSchema,
+      effective: H3CellSchema,
+      populationThreshold: z.number().int().positive(),
+    }),
+    populationSource: z.enum(['kontur', 'worldpop', 'unknown']).optional(),
+    computedAt: z.iso.datetime().optional(),
+  })
+  .check(
+    z.superRefine((value, ctx) => {
+      try {
+        const baselineResolution = getResolution(value.h3.baseline.cellId);
+        if (baselineResolution !== value.h3.baseline.resolution) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['h3', 'baseline', 'resolution'],
+            message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
+          });
+        }
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['h3', 'baseline', 'cellId'],
+          message: 'Invalid baseline H3 cellId',
+        });
+      }
 
-  try {
-    const effectiveResolution = getResolution(value.h3.effective.cellId);
-    if (effectiveResolution !== value.h3.effective.resolution) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['h3', 'effective', 'resolution'],
-        message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
-      });
-    }
-  } catch {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['h3', 'effective', 'cellId'],
-      message: 'Invalid effective H3 cellId',
-    });
-  }
+      try {
+        const effectiveResolution = getResolution(value.h3.effective.cellId);
+        if (effectiveResolution !== value.h3.effective.resolution) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['h3', 'effective', 'resolution'],
+            message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
+          });
+        }
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['h3', 'effective', 'cellId'],
+          message: 'Invalid effective H3 cellId',
+        });
+      }
 
-  if (value.h3.effective.resolution < value.h3.baseline.resolution) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['h3', 'effective', 'resolution'],
-      message: 'effective.resolution must be >= baseline.resolution',
-    });
-  }
+      if (value.h3.effective.resolution < value.h3.baseline.resolution) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['h3', 'effective', 'resolution'],
+          message: 'effective.resolution must be >= baseline.resolution',
+        });
+      }
 
-  if (value.latLon?.source === 'approximate' && !value.latLon.blurRadiusMeters) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['latLon', 'blurRadiusMeters'],
-      message: 'blurRadiusMeters is required when source is approximate',
-    });
-  }
+      if (
+        value.latLon?.source === 'approximate' &&
+        !value.latLon.blurRadiusMeters
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['latLon', 'blurRadiusMeters'],
+          message: 'blurRadiusMeters is required when source is approximate',
+        });
+      }
 
-  if (value.latLon?.source === 'h3_center') {
-    const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
-    const epsilon = 1e-6;
-    if (
-      Math.abs(value.latLon.lat - centerLat) > epsilon ||
-      Math.abs(value.latLon.lon - centerLon) > epsilon
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['latLon'],
-        message: 'latLon must match effective H3 center when source is h3_center',
-      });
-    }
-  }
-}));
+      if (value.latLon?.source === 'h3_center') {
+        const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
+        const epsilon = 1e-6;
+        if (
+          Math.abs(value.latLon.lat - centerLat) > epsilon ||
+          Math.abs(value.latLon.lon - centerLon) > epsilon
+        ) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['latLon'],
+            message:
+              'latLon must match effective H3 center when source is h3_center',
+          });
+        }
+      }
+    }),
+  );
 
 // Generic structure for organization references used in multiple places
 const OrgRefMapSchema = z.object({
@@ -217,7 +232,7 @@ const AssignmentAssessmentSchema = z.object({
         variantId: z.string(),
         variantName: z.string(),
       })
-      .and(z.record(z.string(), z.unknown()))
+      .and(z.record(z.string(), z.unknown())),
   ),
   optional: z.boolean(),
   params: z.object({
@@ -468,10 +483,16 @@ const CreateOrgSchema = OrgSchema.pick({
 
 const parseCommaSeparated = (value: string | undefined): string[] => {
   if (!value) return [];
-  return value.split(',').map(s => s.trim()).filter(s => s);
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s);
 };
 
-const getChildAgeErrorFields = (month: number | undefined, year: number | undefined): Array<'month' | 'year'> => {
+const getChildAgeErrorFields = (
+  month: number | undefined,
+  year: number | undefined,
+): Array<'month' | 'year'> => {
   if (!month || !year) return [];
   const birthMonth = month;
   const birthYear = year;
@@ -509,7 +530,7 @@ const MonthSchema = z
       .int()
       .min(1, 'Month must be between 1 and 12')
       .max(12, 'Month must be between 1 and 12')
-      .optional()
+      .optional(),
   );
 
 const YearSchema = z
@@ -524,7 +545,7 @@ const YearSchema = z
       .int()
       .min(1000, 'Year must be a four-digit number')
       .max(9999, 'Year must be a four-digit number')
-      .optional()
+      .optional(),
   );
 
 const CommaSeparatedSchema = z
@@ -539,7 +560,9 @@ interface AddUserBirthdateInput {
 
 type AddUserBirthdateOutput = AddUserBirthdateInput & Record<string, unknown>;
 
-const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(schema: T) =>
+const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(
+  schema: T,
+) =>
   schema.check(
     z.superRefine((data: AddUserBirthdateOutput, ctx) => {
       if (data.userType === 'child' && (!data.month || !data.year)) {
@@ -572,7 +595,7 @@ const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(schema: 
           });
         });
       }
-    })
+    }),
   );
 
 const AddUsersCsvSchema = addChildUserRules(
@@ -598,12 +621,14 @@ const AddUsersCsvSchema = addChildUserRules(
         if (cohorts.length === 0 && schools.length === 0) {
           ctx.addIssue({
             code: 'custom',
-            message: 'Must have either cohort OR school. School required if class provided.',
+            message:
+              'Must have either cohort OR school. School required if class provided.',
             path: ['cohort'],
           });
           ctx.addIssue({
             code: 'custom',
-            message: 'Must have either cohort OR school. School required if class provided.',
+            message:
+              'Must have either cohort OR school. School required if class provided.',
             path: ['school'],
           });
         }
@@ -611,21 +636,23 @@ const AddUsersCsvSchema = addChildUserRules(
         if (classes.length > 0 && schools.length === 0) {
           ctx.addIssue({
             code: 'custom',
-            message: 'Must have either cohort OR school. School required if class provided.',
+            message:
+              'Must have either cohort OR school. School required if class provided.',
             path: ['class'],
           });
           ctx.addIssue({
             code: 'custom',
-            message: 'Must have either cohort OR school. School required if class provided.',
+            message:
+              'Must have either cohort OR school. School required if class provided.',
             path: ['school'],
           });
         }
-      })
+      }),
     )
     .transform(({ usertype, ...rest }) => ({
       ...rest,
       userType: usertype,
-    }))
+    })),
 );
 
 const AddUsersSubmitSchema = addChildUserRules(
@@ -639,31 +666,39 @@ const AddUsersSubmitSchema = addChildUserRules(
     parentId: z.string().optional(),
     orgIds: z
       .object({
-        districts: z.array(z.string().min(1)).min(1, 'At least one district is required'),
+        districts: z
+          .array(z.string().min(1))
+          .min(1, 'At least one district is required'),
         groups: z.array(z.string().min(1)).optional(),
         schools: z.array(z.string().min(1)).optional(),
         classes: z.array(z.string().min(1)).optional(),
       })
-      .refine((orgIds) => {
-        const hasGroups = orgIds.groups && orgIds.groups.length > 0;
-        const hasSchools = orgIds.schools && orgIds.schools.length > 0;
-        return hasGroups || hasSchools;
-      }, {
-        message: 'Must have either groups OR schools in orgIds',
-        path: ['orgIds']
-      })
-      .refine((orgIds) => {
-        const hasClasses = orgIds.classes && orgIds.classes.length > 0;
-        const hasSchools = orgIds.schools && orgIds.schools.length > 0;
-        if (hasClasses && !hasSchools) {
-          return false;
-        }
-        return true;
-      }, {
-        message: 'Schools required in orgIds if classes are provided',
-        path: ['orgIds']
-      }),
-  })
+      .refine(
+        (orgIds) => {
+          const hasGroups = orgIds.groups && orgIds.groups.length > 0;
+          const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+          return hasGroups || hasSchools;
+        },
+        {
+          message: 'Must have either groups OR schools in orgIds',
+          path: ['orgIds'],
+        },
+      )
+      .refine(
+        (orgIds) => {
+          const hasClasses = orgIds.classes && orgIds.classes.length > 0;
+          const hasSchools = orgIds.schools && orgIds.schools.length > 0;
+          if (hasClasses && !hasSchools) {
+            return false;
+          }
+          return true;
+        },
+        {
+          message: 'Schools required in orgIds if classes are provided',
+          path: ['orgIds'],
+        },
+      ),
+  }),
 );
 
 const LinkUsersCsvSchema = z
@@ -690,7 +725,9 @@ const normalizeFieldLabel = (field: string): string => {
   return field;
 };
 
-const combineFieldErrors = (errors: Array<{ field: string; message: string }>): string[] => {
+const combineFieldErrors = (
+  errors: Array<{ field: string; message: string }>,
+): string[] => {
   const grouped = new Map<string, { fields: Set<string>; order: number }>();
 
   errors.forEach((error, index) => {
@@ -714,10 +751,14 @@ const combineFieldErrors = (errors: Array<{ field: string; message: string }>): 
     });
 };
 
-const validateAddUsersCsv = (data: unknown[]) => validateCsvData(AddUsersCsvSchema, data);
-const validateLinkUsersCsv = (data: unknown[]) => validateCsvData(LinkUsersCsvSchema, data);
+const validateAddUsersCsv = (data: unknown[]) =>
+  validateCsvData(AddUsersCsvSchema, data);
+const validateLinkUsersCsv = (data: unknown[]) =>
+  validateCsvData(LinkUsersCsvSchema, data);
 
-const validateAddUsersSubmit = (data: unknown): {
+const validateAddUsersSubmit = (
+  data: unknown,
+): {
   success: boolean;
   data?: z.infer<typeof AddUsersSubmitSchema>;
   errors: Array<{
@@ -743,21 +784,27 @@ const validateAddUsersSubmit = (data: unknown): {
   };
 };
 
-const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
+const detectMultipleSites = (
+  parsedData: Record<string, unknown>[],
+): {
   hasMultipleSites: boolean;
   uniqueSites: string[];
 } => {
   const siteSet = new Set<string>();
 
   parsedData.forEach((user) => {
-    const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+    const siteField = Object.keys(user).find(
+      (key) => key.toLowerCase() === 'site',
+    );
     if (siteField && user[siteField]) {
       const siteValue = String(user[siteField]);
       const sites = siteValue
         .split(',')
         .map((s) => s.trim())
         .filter((s) => s);
-      sites.forEach(site => siteSet.add(site));
+      sites.forEach((site) => {
+        siteSet.add(site);
+      });
     }
   });
 
@@ -767,14 +814,16 @@ const detectMultipleSites = (parsedData: Record<string, unknown>[]): {
   };
 };
 
-const locationDocId = (location: Pick<z.infer<typeof LocationSchema>, 'schemaVersion' | 'h3'>): string => {
+const locationDocId = (
+  location: Pick<z.infer<typeof LocationSchema>, 'schemaVersion' | 'h3'>,
+): string => {
   const version = location.schemaVersion.replace(/^location_/, '');
   return `h3:${location.h3.effective.cellId}:t:${location.h3.populationThreshold}:${version}`;
 };
 
 const validateAddUsersFileUpload = (
   parsedData: Record<string, unknown>[],
-  shouldUsePermissions: boolean
+  shouldUsePermissions: boolean,
 ): {
   success: boolean;
   errors: Array<{
@@ -805,9 +854,15 @@ const validateAddUsersFileUpload = (
 
   const requiredHeaders = ['usertype'];
   const hasChild = parsedData.some((user) => {
-    const userTypeField = Object.keys(user).find((key) => key.toLowerCase() === 'usertype');
+    const userTypeField = Object.keys(user).find(
+      (key) => key.toLowerCase() === 'usertype',
+    );
     const userTypeValue = userTypeField ? user[userTypeField] : null;
-    return userTypeValue && typeof userTypeValue === 'string' && userTypeValue.toLowerCase() === 'child';
+    return (
+      userTypeValue &&
+      typeof userTypeValue === 'string' &&
+      userTypeValue.toLowerCase() === 'child'
+    );
   });
 
   if (hasChild) {
@@ -824,7 +879,10 @@ const validateAddUsersFileUpload = (
     requiredHeaders.push('site');
   }
 
-  const headerValidation = validateCsvHeaders(lowerCaseHeaders, requiredHeaders);
+  const headerValidation = validateCsvHeaders(
+    lowerCaseHeaders,
+    requiredHeaders,
+  );
   if (!headerValidation.success) {
     return {
       success: false,
@@ -848,7 +906,10 @@ const validateAddUsersFileUpload = (
   const errors: Array<{ user: Record<string, unknown>; error: string }> = [];
 
   if (!validation.success) {
-    const errorsByUser = new Map<Record<string, unknown>, Array<{ field: string; message: string }>>();
+    const errorsByUser = new Map<
+      Record<string, unknown>,
+      Array<{ field: string; message: string }>
+    >();
     validation.errors.forEach((error) => {
       const userIndex = error.row - 1;
       if (userIndex >= 0 && userIndex < parsedData.length) {
@@ -857,7 +918,9 @@ const validateAddUsersFileUpload = (
         if (!errorsByUser.has(user)) {
           errorsByUser.set(user, []);
         }
-        errorsByUser.get(user)!.push({ field: error.field, message: error.message });
+        errorsByUser
+          .get(user)!
+          .push({ field: error.field, message: error.message });
       }
     });
     errorsByUser.forEach((userErrors, user) => {
@@ -873,7 +936,9 @@ const validateAddUsersFileUpload = (
     usersWithoutId.forEach((user) => {
       if (usersWithZodErrors.has(user)) return;
 
-      const siteField = Object.keys(user).find((key) => key.toLowerCase() === 'site');
+      const siteField = Object.keys(user).find(
+        (key) => key.toLowerCase() === 'site',
+      );
       const siteValue = siteField ? user[siteField] : null;
       const hasSite =
         siteValue &&
@@ -901,9 +966,9 @@ const validateAddUsersFileUpload = (
 };
 
 export {
-  AdminDataSchema,
   AddUsersCsvSchema,
   AddUsersSubmitSchema,
+  AdminDataSchema,
   AdministrationSchema,
   AssessmentConditionRuleSchema,
   AssessmentConditionsSchema,
@@ -920,11 +985,11 @@ export {
   CreateUserSchema,
   CsvHeadersSchema,
   DistrictSchema,
-  H3CellSchema,
   GroupSchema,
+  H3CellSchema,
+  LatLonSourceSchema,
   LegalInfoSchema,
   LegalSchema,
-  LatLonSourceSchema,
   LinkUsersCsvSchema,
   LocationSchema,
   locationDocId,

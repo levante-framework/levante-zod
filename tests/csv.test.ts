@@ -1,10 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { normalizeCsvData, normalizeCsvHeaders, validateCsvData, validateCsvHeaders } from '../src/csv';
+import {
+  normalizeCsvData,
+  normalizeCsvHeaders,
+  validateCsvData,
+  validateCsvHeaders,
+} from '../src/csv';
 
 describe('normalizeCsvData', () => {
   it('should map alias keys to their canonical field names', () => {
-    const result = normalizeCsvData({ usertypeid: 'teacher', caregiverid: 'c1' });
+    const result = normalizeCsvData({
+      usertypeid: 'teacher',
+      caregiverid: 'c1',
+    });
     expect(result).toEqual({ usertype: 'teacher', caregiverId: 'c1' });
   });
 
@@ -29,7 +37,7 @@ describe('normalizeCsvData', () => {
     const result = normalizeCsvData({ month: '3', year: '2024', cohort: 'A' });
     expect(result).toEqual({ month: '3', year: '2024', cohort: 'A' });
   });
-})
+});
 
 describe('normalizeCsvHeaders', () => {
   it('should return normalized headers', () => {
@@ -104,7 +112,7 @@ describe('validateCsvData', () => {
     const result = validateCsvData(schema, rows);
     expect(result.success).toBe(false);
     expect(result.errors.length).toBeGreaterThanOrEqual(1);
-    expect(result.errors.every(e => e.row === 1)).toBe(true);
+    expect(result.errors.every((e) => e.row === 1)).toBe(true);
   });
 
   it('normalizes CSV alias keys before validation', () => {

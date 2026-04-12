@@ -16,6 +16,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
+    "check": "biome check",
+    "check:fix": "biome check --write",
     "test": "vitest run",
     "test:watch": "vitest",
     "publish": "npm run build && npm publish --access public"
@@ -26,6 +28,7 @@
   "description": "",
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.2",
+    "@biomejs/biome": "2.4.11",
     "publint": "^0.3.18",
     "tsdown": "^0.21.7",
     "typescript": "^5.8.3",

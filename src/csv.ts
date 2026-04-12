@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import { combineIssues } from './issues';
 
 const csvFieldMap: Record<string, string> = {
@@ -17,21 +17,27 @@ const csvFieldMap: Record<string, string> = {
   class: 'class',
 };
 
-export const normalizeCsvData = (data: Record<string, unknown>): Record<string, unknown> => {
+export const normalizeCsvData = (
+  data: Record<string, unknown>,
+): Record<string, unknown> => {
   const normalized: Record<string, unknown> = {};
   Object.keys(data).forEach((key) => {
     const value = data[key];
     const normalizedKey = csvFieldMap[key.toLowerCase()] ?? key;
-    normalized[normalizedKey] = value === '' || value === null ? undefined : value;
+    normalized[normalizedKey] =
+      value === '' || value === null ? undefined : value;
   });
   return normalized;
 };
 
 export const normalizeCsvHeaders = (headers: string[]): string[] => {
-  return headers.map(header => header.toLowerCase().trim());
+  return headers.map((header) => header.toLowerCase().trim());
 };
 
-export const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
+export const validateCsvData = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown[],
+): {
   success: boolean;
   data: T[];
   errors: Array<{
@@ -50,11 +56,11 @@ export const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
       results.push(result.data);
     } else {
       const combinedIssues = combineIssues(result.error.issues);
-      combinedIssues.forEach(issue => {
+      combinedIssues.forEach((issue) => {
         errors.push({
           row: index + 1,
           field: issue.field,
-          message: issue.message
+          message: issue.message,
         });
       });
     }
@@ -67,7 +73,10 @@ export const validateCsvData = <T>(schema: z.ZodSchema<T>, data: unknown[]): {
   };
 };
 
-export const validateCsvHeaders = (headers: string[], requiredHeaders: string[]): {
+export const validateCsvHeaders = (
+  headers: string[],
+  requiredHeaders: string[],
+): {
   success: boolean;
   errors: Array<{
     field: string;
@@ -76,15 +85,15 @@ export const validateCsvHeaders = (headers: string[], requiredHeaders: string[])
   data: string[];
 } => {
   const normalizedHeaders = normalizeCsvHeaders(headers);
-  const normalizedRequired = requiredHeaders.map(h => h.toLowerCase().trim());
+  const normalizedRequired = requiredHeaders.map((h) => h.toLowerCase().trim());
 
   const missingHeaders = normalizedRequired.filter(
-    required => !normalizedHeaders.includes(required)
+    (required) => !normalizedHeaders.includes(required),
   );
 
-  const errors = missingHeaders.map(header => ({
+  const errors = missingHeaders.map((header) => ({
     field: header,
-    message: `Missing required header: ${header}`
+    message: `Missing required header: ${header}`,
   }));
 
   return {

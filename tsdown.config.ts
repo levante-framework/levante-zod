@@ -2,8 +2,8 @@ import { defineConfig } from 'tsdown';
 
 export default defineConfig({
   attw: {
-    profile: "esm-only"
+    profile: 'esm-only',
   },
-  platform: "neutral",
+  platform: 'neutral',
   publint: true,
 });

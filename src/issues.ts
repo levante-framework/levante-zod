@@ -1,6 +1,8 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 
-export const combineIssues = (issues: z.ZodIssue[]): Array<{ field: string; message: string }> => {
+export const combineIssues = (
+  issues: z.ZodIssue[],
+): Array<{ field: string; message: string }> => {
   const grouped = new Map<string, { fields: Set<string>; order: number }>();
 
   issues.forEach((issue, index) => {
@@ -29,7 +31,9 @@ export const formatIssueFields = (fields: string[]): string => {
   const uniqueFields = Array.from(new Set(fields));
   const hasMonth = uniqueFields.includes('month');
   const hasYear = uniqueFields.includes('year');
-  const remainingFields = uniqueFields.filter(field => field !== 'month' && field !== 'year');
+  const remainingFields = uniqueFields.filter(
+    (field) => field !== 'month' && field !== 'year',
+  );
 
   if (hasMonth && hasYear) {
     remainingFields.unshift('month and year');
