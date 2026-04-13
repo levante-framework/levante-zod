@@ -217,7 +217,7 @@ describe('validateAddUsersFileUpload', () => {
       expect(result.headerErrors?.some((e) => e.field === 'school')).toBe(true);
     });
 
-    it('does not require cohort/school headers when cohort column is present', () => {
+    it('does not require school/class headers when cohort column is present', () => {
       const data = [{ usertype: 'teacher', cohort: 'cohort1' }];
       const result = validateAddUsersFileUpload(data, true);
       expect(result.headerErrors).toBeUndefined();
