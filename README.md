@@ -1,1 +1,3 @@
-These are the Zod schemas for the LEVANTE platform. 
+# levante-zod
+
+Data validation schemas for the LEVANTE platform, built with [Zod](https://zod.dev).
