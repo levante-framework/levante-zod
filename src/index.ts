@@ -17,6 +17,8 @@ import {
 import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
 
 // Type alias for Firestore Timestamp
+// @CC: "To check whether this is compatible with firestore - they encode
+// this using seconds and nanoseconds and it usually has to be converted"
 const TimestampSchema = z.iso.datetime();
 
 const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
@@ -123,6 +125,8 @@ const LocationSchema = z
 const OrgRefMapSchema = z.object({
   classes: z.array(z.string()),
   districts: z.array(z.string()),
+  // @CC: "I don't think we actually ever use families? This is ROAR legacy
+  // - to confirm with team
   families: z.array(z.string()),
   groups: z.array(z.string()),
   schools: z.array(z.string()),
@@ -186,6 +190,7 @@ const AdministrationSchema = z.object({
   dateCreated: TimestampSchema,
   dateOpened: TimestampSchema,
   districts: z.array(z.string()),
+  // @CC: "Flagging for families discussion"
   families: z.array(z.string()),
   groups: z.array(z.string()),
   legal: LegalInfoSchema,
@@ -209,6 +214,7 @@ const AssignedOrgSchema = z.object({
   legal: LegalInfoSchema,
   name: z.string(),
   orgId: z.string(),
+  // @CC: "Flagging for families discussion"
   orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
@@ -267,6 +273,9 @@ const AssignmentAssessmentSchema = z.object({
 });
 
 // Structure for Claims within UserClaims
+// @CC: "I guess we still need this because we haven't gotten around to it
+// yet - but we are going to remove the use of the userClaims collection
+// entirely (we should be relying on custom auth claims instead)"
 const ClaimsSchema = z.object({
   adminOrgs: OrgRefMapSchema,
   adminUid: z.string().optional(),
@@ -489,6 +498,9 @@ const CreateOrgSchema = OrgSchema.pick({
   siteId: z.string().optional(),
 });
 
+// @CC: "Will this fail/reject csvs that have headers that aren't in one of
+// these three lists? I think we have sites that are managing their files with
+// other columns, so we need to have plans to ignore anything"
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
