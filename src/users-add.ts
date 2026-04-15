@@ -57,6 +57,7 @@ export const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(
     }),
   );
 
+/** @deprecated */
 export const AddUsersCsvSchema = addChildUserRules(
   z
     .object({
@@ -114,6 +115,7 @@ export const AddUsersCsvSchema = addChildUserRules(
     })),
 );
 
+/** @deprecated */
 export const AddUsersSubmitSchema = addChildUserRules(
   z.object({
     id: z.string().trim().optional(),
@@ -243,9 +245,11 @@ const normalizeFieldLabel = (field: string): string => {
   return field;
 };
 
+/** @deprecated */
 export const validateAddUsersCsv = (data: unknown[]) =>
   validateCsvData(AddUsersCsvSchema, data);
 
+/** @deprecated */
 export const validateAddUsersFileUpload = (
   parsedData: Record<string, unknown>[],
   shouldUsePermissions: boolean,
@@ -392,6 +396,7 @@ export const validateAddUsersFileUpload = (
   };
 };
 
+/** @deprecated */
 export const validateAddUsersSubmit = (
   data: unknown,
 ): {

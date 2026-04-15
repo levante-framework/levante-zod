@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+/** @deprecated */
 export const parseCommaSeparated = (value: string | undefined): string[] => {
   if (!value) return [];
   return value
