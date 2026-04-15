@@ -4,9 +4,10 @@ import {
   CaregiverUserCsvRow,
   ChildUserCsvRow,
   ListableString,
+  NumberString,
   TeacherUserCsvRow,
-  UserCsv,
   UserCsvRowBase,
+  UserCsvSchema,
 } from '../src/user-csv';
 
 /** Arbitrary: a non-empty string (NB: trim-stable and comma-free so it
@@ -18,41 +19,47 @@ const nonEmptyString = fc
 /** Arbitrary: a non-empty array of non-empty strings */
 const nonEmptyStringArray = fc.array(nonEmptyString, { minLength: 1 });
 
+/** Arbitrary: a non-integer number value */
+const nonIntegerNumber = fc
+  .float()
+  .filter((n) => !Number.isInteger(n))
+  .map(String);
+
+/** Arbitrary: a non-number string (e.g., "foo", "one") */
+const nonNumberString = fc.string().filter((v) => Number.isNaN(Number(v)));
+
 /** Arbitrary: a non-string value */
 const nonString = fc.anything().filter((v) => typeof v !== 'string');
 
-/** Arbitrary: a non-number value */
-const nonNumber = fc.anything().filter((v) => typeof v !== 'number');
-
-/** Arbitrary: a non-integer number value */
-const nonIntegerNumber = fc.float().filter((n) => !Number.isInteger(n));
+/** Arbitrary: a number string (e.g., "123", "123.456", "NaN") */
+const numberString = fc
+  .oneof(fc.float(), fc.integer(), fc.constant('NaN'))
+  .map(String);
 
 /** Fixture: a valid caregiver/teacher row to derive test fixtures from */
 const validAdultRow = {
   id: 'user-1',
   userType: undefined, // NB: must be defined by the test case
-  month: undefined,
-  year: undefined,
-  caregiverId: undefined,
-  teacherId: undefined,
-  site: 'site-1',
+  month: '',
+  year: '',
+  caregiverId: '',
+  teacherId: '',
   school: 'school-1',
   class: 'class-1',
-  cohort: undefined,
+  cohort: '',
 };
 
 /** Fixture: a valid child row to derive test fixtures from */
 const validChildRow = {
   id: 'user-1',
   userType: 'child',
-  month: 1,
-  year: 2020,
+  month: '1',
+  year: '2020',
   caregiverId: 'caregiver-1',
   teacherId: 'teacher-1',
-  site: 'site-1',
   school: 'school-1',
   class: 'class-1',
-  cohort: undefined,
+  cohort: '',
 };
 
 describe('ListableString', () => {
@@ -78,8 +85,25 @@ describe('ListableString', () => {
     expect(ListableString.parse('')).toEqual([]);
   });
 
-  it.prop({ v: nonString })('rejects any non-string input', ({ v }) => {
+  it.prop({ v: nonString })('rejects non-strings', ({ v }) => {
     expect(() => ListableString.parse(v)).toThrow();
+  });
+});
+
+describe('NumberString', () => {
+  it.prop({ v: numberString })('coerces strings into numbers', ({ v }) => {
+    expect(NumberString.parse(v)).toEqual(Number(v));
+  });
+
+  it.prop({ v: nonNumberString })(
+    'coerces non-number strings into NaN',
+    ({ v }) => {
+      expect(NumberString.parse(v)).toBeNaN();
+    },
+  );
+
+  it.prop({ v: nonString })('rejects non-strings', ({ v }) => {
+    expect(() => NumberString.parse(v)).toThrow();
   });
 });
 
@@ -91,10 +115,10 @@ describe('UserCsvRowBase', () => {
   it('keeps loose properties', () => {
     const result = UserCsvRowBase.safeParse({
       ...validChildRow,
-      unexpected: 'value',
+      site: 'site-1',
     });
     expect(result.success).toBe(true);
-    expect(result.data?.unexpected).toEqual('value');
+    expect(result.data?.site).toEqual('site-1');
   });
 
   describe('id validation', () => {
@@ -140,7 +164,7 @@ describe('UserCsvRowBase', () => {
           ...validChildRow,
           school,
           class: _class,
-          cohort: undefined,
+          cohort: '',
         }),
       ).not.toThrow();
     });
@@ -156,7 +180,7 @@ describe('UserCsvRowBase', () => {
             ...validChildRow,
             school: schools.join(','),
             class: classes.join(','),
-            cohort: undefined,
+            cohort: '',
           }),
         ).not.toThrow();
       },
@@ -168,8 +192,8 @@ describe('UserCsvRowBase', () => {
         expect(() =>
           UserCsvRowBase.parse({
             ...validChildRow,
-            school: undefined,
-            class: undefined,
+            school: '',
+            class: '',
             cohort,
           }),
         ).not.toThrow();
@@ -182,8 +206,8 @@ describe('UserCsvRowBase', () => {
         expect(() =>
           UserCsvRowBase.parse({
             ...validChildRow,
-            school: undefined,
-            class: undefined,
+            school: '',
+            class: '',
             cohort: cohorts.join(','),
           }),
         ).not.toThrow();
@@ -196,9 +220,9 @@ describe('UserCsvRowBase', () => {
       expect(() =>
         UserCsvRowBase.parse({
           ...validChildRow,
-          school: undefined,
-          class: undefined,
-          cohort: undefined,
+          school: '',
+          class: '',
+          cohort: '',
         }),
       ).toThrow();
     });
@@ -210,8 +234,8 @@ describe('UserCsvRowBase', () => {
           UserCsvRowBase.parse({
             ...validChildRow,
             school,
-            class: undefined,
-            cohort: undefined,
+            class: '',
+            cohort: '',
           }),
         ).toThrow();
       },
@@ -223,24 +247,13 @@ describe('UserCsvRowBase', () => {
         expect(() =>
           UserCsvRowBase.parse({
             ...validChildRow,
-            school: undefined,
+            school: '',
             class: _class,
-            cohort: undefined,
+            cohort: '',
           }),
         ).toThrow();
       },
     );
-
-    it('rejects a row w/ empty string group', () => {
-      expect(() =>
-        UserCsvRowBase.parse({
-          ...validChildRow,
-          school: '',
-          class: '',
-          cohort: '',
-        }),
-      ).toThrow();
-    });
 
     it.prop({
       school: nonEmptyString,
@@ -273,10 +286,22 @@ describe('CaregiverUserCsvRow', () => {
     const result = CaregiverUserCsvRow.safeParse({
       ...validAdultRow,
       userType: 'caregiver',
-      unexpected: 'value',
+      site: 'site-1',
     });
     expect(result.success).toBe(true);
-    expect(result.data?.unexpected).toEqual('value');
+    expect(result.data?.site).toEqual('site-1');
+  });
+
+  it('rejects rows missing expected fields', () => {
+    ['id', 'userType', 'school', 'class', 'cohort'].forEach((key) => {
+      expect(() =>
+        CaregiverUserCsvRow.parse({
+          ...validAdultRow,
+          userType: 'caregiver',
+          [key]: undefined,
+        }),
+      ).toThrow();
+    });
   });
 });
 
@@ -286,7 +311,7 @@ describe('ChildUserCsvRow', () => {
   });
 
   describe('month validation', () => {
-    it.prop({ month: fc.integer({ min: 1, max: 12 }) })(
+    it.prop({ month: fc.integer({ min: 1, max: 12 }).map(String) })(
       'accepts valid months (1-12)',
       ({ month }) => {
         expect(() =>
@@ -295,23 +320,27 @@ describe('ChildUserCsvRow', () => {
       },
     );
 
-    it.prop({ month: fc.integer({ min: Number.MIN_SAFE_INTEGER, max: 0 }) })(
-      'rejects months below 1',
-      ({ month }) => {
-        expect(() =>
-          ChildUserCsvRow.parse({ ...validChildRow, month }),
-        ).toThrow();
-      },
-    );
+    it.prop({
+      month: fc.integer({ min: Number.MIN_SAFE_INTEGER, max: 0 }).map(String),
+    })('rejects months below 1', ({ month }) => {
+      expect(() =>
+        ChildUserCsvRow.parse({ ...validChildRow, month }),
+      ).toThrow();
+    });
 
-    it.prop({ month: fc.integer({ min: 13, max: Number.MAX_SAFE_INTEGER }) })(
-      'rejects months above 12',
-      ({ month }) => {
-        expect(() =>
-          ChildUserCsvRow.parse({ ...validChildRow, month }),
-        ).toThrow();
-      },
-    );
+    it.prop({
+      month: fc.integer({ min: 13, max: Number.MAX_SAFE_INTEGER }).map(String),
+    })('rejects months above 12', ({ month }) => {
+      expect(() =>
+        ChildUserCsvRow.parse({ ...validChildRow, month }),
+      ).toThrow();
+    });
+
+    it.prop({ month: nonString })('rejects non-strings', ({ month }) => {
+      expect(() =>
+        ChildUserCsvRow.parse({ ...validChildRow, month }),
+      ).toThrow();
+    });
 
     it.prop({ month: nonIntegerNumber })(
       'rejects non-integer numbers',
@@ -322,15 +351,18 @@ describe('ChildUserCsvRow', () => {
       },
     );
 
-    it.prop({ month: nonNumber })('rejects non-numbers', ({ month }) => {
-      expect(() =>
-        ChildUserCsvRow.parse({ ...validChildRow, month }),
-      ).toThrow();
-    });
+    it.prop({ month: nonNumberString })(
+      'rejects non-number strings',
+      ({ month }) => {
+        expect(() =>
+          ChildUserCsvRow.parse({ ...validChildRow, month }),
+        ).toThrow();
+      },
+    );
   });
 
   describe('year validation', () => {
-    it.prop({ year: fc.integer({ min: 1000, max: 9999 }) })(
+    it.prop({ year: fc.integer({ min: 1000, max: 9999 }).map(String) })(
       'accepts valid years (1000-9999)',
       ({ year }) => {
         expect(() =>
@@ -339,23 +371,19 @@ describe('ChildUserCsvRow', () => {
       },
     );
 
-    it.prop({ year: fc.integer({ min: Number.MIN_SAFE_INTEGER, max: 999 }) })(
-      'rejects years below 1000',
-      ({ year }) => {
-        expect(() =>
-          ChildUserCsvRow.parse({ ...validChildRow, year }),
-        ).toThrow();
-      },
-    );
+    it.prop({
+      year: fc.integer({ min: Number.MIN_SAFE_INTEGER, max: 999 }).map(String),
+    })('rejects years below 1000', ({ year }) => {
+      expect(() => ChildUserCsvRow.parse({ ...validChildRow, year })).toThrow();
+    });
 
-    it.prop({ year: fc.integer({ min: 10000, max: Number.MAX_SAFE_INTEGER }) })(
-      'rejects years above 9999',
-      ({ year }) => {
-        expect(() =>
-          ChildUserCsvRow.parse({ ...validChildRow, year }),
-        ).toThrow();
-      },
-    );
+    it.prop({
+      year: fc
+        .integer({ min: 10000, max: Number.MAX_SAFE_INTEGER })
+        .map(String),
+    })('rejects years above 9999', ({ year }) => {
+      expect(() => ChildUserCsvRow.parse({ ...validChildRow, year })).toThrow();
+    });
 
     it.prop({ year: nonIntegerNumber })(
       'rejects non-integer numbers',
@@ -366,15 +394,20 @@ describe('ChildUserCsvRow', () => {
       },
     );
 
-    it.prop({ year: nonNumber })('rejects non-numbers', ({ year }) => {
-      expect(() => ChildUserCsvRow.parse({ ...validChildRow, year })).toThrow();
-    });
+    it.prop({ year: nonNumberString })(
+      'rejects non-number strings',
+      ({ year }) => {
+        expect(() =>
+          ChildUserCsvRow.parse({ ...validChildRow, year }),
+        ).toThrow();
+      },
+    );
   });
 
   describe('caregiverId validation', () => {
-    it('accepts undefined caregiverId', () => {
+    it('accepts an empty caregiverId', () => {
       expect(() =>
-        ChildUserCsvRow.parse({ ...validChildRow, caregiverId: undefined }),
+        ChildUserCsvRow.parse({ ...validChildRow, caregiverId: '' }),
       ).not.toThrow();
     });
 
@@ -391,8 +424,8 @@ describe('ChildUserCsvRow', () => {
     );
 
     it.prop({
-      caregiverId: nonString.filter((v) => v !== undefined),
-    })('rejects non-string, non-undefined values', ({ caregiverId }) => {
+      caregiverId: nonString,
+    })('rejects non-strings', ({ caregiverId }) => {
       expect(() =>
         ChildUserCsvRow.parse({ ...validChildRow, caregiverId }),
       ).toThrow();
@@ -400,9 +433,9 @@ describe('ChildUserCsvRow', () => {
   });
 
   describe('teacherId validation', () => {
-    it('accepts undefined teacherId', () => {
+    it('accepts an empty teacherId', () => {
       expect(() =>
-        ChildUserCsvRow.parse({ ...validChildRow, teacherId: undefined }),
+        ChildUserCsvRow.parse({ ...validChildRow, teacherId: '' }),
       ).not.toThrow();
     });
 
@@ -419,8 +452,8 @@ describe('ChildUserCsvRow', () => {
     );
 
     it.prop({
-      teacherId: nonString.filter((v) => v !== undefined),
-    })('rejects non-string, non-undefined values', ({ teacherId }) => {
+      teacherId: nonString,
+    })('rejects non-strings', ({ teacherId }) => {
       expect(() =>
         ChildUserCsvRow.parse({ ...validChildRow, teacherId }),
       ).toThrow();
@@ -436,7 +469,7 @@ describe('ChildUserCsvRow', () => {
             ...validChildRow,
             school,
             class: _class,
-            cohort: undefined,
+            cohort: '',
           }),
         ).not.toThrow();
       },
@@ -448,8 +481,8 @@ describe('ChildUserCsvRow', () => {
         expect(() =>
           ChildUserCsvRow.parse({
             ...validChildRow,
-            school: undefined,
-            class: undefined,
+            school: '',
+            class: '',
             cohort,
           }),
         ).not.toThrow();
@@ -465,7 +498,7 @@ describe('ChildUserCsvRow', () => {
           ...validChildRow,
           school: schools.join(','),
           class: _class,
-          cohort: undefined,
+          cohort: '',
         }),
       ).toThrow();
     });
@@ -479,7 +512,7 @@ describe('ChildUserCsvRow', () => {
           ...validChildRow,
           school,
           class: classes.join(','),
-          cohort: undefined,
+          cohort: '',
         }),
       ).toThrow();
     });
@@ -490,8 +523,8 @@ describe('ChildUserCsvRow', () => {
         expect(() =>
           ChildUserCsvRow.parse({
             ...validChildRow,
-            school: undefined,
-            class: undefined,
+            school: '',
+            class: '',
             cohort: cohorts.join(','),
           }),
         ).toThrow();
@@ -508,14 +541,20 @@ describe('TeacherUserCsvRow', () => {
   });
 });
 
-describe('UserCsv', () => {
+describe('UserCsvSchema', () => {
   it('accepts valid rows', () => {
     expect(() =>
-      UserCsv.parse([
+      UserCsvSchema.parse([
         { ...validChildRow },
         { ...validAdultRow, userType: 'caregiver' },
         { ...validAdultRow, userType: 'teacher' },
       ]),
     ).not.toThrow();
+  });
+
+  it('rejects a row with undefined userType', () => {
+    expect(() =>
+      UserCsvSchema.parse([{ ...validChildRow, userType: undefined }]),
+    ).toThrow();
   });
 });

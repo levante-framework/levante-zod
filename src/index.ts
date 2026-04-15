@@ -6,6 +6,7 @@ import {
   validateCsvData,
   validateCsvHeaders,
 } from './csv';
+import { UserCsvSchema } from './user-csv';
 import { parseCommaSeparated } from './users';
 import {
   AddUsersCsvSchema,
@@ -553,6 +554,7 @@ export {
   StatSchema,
   TimestampSchema,
   UserClaimsSchema,
+  UserCsvSchema,
   UserLegalSchema,
   UserSchema,
   validateAddUsersCsv,
@@ -603,5 +605,6 @@ export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
+export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
