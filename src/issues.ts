@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 
+/** @deprecated */
 export const combineIssues = (
   issues: z.ZodIssue[],
 ): Array<{ field: string; message: string }> => {

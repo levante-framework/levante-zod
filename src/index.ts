@@ -6,7 +6,11 @@ import {
   validateCsvData,
   validateCsvHeaders,
 } from './csv';
-import { UserCsvSchema } from './user-csv';
+import {
+  AddUserCsvHeaderSchema,
+  combineUserCsvIssues,
+  UserCsvSchema,
+} from './user-csv';
 import { parseCommaSeparated } from './users';
 import {
   AddUsersCsvSchema,
@@ -516,6 +520,7 @@ const locationDocId = (
 };
 
 export {
+  AddUserCsvHeaderSchema,
   AddUsersCsvSchema,
   AddUsersSubmitSchema,
   AdminDataSchema,
@@ -534,6 +539,7 @@ export {
   CreateSchoolSchema,
   CreateUserSchema,
   CsvHeadersSchema,
+  combineUserCsvIssues,
   DistrictSchema,
   GroupSchema,
   H3CellSchema,
@@ -565,6 +571,7 @@ export {
   validateLinkUsersCsv,
 };
 
+export type AddUserCsvHeaderType = z.infer<typeof AddUserCsvHeaderSchema>;
 export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
 export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
