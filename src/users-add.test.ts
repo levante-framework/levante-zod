@@ -3,7 +3,7 @@ import {
   combineFieldErrors,
   detectMultipleSites,
   validateAddUsersFileUpload,
-} from '../src/users-add';
+} from './users-add';
 
 const validTeacher = { usertype: 'teacher', cohort: 'cohort1' };
 const validChild = {

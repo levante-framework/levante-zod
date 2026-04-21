@@ -15,7 +15,7 @@ import {
   TeacherUserCsvRow,
   UserCsvRowBase,
   UserCsvSchema,
-} from '../src/user-csv';
+} from './user-csv';
 
 /** Fixture: returns a minimal zod issue */
 const $makeIssue = (

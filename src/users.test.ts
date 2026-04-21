@@ -5,7 +5,7 @@ import {
   NormalizedUserTypeSchema,
   parseCommaSeparated,
   YearSchema,
-} from '../src/users';
+} from './users';
 
 describe('parseCommaSeparated', () => {
   it('returns an empty array for undefined', () => {
