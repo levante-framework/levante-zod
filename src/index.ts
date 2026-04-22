@@ -6,6 +6,11 @@ import {
   validateCsvData,
   validateCsvHeaders,
 } from './csv';
+import {
+  AddUserCsvHeaderSchema,
+  combineUserCsvIssues,
+  UserCsvSchema,
+} from './user-csv';
 import { parseCommaSeparated } from './users';
 import {
   AddUsersCsvSchema,
@@ -17,6 +22,8 @@ import {
 import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
 
 // Type alias for Firestore Timestamp
+// @CC: "To check whether this is compatible with firestore - they encode
+// this using seconds and nanoseconds and it usually has to be converted"
 const TimestampSchema = z.iso.datetime();
 
 const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
@@ -123,6 +130,8 @@ const LocationSchema = z
 const OrgRefMapSchema = z.object({
   classes: z.array(z.string()),
   districts: z.array(z.string()),
+  // @CC: "I don't think we actually ever use families? This is ROAR legacy
+  // - to confirm with team
   families: z.array(z.string()),
   groups: z.array(z.string()),
   schools: z.array(z.string()),
@@ -186,6 +195,7 @@ const AdministrationSchema = z.object({
   dateCreated: TimestampSchema,
   dateOpened: TimestampSchema,
   districts: z.array(z.string()),
+  // @CC: "Flagging for families discussion"
   families: z.array(z.string()),
   groups: z.array(z.string()),
   legal: LegalInfoSchema,
@@ -209,6 +219,7 @@ const AssignedOrgSchema = z.object({
   legal: LegalInfoSchema,
   name: z.string(),
   orgId: z.string(),
+  // @CC: "Flagging for families discussion"
   orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
@@ -267,6 +278,9 @@ const AssignmentAssessmentSchema = z.object({
 });
 
 // Structure for Claims within UserClaims
+// @CC: "I guess we still need this because we haven't gotten around to it
+// yet - but we are going to remove the use of the userClaims collection
+// entirely (we should be relying on custom auth claims instead)"
 const ClaimsSchema = z.object({
   adminOrgs: OrgRefMapSchema,
   adminUid: z.string().optional(),
@@ -489,6 +503,10 @@ const CreateOrgSchema = OrgSchema.pick({
   siteId: z.string().optional(),
 });
 
+// @CC: "Will this fail/reject csvs that have headers that aren't in one of
+// these three lists? I think we have sites that are managing their files with
+// other columns, so we need to have plans to ignore anything"
+/** @deprecated */
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
@@ -503,6 +521,7 @@ const locationDocId = (
 };
 
 export {
+  AddUserCsvHeaderSchema,
   AddUsersCsvSchema,
   AddUsersSubmitSchema,
   AdminDataSchema,
@@ -521,6 +540,7 @@ export {
   CreateSchoolSchema,
   CreateUserSchema,
   CsvHeadersSchema,
+  combineUserCsvIssues,
   DistrictSchema,
   GroupSchema,
   H3CellSchema,
@@ -541,6 +561,7 @@ export {
   StatSchema,
   TimestampSchema,
   UserClaimsSchema,
+  UserCsvSchema,
   UserLegalSchema,
   UserSchema,
   validateAddUsersCsv,
@@ -551,7 +572,10 @@ export {
   validateLinkUsersCsv,
 };
 
+export type AddUserCsvHeaderType = z.infer<typeof AddUserCsvHeaderSchema>;
+/** @deprecated */
 export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
+/** @deprecated */
 export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
@@ -574,6 +598,7 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
+/** @deprecated */
 export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
@@ -581,6 +606,7 @@ export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
+/** @deprecated */
 export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
@@ -591,5 +617,6 @@ export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
+export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;

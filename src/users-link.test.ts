@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LinkUsersCsvSchema, validateLinkUsersCsv } from '../src/users-link';
+import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
 
 const validRow = { id: 'user-1', usertype: 'teacher', uid: 'uid-1' };
 

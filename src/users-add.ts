@@ -9,6 +9,9 @@ import {
 } from './users';
 
 interface AddUserBirthdateInput {
+  // @CC: "So here's where I think we want to clean up some ugliness around
+  // legacy ROAR terms (student, parent) vs ours (child, caregiver) - this
+  // mixes the two which is not great"
   userType: 'child' | 'parent' | 'teacher';
   month?: number | undefined;
   year?: number | undefined;
@@ -54,6 +57,7 @@ export const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(
     }),
   );
 
+/** @deprecated */
 export const AddUsersCsvSchema = addChildUserRules(
   z
     .object({
@@ -111,6 +115,7 @@ export const AddUsersCsvSchema = addChildUserRules(
     })),
 );
 
+/** @deprecated */
 export const AddUsersSubmitSchema = addChildUserRules(
   z.object({
     id: z.string().trim().optional(),
@@ -183,6 +188,8 @@ export const combineFieldErrors = (
     });
 };
 
+// @CC: "I think this is now impossible given the site selector (site used
+// to be a column in the csv file)"
 export const detectMultipleSites = (
   parsedData: Record<string, unknown>[],
 ): {
@@ -227,6 +234,9 @@ const getChildAgeErrorFields = (
 
   if (yearDiff > 18) return ['month', 'year'];
   if (yearDiff < 18) return [];
+  // @CC: "Wouldn't this send a month error to anyone born in the calendar
+  // year before the current month? Don't we just want a check that returns a
+  // month error if birthMonth>12 (or >=13)?"
   return currentMonth >= birthMonth ? ['month'] : [];
 };
 
@@ -235,9 +245,11 @@ const normalizeFieldLabel = (field: string): string => {
   return field;
 };
 
+/** @deprecated */
 export const validateAddUsersCsv = (data: unknown[]) =>
   validateCsvData(AddUsersCsvSchema, data);
 
+/** @deprecated */
 export const validateAddUsersFileUpload = (
   parsedData: Record<string, unknown>[],
   shouldUsePermissions: boolean,
@@ -349,6 +361,8 @@ export const validateAddUsersFileUpload = (
     });
   }
 
+  // @CC: "Just to flag that this and 301-303 should be removed once we've
+  // removed permissions"
   if (!shouldUsePermissions) {
     usersWithoutId.forEach((user) => {
       if (usersWithZodErrors.has(user)) return;
@@ -382,6 +396,7 @@ export const validateAddUsersFileUpload = (
   };
 };
 
+/** @deprecated */
 export const validateAddUsersSubmit = (
   data: unknown,
 ): {

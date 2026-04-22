@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { validateCsvData } from './csv';
 import { NormalizedUserTypeSchema } from './users';
 
+/** @deprecated */
 export const LinkUsersCsvSchema = z
   .object({
     id: z.string().min(1, 'ID is required').trim(),
@@ -15,5 +16,6 @@ export const LinkUsersCsvSchema = z
     userType: usertype,
   }));
 
+/** @deprecated */
 export const validateLinkUsersCsv = (data: unknown[]) =>
   validateCsvData(LinkUsersCsvSchema, data);

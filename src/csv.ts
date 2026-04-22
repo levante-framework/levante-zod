@@ -17,6 +17,7 @@ const csvFieldMap: Record<string, string> = {
   class: 'class',
 };
 
+/** @deprecated */
 export const normalizeCsvData = (
   data: Record<string, unknown>,
 ): Record<string, unknown> => {
@@ -30,10 +31,12 @@ export const normalizeCsvData = (
   return normalized;
 };
 
+/** @deprecated */
 export const normalizeCsvHeaders = (headers: string[]): string[] => {
   return headers.map((header) => header.toLowerCase().trim());
 };
 
+/** @deprecated */
 export const validateCsvData = <T>(
   schema: z.ZodSchema<T>,
   data: unknown[],
@@ -73,6 +76,7 @@ export const validateCsvData = <T>(
   };
 };
 
+/** @deprecated */
 export const validateCsvHeaders = (
   headers: string[],
   requiredHeaders: string[],

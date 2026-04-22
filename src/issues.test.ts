@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { combineIssues, formatIssueFields } from '../src/issues';
+import { combineIssues, formatIssueFields } from './issues';
 
 const makeIssue = (path: (string | number)[], message: string): z.ZodIssue => ({
   code: z.ZodIssueCode.custom,

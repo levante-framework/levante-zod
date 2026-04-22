@@ -5,7 +5,7 @@ import {
   normalizeCsvHeaders,
   validateCsvData,
   validateCsvHeaders,
-} from '../src/csv';
+} from './csv';
 
 describe('normalizeCsvData', () => {
   it('should map alias keys to their canonical field names', () => {
