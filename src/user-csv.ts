@@ -171,6 +171,7 @@ export const UserCsvSchema = z
   )
   .check(
     z.superRefine((data, ctx) => {
+      // All users must have a unique id
       const seen = new Map<string, number[]>();
       data.forEach((row, idx) => {
         if (row.id === '') return;
