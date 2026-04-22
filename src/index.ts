@@ -573,7 +573,9 @@ export {
 };
 
 export type AddUserCsvHeaderType = z.infer<typeof AddUserCsvHeaderSchema>;
+/** @deprecated */
 export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
+/** @deprecated */
 export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
@@ -596,6 +598,7 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
+/** @deprecated */
 export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
@@ -603,6 +606,7 @@ export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
+/** @deprecated */
 export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
