@@ -506,6 +506,7 @@ const CreateOrgSchema = OrgSchema.pick({
 // @CC: "Will this fail/reject csvs that have headers that aren't in one of
 // these three lists? I think we have sites that are managing their files with
 // other columns, so we need to have plans to ignore anything"
+/** @deprecated */
 const CsvHeadersSchema = z.object({
   headers: z.array(z.string()),
   requiredHeaders: z.array(z.string()),
