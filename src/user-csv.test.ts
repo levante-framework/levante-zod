@@ -798,6 +798,18 @@ describe('UserCsvSchema', () => {
     ).not.toThrow();
   });
 
+  it('rejects a row w/ an unknown userType', () => {
+    const result = UserCsvSchema.safeParse([
+      { ...$validChildRow, id: 'user-1', userType: 'unknown' },
+    ]);
+    expect(result.success).toBe(false);
+    expect(result.error!.issues.length).toBe(1);
+    expect(result.error!.issues[0].code).toEqual('invalid_union');
+    expect(result.error!.issues[0].message).toEqual(
+      'Must be caregiver, child, or teacher',
+    );
+  });
+
   it('rejects a row with undefined userType', () => {
     const result = UserCsvSchema.safeParse([
       { ...$validChildRow, userType: undefined },
