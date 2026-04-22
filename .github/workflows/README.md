@@ -33,4 +33,3 @@ The Levante Bot GitHub App must:
 |---|---|---|
 | `Use workflow from` | `main` | Must always be `main` |
 | `release-type` | `patch` | One of `patch`, `minor`, or `major` |
-| `dry-run` | `false` | If checked, runs all checks and bumps the version locally but skips pushing, publishing, and creating a release |
