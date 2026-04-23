@@ -18,8 +18,14 @@ Manually triggered workflow that:
 
 | Secret | Purpose |
 |---|---|
-| `GITHUB_TOKEN` | Automatically provided by GitHub — used to push the version bump commit and tag, and to create the GitHub Release; requires `contents: write` and `id-token: write` permissions (configured in the workflow) |
+| `LEVANTE_BOT_APP_ID` | App ID of the Levante Bot GitHub App; used with [`actions/create-github-app-token`](https://github.com/actions/create-github-app-token) to mint an installation token that can push directly to `main` (the default `GITHUB_TOKEN` is blocked by the repository ruleset that requires PRs) |
+| `LEVANTE_BOT_APP_PRIVATE_KEY` | Private key (PEM) for the Levante Bot GitHub App |
 | `LEVANTE_NPM_TOKEN` | npm access token with publish rights for this package |
+
+The Levante Bot GitHub App must:
+
+- Be installed on this repository with `Contents: write` permission
+- Be listed as a bypass actor on any ruleset targeting `main` that requires pull requests, so the version bump commit and tag can be pushed directly
 
 **Inputs**
 
@@ -27,4 +33,3 @@ Manually triggered workflow that:
 |---|---|---|
 | `Use workflow from` | `main` | Must always be `main` |
 | `release-type` | `patch` | One of `patch`, `minor`, or `major` |
-| `dry-run` | `false` | If checked, runs all checks and bumps the version locally but skips pushing, publishing, and creating a release |

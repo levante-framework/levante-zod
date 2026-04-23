@@ -12,10 +12,6 @@ on:
           - patch
           - minor
           - major
-      dry-run:
-        description: 'Dry run (skip push and publish)'
-        type: boolean
-        default: false
 
 concurrency:
   group: ${{ github.workflow }}
@@ -29,10 +25,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.LEVANTE_BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.LEVANTE_BOT_APP_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Ensure on main
         run: |
@@ -69,19 +72,16 @@ jobs:
           npm version ${{ inputs.release-type }} --message "chore: release v%s [skip ci]"
 
       - name: Push commit and tag
-        if: ${{ !inputs.dry-run }}
         run: git push --follow-tags
 
       - name: Publish to npm
-        if: ${{ !inputs.dry-run }}
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LEVANTE_NPM_TOKEN }}
 
       - name: Create GitHub Release
-        if: ${{ !inputs.dry-run }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           gh release create "v${VERSION}" --generate-notes --title "v${VERSION}"
