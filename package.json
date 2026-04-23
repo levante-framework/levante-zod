@@ -1,6 +1,6 @@
 {
   "name": "@levante-framework/levante-zod",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Data validation schemas for the LEVANTE platform",
   "license": "MIT",
   "author": "levante-framework",
