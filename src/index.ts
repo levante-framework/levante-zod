@@ -6,6 +6,7 @@ import {
   validateCsvData,
   validateCsvHeaders,
 } from './csv';
+import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import {
   AddUserCsvHeaderSchema,
   combineUserCsvIssues,
@@ -542,6 +543,7 @@ export {
   CsvHeadersSchema,
   combineUserCsvIssues,
   DistrictSchema,
+  GetSiteOverviewParamsSchema,
   GroupSchema,
   H3CellSchema,
   LatLonSourceSchema,
@@ -602,6 +604,10 @@ export type CreateUserType = z.infer<typeof CreateUserSchema>;
 export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
+export type {
+  GetSiteOverviewParams,
+  GetSiteOverviewResult,
+} from './firebase-functions/get-site-overview';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
