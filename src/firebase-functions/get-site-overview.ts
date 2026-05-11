@@ -15,13 +15,11 @@ export type GetSiteOverviewParams = z.infer<typeof GetSiteOverviewParamsSchema>;
 export type GetSiteOverviewResult = {
   counts: {
     users: {
-      total: number;
       teachers: number;
       caregivers: number;
       children: number;
     };
     assignments: {
-      total: number;
       open: number;
       upcoming: number;
       closed: number;
