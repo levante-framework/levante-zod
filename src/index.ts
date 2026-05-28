@@ -238,7 +238,6 @@ const AssignmentAssessmentSchema = z.object({
     testData: z.boolean(),
     userData: z.object({
       assessmentPid: z.union([z.string(), z.null()]),
-      assessmentUid: z.union([z.string(), z.null()]),
       email: z.string(),
       name: z.union([z.string(), z.null()]),
       username: z.string(),
@@ -285,7 +284,6 @@ const AssignmentAssessmentSchema = z.object({
 const ClaimsSchema = z.object({
   adminOrgs: OrgRefMapSchema,
   adminUid: z.string().optional(),
-  assessmentUid: z.string().optional(),
   minimalAdminOrgs: OrgRefMapSchema,
   roarUid: z.string().optional(),
   super_admin: z.boolean(),
@@ -438,7 +436,6 @@ const UserSchema = z.object({
     })
     .optional(),
   archived: z.boolean(),
-  assessmentUid: z.string(),
   classes: OrgAssociationMapSchema,
   createdAt: TimestampSchema,
   displayName: z.string(),
