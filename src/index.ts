@@ -1,33 +1,33 @@
-import { cellToLatLng, getResolution } from "h3-js";
-import { z } from "zod";
+import { cellToLatLng, getResolution } from 'h3-js';
+import { z } from 'zod';
 import {
   normalizeCsvData,
   normalizeCsvHeaders,
   validateCsvData,
   validateCsvHeaders,
-} from "./csv";
-import { GetSiteOverviewParamsSchema } from "./firebase-functions/get-site-overview";
+} from './csv';
+import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import {
   AddUserCsvHeaderSchema,
   combineUserCsvIssues,
   UserCsvSchema,
-} from "./user-csv";
-import { parseCommaSeparated } from "./users";
+} from './user-csv';
+import { parseCommaSeparated } from './users';
 import {
   AddUsersCsvSchema,
   AddUsersSubmitSchema,
   validateAddUsersCsv,
   validateAddUsersFileUpload,
   validateAddUsersSubmit,
-} from "./users-add";
-import { LinkUsersCsvSchema, validateLinkUsersCsv } from "./users-link";
+} from './users-add';
+import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
 
 // Type alias for Firestore Timestamp
 // @CC: "To check whether this is compatible with firestore - they encode
 // this using seconds and nanoseconds and it usually has to be converted"
 const TimestampSchema = z.iso.datetime();
 
-const LatLonSourceSchema = z.enum(["gps", "h3_center", "approximate"]);
+const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
 
 const H3CellSchema = z.object({
   cellId: z.string().min(1),
@@ -36,7 +36,7 @@ const H3CellSchema = z.object({
 
 const LocationSchema = z
   .object({
-    schemaVersion: z.literal("location_v1"),
+    schemaVersion: z.literal('location_v1'),
     latLon: z
       .object({
         lat: z.number().min(-90).max(90),
@@ -46,12 +46,12 @@ const LocationSchema = z
       })
       .optional(),
     h3: z.object({
-      scheme: z.literal("h3_v1"),
+      scheme: z.literal('h3_v1'),
       baseline: H3CellSchema,
       effective: H3CellSchema,
       populationThreshold: z.number().int().positive(),
     }),
-    populationSource: z.enum(["kontur", "worldpop", "unknown"]).optional(),
+    populationSource: z.enum(['kontur', 'worldpop', 'unknown']).optional(),
     computedAt: z.iso.datetime().optional(),
   })
   .check(
@@ -60,16 +60,16 @@ const LocationSchema = z
         const baselineResolution = getResolution(value.h3.baseline.cellId);
         if (baselineResolution !== value.h3.baseline.resolution) {
           ctx.addIssue({
-            code: "custom",
-            path: ["h3", "baseline", "resolution"],
+            code: 'custom',
+            path: ['h3', 'baseline', 'resolution'],
             message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
           });
         }
       } catch {
         ctx.addIssue({
-          code: "custom",
-          path: ["h3", "baseline", "cellId"],
-          message: "Invalid baseline H3 cellId",
+          code: 'custom',
+          path: ['h3', 'baseline', 'cellId'],
+          message: 'Invalid baseline H3 cellId',
         });
       }
 
@@ -77,39 +77,39 @@ const LocationSchema = z
         const effectiveResolution = getResolution(value.h3.effective.cellId);
         if (effectiveResolution !== value.h3.effective.resolution) {
           ctx.addIssue({
-            code: "custom",
-            path: ["h3", "effective", "resolution"],
+            code: 'custom',
+            path: ['h3', 'effective', 'resolution'],
             message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
           });
         }
       } catch {
         ctx.addIssue({
-          code: "custom",
-          path: ["h3", "effective", "cellId"],
-          message: "Invalid effective H3 cellId",
+          code: 'custom',
+          path: ['h3', 'effective', 'cellId'],
+          message: 'Invalid effective H3 cellId',
         });
       }
 
       if (value.h3.effective.resolution < value.h3.baseline.resolution) {
         ctx.addIssue({
-          code: "custom",
-          path: ["h3", "effective", "resolution"],
-          message: "effective.resolution must be >= baseline.resolution",
+          code: 'custom',
+          path: ['h3', 'effective', 'resolution'],
+          message: 'effective.resolution must be >= baseline.resolution',
         });
       }
 
       if (
-        value.latLon?.source === "approximate" &&
+        value.latLon?.source === 'approximate' &&
         !value.latLon.blurRadiusMeters
       ) {
         ctx.addIssue({
-          code: "custom",
-          path: ["latLon", "blurRadiusMeters"],
-          message: "blurRadiusMeters is required when source is approximate",
+          code: 'custom',
+          path: ['latLon', 'blurRadiusMeters'],
+          message: 'blurRadiusMeters is required when source is approximate',
         });
       }
 
-      if (value.latLon?.source === "h3_center") {
+      if (value.latLon?.source === 'h3_center') {
         const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
         const epsilon = 1e-6;
         if (
@@ -117,10 +117,10 @@ const LocationSchema = z
           Math.abs(value.latLon.lon - centerLon) > epsilon
         ) {
           ctx.addIssue({
-            code: "custom",
-            path: ["latLon"],
+            code: 'custom',
+            path: ['latLon'],
             message:
-              "latLon must match effective H3 center when source is h3_center",
+              'latLon must match effective H3 center when source is h3_center',
           });
         }
       }
@@ -221,7 +221,7 @@ const AssignedOrgSchema = z.object({
   name: z.string(),
   orgId: z.string(),
   // @CC: "Flagging for families discussion"
-  orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+  orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
   timestamp: TimestampSchema,
@@ -348,7 +348,7 @@ const GroupSchema = z.object({
   updatedAt: TimestampSchema,
   createdBy: z.string(),
   parentOrgId: z.string(),
-  parentOrgType: z.literal("district"),
+  parentOrgType: z.literal('district'),
   name: z.string(),
   normalizedName: z.string(),
   tags: z.array(z.string()).optional(),
@@ -380,7 +380,7 @@ const ReadOrgSchema = z.object({
   legal: LegalInfoSchema,
   name: z.string(),
   orgId: z.string(),
-  orgType: z.enum(["classes", "districts", "families", "groups", "schools"]),
+  orgType: z.enum(['classes', 'districts', 'families', 'groups', 'schools']),
   publicName: z.string(),
   testData: z.boolean(),
   timestamp: TimestampSchema,
@@ -445,13 +445,13 @@ const UserSchema = z.object({
   legal: UserLegalSchema,
   schools: OrgAssociationMapSchema,
   sso: z.string().optional(),
-  userType: z.enum(["admin", "teacher", "student", "parent"]),
+  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
   testData: z.boolean().optional(),
 });
 
 const CreateUserSchema = z.object({
   id: z.string(),
-  userType: z.enum(["admin", "teacher", "student", "parent"]),
+  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
   month: z.string().optional(),
   year: z.string().optional(),
   caregiverId: z.string().optional(),
@@ -478,7 +478,7 @@ const OrgSchema = z.object({
   name: z.string(),
   normalizedName: z.string(),
   parentOrgId: z.string(),
-  parentOrgType: z.literal("district"),
+  parentOrgType: z.literal('district'),
   schoolId: z.string(),
   schools: z.array(z.string()).optional(),
   subGroups: z.array(z.string()).optional(),
@@ -512,9 +512,9 @@ const CsvHeadersSchema = z.object({
 });
 
 const locationDocId = (
-  location: Pick<z.infer<typeof LocationSchema>, "schemaVersion" | "h3">,
+  location: Pick<z.infer<typeof LocationSchema>, 'schemaVersion' | 'h3'>,
 ): string => {
-  const version = location.schemaVersion.replace(/^location_/, "");
+  const version = location.schemaVersion.replace(/^location_/, '');
   return `h3:${location.h3.effective.cellId}:t:${location.h3.populationThreshold}:${version}`;
 };
 
@@ -604,7 +604,7 @@ export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
   GetSiteOverviewParams,
   GetSiteOverviewResult,
-} from "./firebase-functions/get-site-overview";
+} from './firebase-functions/get-site-overview';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
