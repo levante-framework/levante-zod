@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { validateCsvData, validateCsvHeaders } from './csv';
-import { combineIssues, formatIssueFields } from './issues';
 import {
   CommaSeparatedSchema,
   MonthSchema,
   NormalizedUserTypeSchema,
   YearSchema,
 } from './users';
+import { combineIssues, formatIssueFields } from './util/issues';
 
 interface AddUserBirthdateInput {
   // @CC: "So here's where I think we want to clean up some ugliness around
