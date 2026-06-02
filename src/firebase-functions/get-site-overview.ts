@@ -1,11 +1,9 @@
-import { z } from 'zod';
-
-export const SITE_ID_MESSAGE =
-  'siteId is required and must be a non-empty string';
+import * as z from 'zod';
+import { NonEmptyStringSchema } from '../shared/non-empty-string';
 
 /** Parameters schema for `getSiteOverview` Firebase Function */
 export const GetSiteOverviewParamsSchema = z.object({
-  siteId: z.string(SITE_ID_MESSAGE).trim().min(1, SITE_ID_MESSAGE),
+  siteId: NonEmptyStringSchema,
 });
 
 /** Parameters type for `getSiteOverview` Firebase Function */

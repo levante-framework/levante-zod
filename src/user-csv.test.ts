@@ -9,7 +9,6 @@ import {
   ChildUserCsvRow,
   combineUserCsvIssues,
   ListableString,
-  NonEmptyString,
   NumberString,
   REQUIRED_ADD_USER_CSV_HEADERS,
   TeacherUserCsvRow,
@@ -179,44 +178,6 @@ describe('ListableString', () => {
 
   it.prop({ v: $nonString })('rejects non-strings', ({ v }) => {
     const result = ListableString.safeParse(v);
-    expect(result.success).toBe(false);
-    expect(result.error!.issues.length).toBe(1);
-    expect(result.error!.issues[0].code).toEqual('invalid_type');
-    expect(result.error!.issues[0].path).toEqual([]);
-  });
-});
-
-describe('NonEmptyString', () => {
-  it.prop({ v: $nonEmptyString })('accepts non-empty strings', ({ v }) => {
-    expect(() => NonEmptyString().parse(v)).not.toThrow();
-  });
-
-  it('trims surrounding whitespace', () => {
-    expect(NonEmptyString().parse('  hello  ')).toEqual('hello');
-  });
-
-  it('rejects an empty string with the default message', () => {
-    const result = NonEmptyString().safeParse('');
-    expect(result.success).toBe(false);
-    expect(result.error!.issues.length).toBe(1);
-    expect(result.error!.issues[0].message).toEqual('Required');
-  });
-
-  it('rejects a whitespace-only string with the default message', () => {
-    const result = NonEmptyString().safeParse('   ');
-    expect(result.success).toBe(false);
-    expect(result.error!.issues.length).toBe(1);
-    expect(result.error!.issues[0].message).toEqual('Required');
-  });
-
-  it('uses a custom message when provided', () => {
-    const result = NonEmptyString('Name is required').safeParse('');
-    expect(result.success).toBe(false);
-    expect(result.error!.issues[0].message).toEqual('Name is required');
-  });
-
-  it.prop({ v: $nonString })('rejects non-strings', ({ v }) => {
-    const result = NonEmptyString().safeParse(v);
     expect(result.success).toBe(false);
     expect(result.error!.issues.length).toBe(1);
     expect(result.error!.issues[0].code).toEqual('invalid_type');

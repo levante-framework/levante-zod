@@ -1,73 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import {
-  GetSiteOverviewParamsSchema,
-  SITE_ID_MESSAGE,
-} from './get-site-overview';
+import { GetSiteOverviewParamsSchema } from './get-site-overview';
 
 describe('GetSiteOverviewParamsSchema', () => {
-  it('accepts a valid siteId', () => {
+  it('accepts valid props', () => {
     expect(GetSiteOverviewParamsSchema.parse({ siteId: 'foo' })).toEqual({
       siteId: 'foo',
     });
   });
 
-  it('trims whitespace from siteId', () => {
-    expect(GetSiteOverviewParamsSchema.parse({ siteId: '  foo  ' })).toEqual({
+  it('strips unexpected props', () => {
+    const result = GetSiteOverviewParamsSchema.parse({
       siteId: 'foo',
+      unexpected: 'bar',
+      another: 'baz',
     });
+    expect(result).toEqual({ siteId: 'foo' });
   });
 
-  it('rejects a missing siteId', () => {
+  it('rejects missing siteId', () => {
     const result = GetSiteOverviewParamsSchema.safeParse({});
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
       {
         code: 'invalid_type',
         expected: 'string',
-        message: SITE_ID_MESSAGE,
-        path: ['siteId'],
-      },
-    ]);
-  });
-
-  it('rejects an empty siteId', () => {
-    const result = GetSiteOverviewParamsSchema.safeParse({ siteId: '' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'too_small',
-        inclusive: true,
-        message: SITE_ID_MESSAGE,
-        origin: 'string',
-        minimum: 1,
-        path: ['siteId'],
-      },
-    ]);
-  });
-
-  it('rejects a whitespace-only siteId', () => {
-    const result = GetSiteOverviewParamsSchema.safeParse({ siteId: '   ' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'too_small',
-        inclusive: true,
-        message: SITE_ID_MESSAGE,
-        origin: 'string',
-        minimum: 1,
-        path: ['siteId'],
-      },
-    ]);
-  });
-
-  it('rejects a non-string siteId', () => {
-    const result = GetSiteOverviewParamsSchema.safeParse({ siteId: 42 });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_type',
-        expected: 'string',
-        message: SITE_ID_MESSAGE,
+        message: 'Invalid input: expected string, received undefined',
         path: ['siteId'],
       },
     ]);
