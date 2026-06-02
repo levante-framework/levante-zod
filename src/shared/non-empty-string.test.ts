@@ -11,13 +11,29 @@ const $nonEmptyString = fc
 /** Arbitrary: a non-string value */
 const $nonString = fc.anything().filter((v) => typeof v !== 'string');
 
+/** Fixture: a custom issue message */
+const $message = 'Required';
+
 describe('nonEmptyString', () => {
-  it('uses issue message override when provided', () => {
-    const message = 'foo';
-    const result = nonEmptyString(message).safeParse([]);
+  it('uses issue message override for invalid type', () => {
+    const result = nonEmptyString($message).safeParse([]);
     expect(result.success).toBe(false);
     expect(result.error?.issues.length).toBe(1);
-    expect(result.error?.issues[0].message).toEqual(message);
+    expect(result.error?.issues[0].message).toEqual($message);
+  });
+
+  it('uses issue message override for empty string', () => {
+    const result = nonEmptyString($message).safeParse('');
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0].message).toEqual($message);
+  });
+
+  it('uses issue message override for whitespace-only string', () => {
+    const result = nonEmptyString($message).safeParse('   ');
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0].message).toEqual($message);
   });
 });
 
