@@ -1,26 +1,30 @@
 import { cellToLatLng, getResolution } from 'h3-js';
-import { z } from 'zod';
-import {
-  normalizeCsvData,
-  normalizeCsvHeaders,
-  validateCsvData,
-  validateCsvHeaders,
-} from './csv';
-import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
+import * as z from 'zod';
 import {
   AddUserCsvHeaderSchema,
   combineUserCsvIssues,
   UserCsvSchema,
-} from './user-csv';
-import { parseCommaSeparated } from './users';
+} from './csv/user-csv';
+import {
+  CsvHeadersSchema,
+  normalizeCsvData,
+  normalizeCsvHeaders,
+  validateCsvData,
+  validateCsvHeaders,
+} from './deprecated/csv';
+import { parseCommaSeparated } from './deprecated/users';
 import {
   AddUsersCsvSchema,
   AddUsersSubmitSchema,
   validateAddUsersCsv,
   validateAddUsersFileUpload,
   validateAddUsersSubmit,
-} from './users-add';
-import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
+} from './deprecated/users-add';
+import {
+  LinkUsersCsvSchema,
+  validateLinkUsersCsv,
+} from './deprecated/users-link';
+import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -500,16 +504,6 @@ const CreateOrgSchema = OrgSchema.pick({
   createdBy: true,
 }).extend({
   siteId: z.string().optional(),
-});
-
-// @CC: "Will this fail/reject csvs that have headers that aren't in one of
-// these three lists? I think we have sites that are managing their files with
-// other columns, so we need to have plans to ignore anything"
-/** @deprecated */
-const CsvHeadersSchema = z.object({
-  headers: z.array(z.string()),
-  requiredHeaders: z.array(z.string()),
-  optionalHeaders: z.array(z.string()).optional(),
 });
 
 const locationDocId = (

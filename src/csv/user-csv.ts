@@ -11,7 +11,7 @@
  * passed as an empty string, not `undefined` or `null`.
  */
 import * as z from 'zod';
-import { nonEmptyString } from './shared/non-empty-string';
+import { nonEmptyString } from '../shared/non-empty-string';
 
 /** The maximum year for a child user */
 export const CHILD_YEAR_MAX = new Date().getFullYear() - 2;

@@ -1,5 +1,5 @@
-import type { z } from 'zod';
-import { combineIssues } from './util/issues';
+import * as z from 'zod';
+import { combineIssues } from '../util/issues';
 
 const csvFieldMap: Record<string, string> = {
   id: 'id',
@@ -16,6 +16,13 @@ const csvFieldMap: Record<string, string> = {
   school: 'school',
   class: 'class',
 };
+
+/** @deprecated */
+export const CsvHeadersSchema = z.object({
+  headers: z.array(z.string()),
+  requiredHeaders: z.array(z.string()),
+  optionalHeaders: z.array(z.string()).optional(),
+});
 
 /** @deprecated */
 export const normalizeCsvData = (
