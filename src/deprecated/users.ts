@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** @deprecated */
 export const parseCommaSeparated = (value: string | undefined): string[] => {
@@ -9,10 +9,12 @@ export const parseCommaSeparated = (value: string | undefined): string[] => {
     .filter((s) => s);
 };
 
+/** @deprecated */
 export const CommaSeparatedSchema = z
   .union([z.string(), z.undefined()])
   .transform((value) => parseCommaSeparated(value));
 
+/** @deprecated */
 export const MonthSchema = z
   .union([z.string(), z.number(), z.undefined()])
   .transform((value) => {
@@ -28,12 +30,7 @@ export const MonthSchema = z
       .optional(),
   );
 
-// @CC: "There's some math done in users-add that could be moved here?
-// It's not just that this should be a four digit number; it's that the min max
-// range should be between currentYear-2 and currentYear-18 (i.e., child users
-// must be between 2years old and 18 years old - the current check already
-// doesn't take month into account, i.e., would reject a 17yo born in July
-// because their birth year is 2008)"
+/** @deprecated */
 export const YearSchema = z
   .union([z.string(), z.number(), z.undefined()])
   .transform((value) => {
@@ -49,8 +46,7 @@ export const YearSchema = z
       .optional(),
   );
 
-// @CC: "Why is this converting caregiver to parent? and not child to
-// student?"
+/** @deprecated */
 export const NormalizedUserTypeSchema = z
   .string()
   .trim()

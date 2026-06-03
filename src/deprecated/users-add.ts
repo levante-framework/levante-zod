@@ -1,4 +1,5 @@
-import { z } from 'zod';
+import * as z from 'zod';
+import { combineIssues, formatIssueFields } from '../util/issues';
 import { validateCsvData, validateCsvHeaders } from './csv';
 import {
   CommaSeparatedSchema,
@@ -6,12 +7,8 @@ import {
   NormalizedUserTypeSchema,
   YearSchema,
 } from './users';
-import { combineIssues, formatIssueFields } from './util/issues';
 
 interface AddUserBirthdateInput {
-  // @CC: "So here's where I think we want to clean up some ugliness around
-  // legacy ROAR terms (student, parent) vs ours (child, caregiver) - this
-  // mixes the two which is not great"
   userType: 'child' | 'parent' | 'teacher';
   month?: number | undefined;
   year?: number | undefined;
@@ -19,6 +16,7 @@ interface AddUserBirthdateInput {
 
 type AddUserBirthdateOutput = AddUserBirthdateInput & Record<string, unknown>;
 
+/** @deprecated */
 export const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(
   schema: T,
 ) =>
@@ -162,6 +160,7 @@ export const AddUsersSubmitSchema = addChildUserRules(
   }),
 );
 
+/** @deprecated */
 export const combineFieldErrors = (
   errors: Array<{ field: string; message: string }>,
 ): string[] => {
@@ -188,8 +187,7 @@ export const combineFieldErrors = (
     });
 };
 
-// @CC: "I think this is now impossible given the site selector (site used
-// to be a column in the csv file)"
+/** @deprecated */
 export const detectMultipleSites = (
   parsedData: Record<string, unknown>[],
 ): {
@@ -234,9 +232,6 @@ const getChildAgeErrorFields = (
 
   if (yearDiff > 18) return ['month', 'year'];
   if (yearDiff < 18) return [];
-  // @CC: "Wouldn't this send a month error to anyone born in the calendar
-  // year before the current month? Don't we just want a check that returns a
-  // month error if birthMonth>12 (or >=13)?"
   return currentMonth >= birthMonth ? ['month'] : [];
 };
 
@@ -361,8 +356,6 @@ export const validateAddUsersFileUpload = (
     });
   }
 
-  // @CC: "Just to flag that this and 301-303 should be removed once we've
-  // removed permissions"
   if (!shouldUsePermissions) {
     usersWithoutId.forEach((user) => {
       if (usersWithZodErrors.has(user)) return;
