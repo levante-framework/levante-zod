@@ -11,6 +11,7 @@
  * passed as an empty string, not `undefined` or `null`.
  */
 import * as z from 'zod';
+import { nonEmptyString } from './shared/non-empty-string';
 
 /** The maximum year for a child user */
 export const CHILD_YEAR_MAX = new Date().getFullYear() - 2;
@@ -61,29 +62,20 @@ export const ListableString = z.string().transform((value) => {
 });
 
 /**
- * A required string, i.e., not empty or whitespace-only
- */
-export const NonEmptyString = (message: string = 'Required') => {
-  // NB: pipe() forces type check to abort on failure instead of
-  // running proceeding checks in parallel
-  return z.string().pipe(z.string().trim().nonempty(message));
-};
-
-/**
  * A string that coerces into a number (or `Number.NaN`), e.g.,
  * `"123"` -> `123`, `"foo"` -> `Number.NaN`
  */
 export const NumberString = (message: string = 'Required') => {
-  // NB: NonEmptyString() prevents '' from being coerced to 0
-  return NonEmptyString(message).transform(Number);
+  // NB: nonEmptyString prevents '' from being coerced to 0
+  return nonEmptyString(message).transform(Number);
 };
 
 /**
  * Base schema for all UserCsv rows
  */
 export const UserCsvRowBase = z
-  .object({
-    id: NonEmptyString(),
+  .looseObject({
+    id: nonEmptyString('Required'),
     school: ListableString,
     class: ListableString,
     cohort: ListableString,
@@ -108,8 +100,7 @@ export const UserCsvRowBase = z
         });
       }
     }),
-  )
-  .loose(); // Pass through unknown props
+  );
 
 /**
  * A caregiver UserCsv row
