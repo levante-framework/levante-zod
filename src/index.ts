@@ -24,6 +24,10 @@ import {
   LinkUsersCsvSchema,
   validateLinkUsersCsv,
 } from './deprecated/users-link';
+import {
+  CreateUserSchema,
+  CreateUsersParamsSchema,
+} from './firebase-functions/create-users';
 import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import { makeCustomIssue } from './util/issues';
 
@@ -452,25 +456,6 @@ const UserSchema = z.object({
   testData: z.boolean().optional(),
 });
 
-const CreateUserSchema = z.object({
-  id: z.string(),
-  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
-  month: z.string().optional(),
-  year: z.string().optional(),
-  caregiverId: z.string().optional(),
-  teacherId: z.string().optional(),
-  site: z.string(),
-  school: z.string().optional(),
-  class: z.string().optional(),
-  cohort: z.string().optional(),
-  orgIds: z.object({
-    schools: z.array(z.string()),
-    classes: z.array(z.string()),
-    districts: z.array(z.string()).nonempty(),
-    groups: z.array(z.string()),
-  }),
-});
-
 const OrgSchema = z.object({
   archived: z.boolean(),
   classes: z.array(z.string()).optional(),
@@ -530,6 +515,7 @@ export {
   CreateOrgSchema,
   CreateSchoolSchema,
   CreateUserSchema,
+  CreateUsersParamsSchema,
   CsvHeadersSchema,
   combineUserCsvIssues,
   DistrictSchema,
@@ -590,7 +576,12 @@ export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
 export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
+/** @deprecated */
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
+export type {
+  CreateUsersParams,
+  CreateUsersResult,
+} from './firebase-functions/create-users';
 /** @deprecated */
 export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
