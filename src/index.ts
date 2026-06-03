@@ -59,78 +59,76 @@ const LocationSchema = z
     populationSource: z.enum(['kontur', 'worldpop', 'unknown']).optional(),
     computedAt: z.iso.datetime().optional(),
   })
-  .check(
-    z.superRefine((value, ctx) => {
-      try {
-        const baselineResolution = getResolution(value.h3.baseline.cellId);
-        if (baselineResolution !== value.h3.baseline.resolution) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['h3', 'baseline', 'resolution'],
-            message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
-          });
-        }
-      } catch {
+  .superRefine((value, ctx) => {
+    try {
+      const baselineResolution = getResolution(value.h3.baseline.cellId);
+      if (baselineResolution !== value.h3.baseline.resolution) {
         ctx.addIssue({
           code: 'custom',
-          path: ['h3', 'baseline', 'cellId'],
-          message: 'Invalid baseline H3 cellId',
+          path: ['h3', 'baseline', 'resolution'],
+          message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
         });
       }
+    } catch {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['h3', 'baseline', 'cellId'],
+        message: 'Invalid baseline H3 cellId',
+      });
+    }
 
-      try {
-        const effectiveResolution = getResolution(value.h3.effective.cellId);
-        if (effectiveResolution !== value.h3.effective.resolution) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['h3', 'effective', 'resolution'],
-            message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
-          });
-        }
-      } catch {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['h3', 'effective', 'cellId'],
-          message: 'Invalid effective H3 cellId',
-        });
-      }
-
-      if (value.h3.effective.resolution < value.h3.baseline.resolution) {
+    try {
+      const effectiveResolution = getResolution(value.h3.effective.cellId);
+      if (effectiveResolution !== value.h3.effective.resolution) {
         ctx.addIssue({
           code: 'custom',
           path: ['h3', 'effective', 'resolution'],
-          message: 'effective.resolution must be >= baseline.resolution',
+          message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
         });
       }
+    } catch {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['h3', 'effective', 'cellId'],
+        message: 'Invalid effective H3 cellId',
+      });
+    }
 
+    if (value.h3.effective.resolution < value.h3.baseline.resolution) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['h3', 'effective', 'resolution'],
+        message: 'effective.resolution must be >= baseline.resolution',
+      });
+    }
+
+    if (
+      value.latLon?.source === 'approximate' &&
+      !value.latLon.blurRadiusMeters
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['latLon', 'blurRadiusMeters'],
+        message: 'blurRadiusMeters is required when source is approximate',
+      });
+    }
+
+    if (value.latLon?.source === 'h3_center') {
+      const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
+      const epsilon = 1e-6;
       if (
-        value.latLon?.source === 'approximate' &&
-        !value.latLon.blurRadiusMeters
+        Math.abs(value.latLon.lat - centerLat) > epsilon ||
+        Math.abs(value.latLon.lon - centerLon) > epsilon
       ) {
         ctx.addIssue({
           code: 'custom',
-          path: ['latLon', 'blurRadiusMeters'],
-          message: 'blurRadiusMeters is required when source is approximate',
+          path: ['latLon'],
+          message:
+            'latLon must match effective H3 center when source is h3_center',
         });
       }
-
-      if (value.latLon?.source === 'h3_center') {
-        const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
-        const epsilon = 1e-6;
-        if (
-          Math.abs(value.latLon.lat - centerLat) > epsilon ||
-          Math.abs(value.latLon.lon - centerLon) > epsilon
-        ) {
-          ctx.addIssue({
-            code: 'custom',
-            path: ['latLon'],
-            message:
-              'latLon must match effective H3 center when source is h3_center',
-          });
-        }
-      }
-    }),
-  );
+    }
+  });
 
 // Generic structure for organization references used in multiple places
 const OrgRefMapSchema = z.object({
