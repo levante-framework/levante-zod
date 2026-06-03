@@ -21,6 +21,7 @@ import {
   validateAddUsersSubmit,
 } from './users-add';
 import { LinkUsersCsvSchema, validateLinkUsersCsv } from './users-link';
+import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
 // @CC: "To check whether this is compatible with firestore - they encode
@@ -549,6 +550,7 @@ export {
   LinkUsersCsvSchema,
   LocationSchema,
   locationDocId,
+  makeCustomIssue,
   normalizeCsvData,
   normalizeCsvHeaders,
   OrgAssociationMapSchema,
@@ -623,3 +625,4 @@ export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
+export type { ZodIssue } from './util/issues';
