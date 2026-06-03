@@ -20,40 +20,38 @@ type AddUserBirthdateOutput = AddUserBirthdateInput & Record<string, unknown>;
 export const addChildUserRules = <T extends z.ZodType<AddUserBirthdateOutput>>(
   schema: T,
 ) =>
-  schema.check(
-    z.superRefine((data: AddUserBirthdateOutput, ctx) => {
-      if (data.userType === 'child' && (!data.month || !data.year)) {
-        const isMissingMonth = !data.month;
-        const isMissingYear = !data.year;
+  schema.superRefine((data: AddUserBirthdateOutput, ctx) => {
+    if (data.userType === 'child' && (!data.month || !data.year)) {
+      const isMissingMonth = !data.month;
+      const isMissingYear = !data.year;
 
-        if (isMissingMonth) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Child users must have month and year',
-            path: ['month'],
-          });
-        }
-        if (isMissingYear) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Child users must have month and year',
-            path: ['year'],
-          });
-        }
-      }
-
-      const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
-      if (data.userType === 'child' && ageErrorFields.length > 0) {
-        ageErrorFields.forEach((field) => {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Child users must be under 18 years old',
-            path: [field],
-          });
+      if (isMissingMonth) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['month'],
         });
       }
-    }),
-  );
+      if (isMissingYear) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must have month and year',
+          path: ['year'],
+        });
+      }
+    }
+
+    const ageErrorFields = getChildAgeErrorFields(data.month, data.year);
+    if (data.userType === 'child' && ageErrorFields.length > 0) {
+      ageErrorFields.forEach((field) => {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Child users must be under 18 years old',
+          path: [field],
+        });
+      });
+    }
+  });
 
 /** @deprecated */
 export const AddUsersCsvSchema = addChildUserRules(
@@ -70,43 +68,41 @@ export const AddUsersCsvSchema = addChildUserRules(
       school: CommaSeparatedSchema,
       class: CommaSeparatedSchema,
     })
-    .check(
-      z.superRefine((data, ctx) => {
-        const cohorts = data.cohort;
-        const schools = data.school;
-        const classes = data.class;
+    .superRefine((data, ctx) => {
+      const cohorts = data.cohort;
+      const schools = data.school;
+      const classes = data.class;
 
-        if (cohorts.length === 0 && schools.length === 0) {
-          ctx.addIssue({
-            code: 'custom',
-            message:
-              'Must have either cohort OR school. School required if class provided.',
-            path: ['cohort'],
-          });
-          ctx.addIssue({
-            code: 'custom',
-            message:
-              'Must have either cohort OR school. School required if class provided.',
-            path: ['school'],
-          });
-        }
+      if (cohorts.length === 0 && schools.length === 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'Must have either cohort OR school. School required if class provided.',
+          path: ['cohort'],
+        });
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'Must have either cohort OR school. School required if class provided.',
+          path: ['school'],
+        });
+      }
 
-        if (classes.length > 0 && schools.length === 0) {
-          ctx.addIssue({
-            code: 'custom',
-            message:
-              'Must have either cohort OR school. School required if class provided.',
-            path: ['class'],
-          });
-          ctx.addIssue({
-            code: 'custom',
-            message:
-              'Must have either cohort OR school. School required if class provided.',
-            path: ['school'],
-          });
-        }
-      }),
-    )
+      if (classes.length > 0 && schools.length === 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'Must have either cohort OR school. School required if class provided.',
+          path: ['class'],
+        });
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'Must have either cohort OR school. School required if class provided.',
+          path: ['school'],
+        });
+      }
+    })
     .transform(({ usertype, ...rest }) => ({
       ...rest,
       userType: usertype,

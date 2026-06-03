@@ -35,20 +35,20 @@ export const REQUIRED_ADD_USER_CSV_HEADERS = [
  *
  * Usage: `AddUserCsvHeaderSchema.safeParse(headers: string[])`
  */
-export const AddUserCsvHeaderSchema = z.array(z.string()).check(
-  z.superRefine((headers, ctx) => {
+export const AddUserCsvHeaderSchema = z
+  .array(z.string())
+  .superRefine((headers, ctx) => {
     for (const required of REQUIRED_ADD_USER_CSV_HEADERS) {
       if (!headers.includes(required)) {
         ctx.addIssue({
           code: 'custom',
-          message: `Missing required header`,
+          message: 'Missing required header',
           path: [required],
           input: headers,
         });
       }
     }
-  }),
-);
+  });
 
 /**
  * A string of comma-separated values that parses into a list of trimmed,
@@ -80,27 +80,25 @@ export const UserCsvRowBase = z
     class: ListableString,
     cohort: ListableString,
   })
-  .check(
-    z.superRefine((data, ctx) => {
-      // All users must have either school+class xor cohort
-      const hasSchoolClass =
-        data.school &&
-        data.school.length > 0 &&
-        data.class &&
-        data.class.length > 0;
-      const hasCohort = data.cohort && data.cohort.length > 0;
-      const hasAtLeastOneGroup = hasSchoolClass || hasCohort;
-      const hasBothGroupTypes = hasSchoolClass && hasCohort;
-      if (!hasAtLeastOneGroup || hasBothGroupTypes) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Must have either school and class OR cohort',
-          path: ['school|class|cohort'],
-          input: data,
-        });
-      }
-    }),
-  );
+  .superRefine((data, ctx) => {
+    // All users must have either school+class xor cohort
+    const hasSchoolClass =
+      data.school &&
+      data.school.length > 0 &&
+      data.class &&
+      data.class.length > 0;
+    const hasCohort = data.cohort && data.cohort.length > 0;
+    const hasAtLeastOneGroup = hasSchoolClass || hasCohort;
+    const hasBothGroupTypes = hasSchoolClass && hasCohort;
+    if (!hasAtLeastOneGroup || hasBothGroupTypes) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must have either school and class OR cohort',
+        path: ['school|class|cohort'],
+        input: data,
+      });
+    }
+  });
 
 /**
  * A caregiver UserCsv row
@@ -160,30 +158,28 @@ export const UserCsvSchema = z
       { message: 'Must be caregiver, child, or teacher' },
     ),
   )
-  .check(
-    z.superRefine((data, ctx) => {
-      // All users must have a unique id
-      const seen = new Map<string, number[]>();
-      data.forEach((row, idx) => {
-        if (row.id === '') return;
-        const rows = seen.get(row.id) ?? [];
-        rows.push(idx);
-        seen.set(row.id, rows);
-      });
+  .superRefine((data, ctx) => {
+    // All users must have a unique id
+    const seen = new Map<string, number[]>();
+    data.forEach((row, idx) => {
+      if (row.id === '') return;
+      const rows = seen.get(row.id) ?? [];
+      rows.push(idx);
+      seen.set(row.id, rows);
+    });
 
-      for (const rowIdxs of seen.values()) {
-        if (rowIdxs.length < 2) continue;
-        rowIdxs.forEach((idx) => {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Must be unique',
-            path: [idx, 'id'],
-            input: data[idx],
-          });
+    for (const rowIdxs of seen.values()) {
+      if (rowIdxs.length < 2) continue;
+      rowIdxs.forEach((idx) => {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Must be unique',
+          path: [idx, 'id'],
+          input: data[idx],
         });
-      }
-    }),
-  );
+      });
+    }
+  });
 
 /**
  * Combines UserCsv validation issues by field+message
