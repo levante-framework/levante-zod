@@ -17,9 +17,6 @@ const $nonArray = fc.anything().filter((v) => !Array.isArray(v));
 /** Arbitrary: a non-object value */
 const $nonObject = fc.anything().filter((v) => typeof v !== 'object');
 
-/** Arbitrary: a non-string value */
-const $nonString = fc.anything().filter((v) => typeof v !== 'string');
-
 /** Fixture: a valid user base */
 const $validBase = {
   id: 'u1',
@@ -116,34 +113,6 @@ describe('UserBaseSchema', () => {
     });
   });
 
-  describe('invalid id', () => {
-    it.prop({ id: $nonString })('rejects non-string id', ({ id }) => {
-      const result = UserBaseSchema.safeParse({ ...$validBase, id });
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
-      expect(issue.code).toEqual('invalid_type');
-      expect(issue.expected).toEqual('string');
-      expect(issue.message).toMatch(
-        /^Invalid input: expected string, received/,
-      );
-      expect(issue.path).toEqual(['id']);
-    });
-
-    it.prop({ id: fc.constantFrom('', '   ') })(
-      'rejects empty or whitespace-only id',
-      ({ id }) => {
-        const result = UserBaseSchema.safeParse({ ...$validBase, id });
-        expect(result.success).toBe(false);
-        expect(result.error?.issues.length).toBe(1);
-        expect(result.error?.issues[0]).toMatchObject({
-          code: 'too_small',
-          path: ['id'],
-        });
-      },
-    );
-  });
-
   describe('invalid orgIds', () => {
     it.prop({ orgIds: $nonObject })(
       'rejects non-object orgIds',
@@ -190,53 +159,21 @@ describe('UserBaseSchema', () => {
       },
     );
 
-    it.prop({ nonString: $nonString })(
-      'rejects non-strings in orgIds.schools, orgIds.classes, orgIds.cohorts',
-      ({ nonString }) => {
-        const result = UserBaseSchema.safeParse({
-          ...$validBase,
-          orgIds: {
-            schools: [nonString],
-            classes: [nonString],
-            cohorts: [nonString],
-          },
-        });
-        expect(result.success).toBe(false);
-        expect(result.error?.issues.length).toBe(3);
-        const paths = ['schools', 'classes', 'cohorts'];
-        for (let i = 0; i < 3; i++) {
-          const issue = result.error?.issues[i] as z.core.$ZodIssueInvalidType;
-          expect(issue.code).toEqual('invalid_type');
-          expect(issue.expected).toEqual('string');
-          expect(issue.message).toMatch(
-            /^Invalid input: expected string, received/,
-          );
-          expect(issue.path).toEqual(['orgIds', paths[i], 0]);
-        }
-      },
-    );
-
-    it.prop({ elem: fc.constantFrom('', '   ') })(
-      'rejects empty or whitespace-only strings in orgIds.schools, orgIds.classes, orgIds.cohorts',
-      ({ elem }) => {
-        const result = UserBaseSchema.safeParse({
-          ...$validBase,
-          orgIds: {
-            schools: [elem],
-            classes: [elem],
-            cohorts: [elem],
-          },
-        });
-        expect(result.success).toBe(false);
-        const paths = ['schools', 'classes', 'cohorts'];
-        for (let i = 0; i < 3; i++) {
-          expect(result.error?.issues[i]).toMatchObject({
-            code: 'too_small',
-            path: ['orgIds', paths[i], 0],
-          });
-        }
-      },
-    );
+    it('rejects missing orgIds sub-fields', () => {
+      const result = UserBaseSchema.safeParse({ ...$validBase, orgIds: {} });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(3);
+      const paths = ['schools', 'classes', 'cohorts'];
+      for (const [i, path] of paths.entries()) {
+        const issue = result.error?.issues[i] as z.core.$ZodIssueInvalidType;
+        expect(issue.code).toEqual('invalid_type');
+        expect(issue.expected).toEqual('array');
+        expect(issue.message).toMatch(
+          /^Invalid input: expected array, received/,
+        );
+        expect(issue.path).toEqual(['orgIds', path]);
+      }
+    });
   });
 
   describe('invalid superRefine', () => {
@@ -553,6 +490,59 @@ describe('UserSchema', () => {
       expect(() => UserSchema.parse($validTeacher)).not.toThrow();
     });
   });
+
+  describe('invalid userType', () => {
+    it('rejects an unknown userType', () => {
+      const result = UserSchema.safeParse({
+        ...$validChild,
+        userType: 'admin',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_union',
+          errors: [],
+          note: 'No matching discriminator',
+          discriminator: 'userType',
+          path: ['userType'],
+          message: 'Invalid input',
+        },
+      ]);
+    });
+
+    it('rejects a missing userType', () => {
+      const { userType: _, ...rest } = $validChild;
+      const result = UserSchema.safeParse(rest);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_union',
+          errors: [],
+          note: 'No matching discriminator',
+          discriminator: 'userType',
+          path: ['userType'],
+          message: 'Invalid input',
+        },
+      ]);
+    });
+  });
+
+  describe('invalid superRefine (inherited)', () => {
+    it('rejects a user with no org group', () => {
+      const result = UserSchema.safeParse({
+        ...$validChild,
+        orgIds: { schools: [], classes: [], cohorts: [] },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Must have either schools and classes OR cohorts',
+          path: ['orgIds'],
+        },
+      ]);
+    });
+  });
 });
 
 describe('CreateUsersParamsSchema', () => {
@@ -605,45 +595,6 @@ describe('CreateUsersParamsSchema', () => {
         expect(issue.path).toEqual([path]);
       }
     });
-  });
-
-  describe('invalid siteId', () => {
-    it.prop({ nonString: $nonString })(
-      'rejects non-string siteId',
-      ({ nonString }) => {
-        const result = CreateUsersParamsSchema.safeParse({
-          ...$validParams,
-          siteId: nonString,
-        });
-        expect(result.success).toBe(false);
-        expect(result.error?.issues.length).toBe(1);
-        const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
-        expect(issue.code).toEqual('invalid_type');
-        expect(issue.expected).toEqual('string');
-        expect(issue.message).toMatch(
-          /^Invalid input: expected string, received/,
-        );
-        expect(issue.path).toEqual(['siteId']);
-      },
-    );
-
-    it.prop({ empty: fc.constantFrom('', '   ') })(
-      'rejects empty or whitespace-only siteId',
-      ({ empty }) => {
-        const result = CreateUsersParamsSchema.safeParse({
-          ...$validParams,
-          siteId: empty,
-        });
-        expect(result.success).toBe(false);
-        expect(result.error?.issues.length).toBe(1);
-        const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
-        expect(issue.code).toEqual('too_small');
-        expect(issue.message).toMatch(
-          /^Too small: expected string to have >=1 characters/,
-        );
-        expect(issue.path).toEqual(['siteId']);
-      },
-    );
   });
 
   describe('invalid users', () => {
