@@ -99,6 +99,7 @@ export const CreateUsersParamsSchema = z
         code: 'custom',
         message: 'Must have at least one user',
         path: ['users'],
+        input: data.users,
       });
       return;
     }
