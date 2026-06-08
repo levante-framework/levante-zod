@@ -35,7 +35,7 @@ export const UserBaseSchema = z
   .superRefine((data, ctx) => {
     // All users must have either schools+classes xor cohorts
     const hasSchoolClass =
-      data.orgIds.schools.length > 0 && data.orgIds.classes.length;
+      data.orgIds.schools.length > 0 && data.orgIds.classes.length > 0;
     const hasCohort = data.orgIds.cohorts.length > 0;
     const hasAtLeastOneGroup = hasSchoolClass || hasCohort;
     const hasBothGroupTypes = hasSchoolClass && hasCohort;
