@@ -29,6 +29,7 @@ import {
   CreateUsersParamsSchema,
 } from './firebase-functions/create-users';
 import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
+import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -520,6 +521,7 @@ export {
   combineUserCsvIssues,
   DistrictSchema,
   GetSiteOverviewParamsSchema,
+  GetSyncStatusParamsSchema,
   GroupSchema,
   H3CellSchema,
   LatLonSourceSchema,
@@ -590,6 +592,10 @@ export type {
   GetSiteOverviewParams,
   GetSiteOverviewResult,
 } from './firebase-functions/get-site-overview';
+export type {
+  GetSyncStatusParams,
+  GetSyncStatusResult,
+} from './firebase-functions/get-sync-status';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
