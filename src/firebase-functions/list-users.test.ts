@@ -3,7 +3,10 @@ import type * as z from 'zod';
 import { ListUsersParamsSchema } from './list-users';
 
 /** Fixture: minimal valid params */
-const $valid = { orgType: 'schools' as const, orgId: 'o1' };
+const $valid = { orgType: 'school' as const, orgId: 'o1' };
+
+/** Fixture: the default orderBy applied when none is provided */
+const $defaultOrderBy = { field: 'createdAt', direction: 'desc' };
 
 describe('ListUsersParamsSchema', () => {
   describe('valid', () => {
@@ -17,10 +20,22 @@ describe('ListUsersParamsSchema', () => {
           ...$valid,
           page: 0,
           pageLimit: 50,
-          restrictToActiveUsers: true,
-          restrictToEnabledUsers: true,
+          orderBy: { field: 'email', direction: 'asc' },
+          excludeArchived: true,
+          excludeDisabled: true,
         }),
       ).not.toThrow();
+    });
+
+    it('defaults orderBy to createdAt (newest first)', () => {
+      const result = ListUsersParamsSchema.parse($valid);
+      expect(result.orderBy).toEqual($defaultOrderBy);
+    });
+
+    it('keeps a provided orderBy', () => {
+      const orderBy = { field: 'email', direction: 'asc' as const };
+      const result = ListUsersParamsSchema.parse({ ...$valid, orderBy });
+      expect(result.orderBy).toEqual(orderBy);
     });
 
     it('strips unexpected props', () => {
@@ -28,7 +43,7 @@ describe('ListUsersParamsSchema', () => {
         ...$valid,
         unexpected: 'foo',
       });
-      expect(result.data).toEqual({ ...$valid });
+      expect(result.data).toEqual({ ...$valid, orderBy: $defaultOrderBy });
     });
   });
 
@@ -63,6 +78,26 @@ describe('ListUsersParamsSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].path).toEqual(['orgId']);
+    });
+
+    it('rejects an invalid orderBy field', () => {
+      const result = ListUsersParamsSchema.safeParse({
+        ...$valid,
+        orderBy: { field: 'username', direction: 'asc' },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0].path).toEqual(['orderBy', 'field']);
+    });
+
+    it('rejects an invalid orderBy direction', () => {
+      const result = ListUsersParamsSchema.safeParse({
+        ...$valid,
+        orderBy: { field: 'createdAt', direction: 'sideways' },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0].path).toEqual(['orderBy', 'direction']);
     });
   });
 });

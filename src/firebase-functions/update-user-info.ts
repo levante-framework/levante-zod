@@ -8,7 +8,7 @@ import { NonEmptyStringSchema } from '../shared/non-empty-string';
  * document (i.e., not relationships to other entities such as orgs). Add new
  * optional fields here as more such properties become editable.
  */
-export const UpdateUserInfoUserSchema = z.object({
+export const UserInfoSchema = z.object({
   uid: NonEmptyStringSchema,
   archived: z.boolean().optional(),
   disabled: z.boolean().optional(),
@@ -20,7 +20,7 @@ const EDITABLE_FIELDS = ['archived', 'disabled'] as const;
 /** Parameters schema for `updateUserInfo` Firebase Function */
 export const UpdateUserInfoParamsSchema = z
   .object({
-    users: z.array(UpdateUserInfoUserSchema),
+    users: z.array(UserInfoSchema),
   })
   .superRefine((data, ctx) => {
     // Users array must be non-empty
@@ -68,9 +68,6 @@ export const UpdateUserInfoParamsSchema = z
       });
     }
   });
-
-/** A single user update for the `updateUserInfo` Firebase Function */
-export type UpdateUserInfoUser = z.infer<typeof UpdateUserInfoUserSchema>;
 
 /** Parameters type for `updateUserInfo` Firebase Function */
 export type UpdateUserInfoParams = z.infer<typeof UpdateUserInfoParamsSchema>;

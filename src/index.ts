@@ -31,10 +31,7 @@ import {
 import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
 import { ListUsersParamsSchema } from './firebase-functions/list-users';
-import {
-  UpdateUserInfoParamsSchema,
-  UpdateUserInfoUserSchema,
-} from './firebase-functions/update-user-info';
+import { UpdateUserInfoParamsSchema } from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -549,7 +546,6 @@ export {
   StatSchema,
   TimestampSchema,
   UpdateUserInfoParamsSchema,
-  UpdateUserInfoUserSchema,
   UserClaimsSchema,
   UserCsvSchema,
   UserLegalSchema,
@@ -614,7 +610,6 @@ export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type {
   ListUsersParams,
   ListUsersResult,
-  ListUsersUser,
 } from './firebase-functions/list-users';
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
@@ -627,7 +622,6 @@ export type TimestampType = z.infer<typeof TimestampSchema>;
 export type {
   UpdateUserInfoParams,
   UpdateUserInfoResult,
-  UpdateUserInfoUser,
 } from './firebase-functions/update-user-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
