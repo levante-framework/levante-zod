@@ -28,6 +28,10 @@ import {
   CreateUserSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/create-users';
+import {
+  FirebaseErrorSchema,
+  FunctionsErrorSchema,
+} from './firebase-functions/error';
 import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
 import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
 import { makeCustomIssue } from './util/issues';
@@ -520,6 +524,8 @@ export {
   CsvHeadersSchema,
   combineUserCsvIssues,
   DistrictSchema,
+  FirebaseErrorSchema,
+  FunctionsErrorSchema,
   GetSiteOverviewParamsSchema,
   GetSyncStatusParamsSchema,
   GroupSchema,
@@ -606,6 +612,10 @@ export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
+export type {
+  ParsedFirebaseError,
+  ParsedFunctionsError,
+} from './firebase-functions/error';
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
