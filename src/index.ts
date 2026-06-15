@@ -26,6 +26,7 @@ import {
 } from './deprecated/users-link';
 import {
   CreateUserSchema,
+  CreateUsersErrorSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/create-users';
 import {
@@ -520,6 +521,7 @@ export {
   CreateOrgSchema,
   CreateSchoolSchema,
   CreateUserSchema,
+  CreateUsersErrorSchema,
   CreateUsersParamsSchema,
   CsvHeadersSchema,
   combineUserCsvIssues,
@@ -587,6 +589,7 @@ export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 /** @deprecated */
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
 export type {
+  CreateUsersError,
   CreateUsersParams,
   CreateUsersResult,
 } from './firebase-functions/create-users';
