@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/user-csv';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { FunctionsErrorSchema } from './error';
 
 /** @deprecated */
 export const CreateUserSchema = z.object({
@@ -22,7 +23,7 @@ export const CreateUserSchema = z.object({
   }),
 });
 
-/** Base schema for CreateUsersParamsSchema.users items */
+/** Base schema for CreateUsersParamsSchema.users items. */
 export const UserBaseSchema = z
   .object({
     id: NonEmptyStringSchema,
@@ -49,7 +50,7 @@ export const UserBaseSchema = z
     }
   });
 
-/** Schema for CreateUsersParamsSchema.users items where userType is 'child' */
+/** Schema for CreateUsersParamsSchema.users items where userType is 'child'. */
 export const ChildUserSchema = UserBaseSchema.extend({
   userType: z.literal('child'),
   month: z.int().min(1).max(12),
@@ -69,24 +70,24 @@ export const ChildUserSchema = UserBaseSchema.extend({
   }
 });
 
-/** Schema for CreateUsersParamsSchema.users items where userType is 'caregiver' */
+/** Schema for CreateUsersParamsSchema.users items where userType is 'caregiver'. */
 export const CaregiverUserSchema = UserBaseSchema.extend({
   userType: z.literal('caregiver'),
 });
 
-/** Schema for CreateUsersParamsSchema.users items where userType is 'teacher' */
+/** Schema for CreateUsersParamsSchema.users items where userType is 'teacher'. */
 export const TeacherUserSchema = UserBaseSchema.extend({
   userType: z.literal('teacher'),
 });
 
-/** Schema for CreateUsersParamsSchema.users items */
+/** Schema for CreateUsersParamsSchema.users items. */
 export const UserSchema = z.discriminatedUnion('userType', [
   ChildUserSchema,
   CaregiverUserSchema,
   TeacherUserSchema,
 ]);
 
-/** Parameters schema for `createUsers` Firebase Function */
+/** Parameters schema for `createUsers` Firebase Function. */
 export const CreateUsersParamsSchema = z
   .object({
     siteId: NonEmptyStringSchema,
@@ -124,10 +125,10 @@ export const CreateUsersParamsSchema = z
     }
   });
 
-/** Parameters type for `createUsers` Firebase Function */
+/** Inferred type of {@link CreateUsersParamsSchema}. */
 export type CreateUsersParams = z.infer<typeof CreateUsersParamsSchema>;
 
-/** Result type for `createUsers` Firebase Function */
+/** Result type for `createUsers` Firebase Function. */
 export type CreateUsersResult = {
   users: {
     id: string;
@@ -136,3 +137,65 @@ export type CreateUsersResult = {
     uid: string;
   }[];
 };
+
+/** Error schema for `createUsers` Firebase Function. */
+export const CreateUsersErrorSchema = z.discriminatedUnion('code', [
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/already-exists'),
+    details: z.object({
+      code: z.literal('users'),
+      ids: z.array(z.string()),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/failed-precondition'),
+    details: z.object({
+      code: z.literal('sync-pending'),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/invalid-argument'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('schema'),
+        issues: z.array(
+          z.object({
+            path: z.string(),
+            message: z.string(),
+          }),
+        ),
+      }),
+      z.object({
+        code: z.literal('org-site-mismatch'),
+        siteId: z.string(),
+        orgIds: z.object({
+          schools: z.array(z.string()),
+          classes: z.array(z.string()),
+          cohorts: z.array(z.string()),
+        }),
+      }),
+    ]),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.object({
+      code: z.literal('orgs'),
+      orgIds: z.object({
+        schools: z.array(z.string()),
+        classes: z.array(z.string()),
+        cohorts: z.array(z.string()),
+      }),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/permission-denied'),
+    details: z.undefined(),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/unauthenticated'),
+    details: z.undefined(),
+  }),
+]);
+
+/** Inferred type of {@link CreateUsersErrorSchema}. */
+export type CreateUsersError = z.infer<typeof CreateUsersErrorSchema>;
