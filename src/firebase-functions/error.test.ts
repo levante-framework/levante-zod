@@ -1,7 +1,13 @@
 import { FirebaseError } from 'firebase/app';
 import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
-import { FirebaseErrorSchema, FunctionsErrorSchema } from './error';
+import {
+  FirebaseErrorSchema,
+  FunctionsErrorSchema,
+  InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+} from './error';
 
 const $name = 'FirebaseError';
 const $code = 'internal';
@@ -133,6 +139,125 @@ describe('FunctionsErrorSchema', () => {
       code: 'invalid_type',
       path: ['code'],
       message: 'Invalid input: expected string, received undefined',
+    });
+  });
+});
+
+describe('InvalidArgumentErrorSchema', () => {
+  const $code = 'invalid-argument';
+  const $message = 'Schema error';
+
+  it('accepts functions/invalid-argument/schema', () => {
+    const $details = {
+      code: 'schema',
+      issues: [
+        { path: 'users[0].firstName', message: 'Required' },
+        { path: 'users[1].grade', message: 'Invalid value' },
+      ],
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = InvalidArgumentErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+      details: $details,
+    });
+  });
+
+  it('rejects bare functions/invalid-argument', () => {
+    const err = new FunctionsError($code, 'Foo error');
+    const result = InvalidArgumentErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'object',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected object, received undefined',
+    });
+  });
+
+  it('rejects functions/invalid-argument/foo', () => {
+    const err = new FunctionsError($code, 'Foo error', {
+      code: 'foo',
+    });
+    const result = InvalidArgumentErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(2);
+    expect(result.error?.issues[0]).toEqual({
+      code: 'invalid_value',
+      values: ['schema'],
+      path: ['details', 'code'],
+      message: 'Invalid input: expected "schema"',
+    });
+    expect(result.error?.issues[1]).toEqual({
+      expected: 'array',
+      code: 'invalid_type',
+      path: ['details', 'issues'],
+      message: 'Invalid input: expected array, received undefined',
+    });
+  });
+});
+
+describe('PermissionDeniedErrorSchema', () => {
+  const $code = 'permission-denied';
+  const $message = 'Permission denied';
+
+  it('accepts bare functions/permission-denied', () => {
+    const err = new FunctionsError($code, $message);
+    const result = PermissionDeniedErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+    });
+  });
+
+  it('rejects functions/permission-denied/foo', () => {
+    const $details = {
+      code: 'foo',
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = PermissionDeniedErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'undefined',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected undefined, received object',
+    });
+  });
+});
+
+describe('UnauthenticatedErrorSchema', () => {
+  const $code = 'unauthenticated';
+  const $message = 'Unauthenticated';
+
+  it('accepts bare functions/unauthenticated', () => {
+    const err = new FunctionsError($code, $message);
+    const result = UnauthenticatedErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+    });
+  });
+
+  it('rejects functions/unauthenticated/foo', () => {
+    const $details = {
+      code: 'foo',
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = UnauthenticatedErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'undefined',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected undefined, received object',
     });
   });
 });
