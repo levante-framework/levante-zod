@@ -6,15 +6,15 @@ import {
   UnauthenticatedErrorSchema,
 } from './error';
 
-/** Parameters schema for `getSyncStatus` Firebase Function */
+/** Parameters schema for `getSyncStatus` Firebase Function. */
 export const GetSyncStatusParamsSchema = z.object({
   siteId: NonEmptyStringSchema,
 });
 
-/** Parameters type for `getSyncStatus` Firebase Function */
+/** Inferred type of {@link GetSyncStatusParamsSchema}. */
 export type GetSyncStatusParams = z.infer<typeof GetSyncStatusParamsSchema>;
 
-/** Result type for `getSyncStatus` Firebase Function */
+/** Result type for `getSyncStatus` Firebase Function. */
 export type GetSyncStatusResult = {
   assignments: {
     complete: number;
