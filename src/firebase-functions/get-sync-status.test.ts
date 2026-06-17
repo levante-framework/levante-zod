@@ -1,5 +1,9 @@
+import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
-import { GetSyncStatusParamsSchema } from './get-sync-status';
+import {
+  GetSyncStatusErrorSchema,
+  GetSyncStatusParamsSchema,
+} from './get-sync-status';
 
 describe('GetSyncStatusParamsSchema', () => {
   it('accepts valid props', () => {
@@ -28,5 +32,27 @@ describe('GetSyncStatusParamsSchema', () => {
         path: ['siteId'],
       },
     ]);
+  });
+});
+
+describe('GetSyncStatusErrorSchema', () => {
+  describe('common error codes', () => {
+    it('accepts functions/invalid-argument/schema', () => {
+      const err = new FunctionsError('invalid-argument', 'Schema error', {
+        code: 'schema',
+        issues: [{ path: 'users[0].firstName', message: 'Required' }],
+      });
+      expect(() => GetSyncStatusErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => GetSyncStatusErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/unauthenticated', () => {
+      const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => GetSyncStatusErrorSchema.parse(err)).not.toThrow();
+    });
   });
 });
