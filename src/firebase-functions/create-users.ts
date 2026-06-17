@@ -1,7 +1,11 @@
 import * as z from 'zod';
 import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/user-csv';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
-import { FunctionsErrorSchema } from './error';
+import {
+  FunctionsErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+} from './error';
 
 /** @deprecated */
 export const CreateUserSchema = z.object({
@@ -187,14 +191,8 @@ export const CreateUsersErrorSchema = z.discriminatedUnion('code', [
       }),
     }),
   }),
-  FunctionsErrorSchema.extend({
-    code: z.literal('functions/permission-denied'),
-    details: z.undefined(),
-  }),
-  FunctionsErrorSchema.extend({
-    code: z.literal('functions/unauthenticated'),
-    details: z.undefined(),
-  }),
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
 ]);
 
 /** Inferred type of {@link CreateUsersErrorSchema}. */

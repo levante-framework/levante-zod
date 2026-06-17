@@ -33,7 +33,10 @@ import {
   FirebaseErrorSchema,
   FunctionsErrorSchema,
 } from './firebase-functions/error';
-import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
+import {
+  GetSiteOverviewErrorSchema,
+  GetSiteOverviewParamsSchema,
+} from './firebase-functions/get-site-overview';
 import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
 import { makeCustomIssue } from './util/issues';
 
@@ -528,6 +531,7 @@ export {
   DistrictSchema,
   FirebaseErrorSchema,
   FunctionsErrorSchema,
+  GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
   GetSyncStatusParamsSchema,
   GroupSchema,
@@ -598,6 +602,7 @@ export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
+  GetSiteOverviewError,
   GetSiteOverviewParams,
   GetSiteOverviewResult,
 } from './firebase-functions/get-site-overview';

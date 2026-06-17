@@ -30,3 +30,24 @@ export const FunctionsErrorSchema = z.object({
  * NB: Named `ParsedFunctionsError` to avoid conflict with `FunctionsError` from `firebase/functions`.
  */
 export type ParsedFunctionsError = z.infer<typeof FunctionsErrorSchema>;
+
+/** Default schema for `functions/invalid-argument` errors - i.e., only `schema` sub-case. */
+export const InvalidArgumentErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/invalid-argument'),
+  details: z.object({
+    code: z.literal('schema'),
+    issues: z.array(z.object({ path: z.string(), message: z.string() })),
+  }),
+});
+
+/** Default schema for `functions/permission-denied` errors. */
+export const PermissionDeniedErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/permission-denied'),
+  details: z.undefined(),
+});
+
+/** Default schema for `functions/unauthenticated` errors. */
+export const UnauthenticatedErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/unauthenticated'),
+  details: z.undefined(),
+});
