@@ -637,4 +637,5 @@ export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
-export type { ZodIssue } from './util/issues';
+export type ZodIssue = z.core.$ZodIssue;
+export type { ZodType } from 'zod';
