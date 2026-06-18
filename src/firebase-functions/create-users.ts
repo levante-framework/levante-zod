@@ -95,7 +95,7 @@ export const UserSchema = z.discriminatedUnion('userType', [
 export const CreateUsersParamsSchema = z
   .object({
     siteId: NonEmptyStringSchema,
-    users: z.array(UserSchema),
+    users: z.array(UserSchema).max(1000),
   })
   .superRefine((data, ctx) => {
     // Users array must be non-empty

@@ -1,7 +1,5 @@
 import type * as z from 'zod';
 
-export type ZodIssue = z.core.$ZodIssue;
-
 /** @deprecated */
 export const combineIssues = (
   issues: z.ZodIssue[],

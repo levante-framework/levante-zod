@@ -600,6 +600,26 @@ describe('CreateUsersParamsSchema', () => {
   });
 
   describe('invalid users', () => {
+    it('rejects >1000 users', () => {
+      const result = CreateUsersParamsSchema.safeParse({
+        ...$validParams,
+        users: Array.from({ length: 1001 }, (_, idx) => ({
+          ...$validChild,
+          id: `u${idx}`,
+        })),
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_big',
+        inclusive: true,
+        maximum: 1000,
+        message: 'Too big: expected array to have <=1000 items',
+        origin: 'array',
+        path: ['users'],
+      });
+    });
+
     it.prop({ users: $nonArray })('rejects non-array users', ({ users }) => {
       const result = CreateUsersParamsSchema.safeParse({
         ...$validParams,

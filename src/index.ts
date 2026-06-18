@@ -37,7 +37,10 @@ import {
   GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
 } from './firebase-functions/get-site-overview';
-import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
+import {
+  GetSyncStatusErrorSchema,
+  GetSyncStatusParamsSchema,
+} from './firebase-functions/get-sync-status';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -533,6 +536,7 @@ export {
   FunctionsErrorSchema,
   GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
+  GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
   GroupSchema,
   H3CellSchema,
@@ -607,6 +611,7 @@ export type {
   GetSiteOverviewResult,
 } from './firebase-functions/get-site-overview';
 export type {
+  GetSyncStatusError,
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
@@ -632,4 +637,5 @@ export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
-export type { ZodIssue } from './util/issues';
+export type ZodIssue = z.core.$ZodIssue;
+export type { ZodType } from 'zod';
