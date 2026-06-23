@@ -41,7 +41,10 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
-import { ListUsersParamsSchema } from './firebase-functions/list-users';
+import {
+  ListUsersErrorSchema,
+  ListUsersParamsSchema,
+} from './firebase-functions/list-users';
 import {
   UpdateUserInfoErrorSchema,
   UpdateUserInfoParamsSchema,
@@ -550,6 +553,7 @@ export {
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvSchema,
+  ListUsersErrorSchema,
   ListUsersParamsSchema,
   LocationSchema,
   locationDocId,
@@ -631,6 +635,7 @@ export type LegalType = z.infer<typeof LegalSchema>;
 /** @deprecated */
 export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
 export type {
+  ListUsersError,
   ListUsersParams,
   ListUsersResult,
 } from './firebase-functions/list-users';

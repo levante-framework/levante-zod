@@ -1,6 +1,7 @@
+import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
 import type * as z from 'zod';
-import { ListUsersParamsSchema } from './list-users';
+import { ListUsersErrorSchema, ListUsersParamsSchema } from './list-users';
 
 /** Fixture: minimal valid params */
 const $valid = { orgType: 'school' as const, orgId: 'o1' };
@@ -98,6 +99,28 @@ describe('ListUsersParamsSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].path).toEqual(['orderBy', 'direction']);
+    });
+  });
+});
+
+describe('ListUsersErrorSchema', () => {
+  describe('common error codes', () => {
+    it('accepts functions/invalid-argument/schema', () => {
+      const err = new FunctionsError('invalid-argument', 'Schema error', {
+        code: 'schema',
+        issues: [{ path: 'users[0].uid', message: 'Must be non-empty' }],
+      });
+      expect(() => ListUsersErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => ListUsersErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/unauthenticated', () => {
+      const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => ListUsersErrorSchema.parse(err)).not.toThrow();
     });
   });
 });

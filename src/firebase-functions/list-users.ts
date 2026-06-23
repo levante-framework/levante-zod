@@ -1,7 +1,12 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import {
+  InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+} from './error';
 
-/** Parameters schema for `listUsers` Firebase Function */
+/** Parameters schema for `listUsers` Firebase Function. */
 export const ListUsersParamsSchema = z.object({
   orgType: z.enum(['site', 'school', 'class', 'cohort']),
   orgId: NonEmptyStringSchema,
@@ -20,10 +25,10 @@ export const ListUsersParamsSchema = z.object({
   excludeDisabled: z.boolean().optional(),
 });
 
-/** Parameters type for `listUsers` Firebase Function */
+/** Inferred type of {@link ListUsersParamsSchema}. */
 export type ListUsersParams = z.infer<typeof ListUsersParamsSchema>;
 
-/** Result type for `listUsers` Firebase Function */
+/** Result type for `listUsers` Firebase Function. */
 export type ListUsersResult = {
   users: {
     uid: string;
@@ -36,3 +41,13 @@ export type ListUsersResult = {
     disabled: boolean;
   }[];
 };
+
+/** Error schema for `listUsers` Firebase Function. */
+export const ListUsersErrorSchema = z.discriminatedUnion('code', [
+  InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+]);
+
+/** Inferred type of {@link ListUsersErrorSchema}. */
+export type ListUsersError = z.infer<typeof ListUsersErrorSchema>;
