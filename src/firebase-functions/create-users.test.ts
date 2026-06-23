@@ -1,10 +1,12 @@
 import { fc, it } from '@fast-check/vitest';
+import { FunctionsError } from 'firebase/functions';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
 import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/user-csv';
 import {
   CaregiverUserSchema,
   ChildUserSchema,
+  CreateUsersErrorSchema,
   CreateUsersParamsSchema,
   TeacherUserSchema,
   UserBaseSchema,
@@ -598,6 +600,26 @@ describe('CreateUsersParamsSchema', () => {
   });
 
   describe('invalid users', () => {
+    it('rejects >1000 users', () => {
+      const result = CreateUsersParamsSchema.safeParse({
+        ...$validParams,
+        users: Array.from({ length: 1001 }, (_, idx) => ({
+          ...$validChild,
+          id: `u${idx}`,
+        })),
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_big',
+        inclusive: true,
+        maximum: 1000,
+        message: 'Too big: expected array to have <=1000 items',
+        origin: 'array',
+        path: ['users'],
+      });
+    });
+
     it.prop({ users: $nonArray })('rejects non-array users', ({ users }) => {
       const result = CreateUsersParamsSchema.safeParse({
         ...$validParams,
@@ -660,6 +682,235 @@ describe('CreateUsersParamsSchema', () => {
         expect(issue.message).toEqual('Must be unique');
         expect(issue.path).toEqual([idx, 'id']);
       }
+    });
+  });
+});
+
+describe('CreateUsersErrorSchema', () => {
+  describe('already-exists', () => {
+    const $code = 'already-exists';
+    const $message = 'User already exists';
+    const $details = {
+      code: 'users',
+      ids: ['u1'],
+    };
+
+    it('accepts functions/already-exists/users', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = CreateUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/already-exists', () => {
+      const err = new FunctionsError($code, $message);
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/already-exists/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        ids: ['f1'],
+      });
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['users'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "users"',
+      });
+    });
+  });
+
+  describe('failed-precondition', () => {
+    const $code = 'failed-precondition';
+    const $message = 'Sync pending';
+    const $details = {
+      code: 'sync-pending',
+    };
+
+    it('accepts functions/failed-precondition/sync-pending', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = CreateUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        message: $message,
+        code: `functions/${$code}`,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/failed-precondition', () => {
+      const err = new FunctionsError($code, $message);
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/failed-precondition/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+      });
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['sync-pending'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "sync-pending"',
+      });
+    });
+  });
+
+  describe('invalid-argument', () => {
+    const $code = 'invalid-argument';
+
+    it('accepts functions/invalid-argument/schema', () => {
+      const $message = 'Schema error';
+      const $details = {
+        code: 'schema',
+        issues: [
+          { path: 'users[0].firstName', message: 'Required' },
+          { path: 'users[1].grade', message: 'Invalid value' },
+        ],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = CreateUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('accepts functions/invalid-argument/org-site-mismatch', () => {
+      const $message = 'Org-site mismatch';
+      const $details = {
+        code: 'org-site-mismatch',
+        siteId: 'site-1',
+        orgIds: { schools: ['s1'], classes: ['c1'], cohorts: ['co1'] },
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = CreateUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/invalid-argument', () => {
+      const err = new FunctionsError($code, 'Foo error');
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/invalid-argument/foo', () => {
+      const err = new FunctionsError($code, 'Foo error', {
+        code: 'foo',
+      });
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        errors: [],
+        note: 'No matching discriminator',
+        discriminator: 'code',
+        path: ['details', 'code'],
+        message: 'Invalid input',
+      });
+    });
+  });
+
+  describe('not-found', () => {
+    const $code = 'not-found';
+    const $message = 'Not found';
+    const $details = {
+      code: 'orgs',
+      orgIds: { schools: ['s1'], classes: ['c1'], cohorts: ['co1'] },
+    };
+
+    it('accepts functions/not-found/orgs', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = CreateUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/not-found', () => {
+      const err = new FunctionsError($code, $message);
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/not-found/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        orgIds: { schools: ['s1'], classes: ['c1'], cohorts: ['co1'] },
+      });
+      const result = CreateUsersErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['orgs'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "orgs"',
+      });
+    });
+  });
+
+  describe('common error codes', () => {
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => CreateUsersErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/unauthenticated', () => {
+      const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => CreateUsersErrorSchema.parse(err)).not.toThrow();
     });
   });
 });

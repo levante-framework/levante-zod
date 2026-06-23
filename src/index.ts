@@ -26,10 +26,21 @@ import {
 } from './deprecated/users-link';
 import {
   CreateUserSchema,
+  CreateUsersErrorSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/create-users';
-import { GetSiteOverviewParamsSchema } from './firebase-functions/get-site-overview';
-import { GetSyncStatusParamsSchema } from './firebase-functions/get-sync-status';
+import {
+  FirebaseErrorSchema,
+  FunctionsErrorSchema,
+} from './firebase-functions/error';
+import {
+  GetSiteOverviewErrorSchema,
+  GetSiteOverviewParamsSchema,
+} from './firebase-functions/get-site-overview';
+import {
+  GetSyncStatusErrorSchema,
+  GetSyncStatusParamsSchema,
+} from './firebase-functions/get-sync-status';
 import { ListUsersParamsSchema } from './firebase-functions/list-users';
 import { UpdateUserInfoParamsSchema } from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
@@ -519,11 +530,16 @@ export {
   CreateOrgSchema,
   CreateSchoolSchema,
   CreateUserSchema,
+  CreateUsersErrorSchema,
   CreateUsersParamsSchema,
   CsvHeadersSchema,
   combineUserCsvIssues,
   DistrictSchema,
+  FirebaseErrorSchema,
+  FunctionsErrorSchema,
+  GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
+  GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
   GroupSchema,
   H3CellSchema,
@@ -586,6 +602,7 @@ export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 /** @deprecated */
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
 export type {
+  CreateUsersError,
   CreateUsersParams,
   CreateUsersResult,
 } from './firebase-functions/create-users';
@@ -594,10 +611,12 @@ export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
+  GetSiteOverviewError,
   GetSiteOverviewParams,
   GetSiteOverviewResult,
 } from './firebase-functions/get-site-overview';
 export type {
+  GetSyncStatusError,
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
@@ -615,6 +634,10 @@ export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
+export type {
+  ParsedFirebaseError,
+  ParsedFunctionsError,
+} from './firebase-functions/error';
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
@@ -627,4 +650,5 @@ export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
-export type { ZodIssue } from './util/issues';
+export type ZodIssue = z.core.$ZodIssue;
+export type { ZodType } from 'zod';

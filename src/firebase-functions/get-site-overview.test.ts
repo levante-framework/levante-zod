@@ -1,5 +1,9 @@
+import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
-import { GetSiteOverviewParamsSchema } from './get-site-overview';
+import {
+  GetSiteOverviewErrorSchema,
+  GetSiteOverviewParamsSchema,
+} from './get-site-overview';
 
 describe('GetSiteOverviewParamsSchema', () => {
   it('accepts valid props', () => {
@@ -28,5 +32,27 @@ describe('GetSiteOverviewParamsSchema', () => {
         path: ['siteId'],
       },
     ]);
+  });
+});
+
+describe('GetSiteOverviewErrorSchema', () => {
+  describe('common error codes', () => {
+    it('accepts functions/invalid-argument/schema', () => {
+      const err = new FunctionsError('invalid-argument', 'Schema error', {
+        code: 'schema',
+        issues: [{ path: 'users[0].firstName', message: 'Required' }],
+      });
+      expect(() => GetSiteOverviewErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => GetSiteOverviewErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/unauthenticated', () => {
+      const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => GetSiteOverviewErrorSchema.parse(err)).not.toThrow();
+    });
   });
 });
