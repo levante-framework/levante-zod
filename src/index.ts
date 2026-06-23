@@ -42,7 +42,10 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import { ListUsersParamsSchema } from './firebase-functions/list-users';
-import { UpdateUserInfoParamsSchema } from './firebase-functions/update-user-info';
+import {
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
+} from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -561,6 +564,7 @@ export {
   SchoolSchema,
   StatSchema,
   TimestampSchema,
+  UpdateUserInfoErrorSchema,
   UpdateUserInfoParamsSchema,
   UserClaimsSchema,
   UserCsvSchema,
@@ -643,6 +647,7 @@ export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
 export type {
+  UpdateUserInfoError,
   UpdateUserInfoParams,
   UpdateUserInfoResult,
 } from './firebase-functions/update-user-info';

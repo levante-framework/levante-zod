@@ -1,5 +1,13 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import {
+  InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+} from './error';
+
+/** The editable fields on a user, excluding the `uid` identifier. */
+const EDITABLE_FIELDS = ['archived', 'disabled'] as const;
 
 /**
  * A single user update accepted by the `updateUserInfo` Firebase Function.
@@ -14,10 +22,7 @@ export const UserInfoSchema = z.object({
   disabled: z.boolean().optional(),
 });
 
-/** The editable fields on a user, excluding the `uid` identifier */
-const EDITABLE_FIELDS = ['archived', 'disabled'] as const;
-
-/** Parameters schema for `updateUserInfo` Firebase Function */
+/** Parameters schema for `updateUserInfo` Firebase Function. */
 export const UpdateUserInfoParamsSchema = z
   .object({
     users: z.array(UserInfoSchema),
@@ -69,12 +74,22 @@ export const UpdateUserInfoParamsSchema = z
     }
   });
 
-/** Parameters type for `updateUserInfo` Firebase Function */
+/** Inferred type of {@link UpdateUserInfoParamsSchema}. */
 export type UpdateUserInfoParams = z.infer<typeof UpdateUserInfoParamsSchema>;
 
-/** Result type for `updateUserInfo` Firebase Function */
+/** Result type for `updateUserInfo` Firebase Function. */
 export type UpdateUserInfoResult = {
   status: string;
   message: string;
   data: { uid: string }[];
 };
+
+/** Error schema for `updateUserInfo` Firebase Function. */
+export const UpdateUserInfoErrorSchema = z.discriminatedUnion('code', [
+  InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
+]);
+
+/** Inferred type of {@link UpdateUserInfoErrorSchema}. */
+export type UpdateUserInfoError = z.infer<typeof UpdateUserInfoErrorSchema>;

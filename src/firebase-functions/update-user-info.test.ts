@@ -1,6 +1,10 @@
+import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
 import type * as z from 'zod';
-import { UpdateUserInfoParamsSchema } from './update-user-info';
+import {
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
+} from './update-user-info';
 
 /** Fixture: valid params */
 const $valid = {
@@ -120,6 +124,28 @@ describe('UpdateUserInfoParamsSchema', () => {
         expect(issue.message).toEqual('Must be unique');
         expect(issue.path).toEqual(['users', idx, 'uid']);
       }
+    });
+  });
+});
+
+describe('UpdateUserInfoErrorSchema', () => {
+  describe('common error codes', () => {
+    it('accepts functions/invalid-argument/schema', () => {
+      const err = new FunctionsError('invalid-argument', 'Schema error', {
+        code: 'schema',
+        issues: [{ path: 'users[0].uid', message: 'Must be non-empty' }],
+      });
+      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/unauthenticated', () => {
+      const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
     });
   });
 });
