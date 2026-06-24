@@ -692,7 +692,7 @@ describe('CreateUsersErrorSchema', () => {
     const $message = 'User already exists';
     const $details = {
       code: 'users',
-      users: { id: 'u1', email: 'u1@example.com', uid: 'uid-u1' },
+      users: [{ id: 'u1', email: 'u1@example.com', uid: 'uid-u1' }],
     };
 
     it('accepts functions/already-exists/users', () => {
@@ -734,10 +734,10 @@ describe('CreateUsersErrorSchema', () => {
         message: 'Invalid input: expected "users"',
       });
       expect(result.error?.issues[1]).toEqual({
-        expected: 'object',
+        expected: 'array',
         code: 'invalid_type',
         path: ['details', 'users'],
-        message: 'Invalid input: expected object, received undefined',
+        message: 'Invalid input: expected array, received undefined',
       });
     });
   });
