@@ -148,7 +148,13 @@ export const CreateUsersErrorSchema = z.discriminatedUnion('code', [
     code: z.literal('functions/already-exists'),
     details: z.object({
       code: z.literal('users'),
-      ids: z.array(z.string()),
+      users: z.array(
+        z.object({
+          id: z.string(),
+          email: z.string(),
+          uid: z.string(),
+        }),
+      ),
     }),
   }),
   FunctionsErrorSchema.extend({
