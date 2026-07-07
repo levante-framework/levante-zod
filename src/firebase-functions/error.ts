@@ -46,6 +46,15 @@ export const PermissionDeniedErrorSchema = FunctionsErrorSchema.extend({
   details: z.undefined(),
 });
 
+/** Schema for `functions/not-found/task` errors. */
+export const TaskNotFoundErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/not-found'),
+  details: z.object({
+    code: z.literal('task'),
+    taskId: z.string(),
+  }),
+});
+
 /** Default schema for `functions/unauthenticated` errors. */
 export const UnauthenticatedErrorSchema = FunctionsErrorSchema.extend({
   code: z.literal('functions/unauthenticated'),
