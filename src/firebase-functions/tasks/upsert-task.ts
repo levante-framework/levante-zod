@@ -1,19 +1,19 @@
 import * as z from 'zod';
-import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { NonEmptyStringSchema } from '../../shared/non-empty-string';
 import {
+  FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
-  TaskNotFoundErrorSchema,
   UnauthenticatedErrorSchema,
-} from './error';
-import type { SerializedTask } from './firestore';
+} from '../error';
+import type { SerializedTask } from '../firestore';
 
 /** Parameters schema for `upsertTask` Firebase Function. */
 export const UpsertTaskParamsSchema = z.object({
+  archived: z.boolean(),
   description: NonEmptyStringSchema,
   image: NonEmptyStringSchema,
   name: NonEmptyStringSchema,
-  registered: z.boolean(),
   id: NonEmptyStringSchema.optional(),
 });
 
@@ -28,7 +28,13 @@ export type UpsertTaskResult = {
 /** Error schema for `upsertTask` Firebase Function. */
 export const UpsertTaskErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
-  TaskNotFoundErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.object({
+      code: z.literal('task'),
+      taskId: z.string(),
+    }),
+  }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 ]);

@@ -4,42 +4,36 @@
  * which Firestore stores outside the document data itself.
  */
 
-/** Wire format representation of a Firestore `tasks/{id}` document. */
+/** Wire format representation of a Firestore `tasks/{id}` doc. */
 export type SerializedTask = {
   id: string;
+  archived: boolean;
   createdAt: string;
   description: string;
   image: string;
   name: string;
-  registered: boolean;
   updatedAt: string;
 };
 
-/** Wire format representation of a Firestore `tasks/{taskId}/schemas/{id}` document. */
-export type SerializedTaskSchema = {
-  id: string;
-  taskId: string;
-  createdAt: string;
-  createdBy: string;
-  paramDefinitions: Record<
-    string,
-    {
-      description: string;
-      type: 'boolean' | 'number' | 'string';
-      required?: boolean;
-    }
-  >;
-  version: number;
-};
-
-/** Wire format representation of a Firestore `tasks/{taskId}/variants/{id}` document. */
+/** Wire format representation of a Firestore `tasks/{taskId}/variants/{id}` doc. */
 export type SerializedTaskVariant = {
   id: string;
   taskId: string;
   createdAt: string;
+  createdBy: string;
   name: string;
   params: Record<string, boolean | number | string>;
   registered: boolean;
-  schemaVersion: number;
+  updatedAt: string;
+};
+
+/** Wire format representation of a Firestore `variantParamSpecs/{id}` doc. */
+export type SerializedVariantParamSpec = {
+  id: string;
+  archived: boolean;
+  createdAt: string;
+  description: string;
+  name: string;
+  type: 'boolean' | 'number' | 'string' | 'unknown';
   updatedAt: string;
 };

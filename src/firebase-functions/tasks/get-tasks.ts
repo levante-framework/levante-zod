@@ -3,11 +3,13 @@ import {
   InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
-} from './error';
-import type { SerializedTask } from './firestore';
+} from '../error';
+import type { SerializedTask } from '../firestore';
 
 /** Parameters schema for `getTasks` Firebase Function. */
-export const GetTasksParamsSchema = z.object({});
+export const GetTasksParamsSchema = z.object({
+  archived: z.boolean().optional(),
+});
 
 /** Inferred type of {@link GetTasksParamsSchema}. */
 export type GetTasksParams = z.infer<typeof GetTasksParamsSchema>;
