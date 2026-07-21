@@ -41,6 +41,34 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
+import {
+  CreateTaskVariantErrorSchema,
+  CreateTaskVariantParamsSchema,
+} from './firebase-functions/tasks/create-task-variant';
+import {
+  GetTaskVariantsErrorSchema,
+  GetTaskVariantsParamsSchema,
+} from './firebase-functions/tasks/get-task-variants';
+import {
+  GetTasksErrorSchema,
+  GetTasksParamsSchema,
+} from './firebase-functions/tasks/get-tasks';
+import {
+  GetVariantParamSpecsErrorSchema,
+  GetVariantParamSpecsParamsSchema,
+} from './firebase-functions/tasks/get-variant-param-specs';
+import {
+  UpdateTaskVariantErrorSchema,
+  UpdateTaskVariantParamsSchema,
+} from './firebase-functions/tasks/update-task-variant';
+import {
+  UpsertTaskErrorSchema,
+  UpsertTaskParamsSchema,
+} from './firebase-functions/tasks/upsert-task';
+import {
+  UpsertVariantParamSpecErrorSchema,
+  UpsertVariantParamSpecParamsSchema,
+} from './firebase-functions/tasks/upsert-variant-param-spec';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -526,6 +554,8 @@ export {
   CreateGroupSchema,
   CreateOrgSchema,
   CreateSchoolSchema,
+  CreateTaskVariantErrorSchema,
+  CreateTaskVariantParamsSchema,
   CreateUserSchema,
   CreateUsersErrorSchema,
   CreateUsersParamsSchema,
@@ -538,6 +568,12 @@ export {
   GetSiteOverviewParamsSchema,
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
+  GetTasksErrorSchema,
+  GetTasksParamsSchema,
+  GetTaskVariantsErrorSchema,
+  GetTaskVariantsParamsSchema,
+  GetVariantParamSpecsErrorSchema,
+  GetVariantParamSpecsParamsSchema,
   GroupSchema,
   H3CellSchema,
   LatLonSourceSchema,
@@ -557,6 +593,12 @@ export {
   SchoolSchema,
   StatSchema,
   TimestampSchema,
+  UpdateTaskVariantErrorSchema,
+  UpdateTaskVariantParamsSchema,
+  UpsertTaskErrorSchema,
+  UpsertTaskParamsSchema,
+  UpsertVariantParamSpecErrorSchema,
+  UpsertVariantParamSpecParamsSchema,
   UserClaimsSchema,
   UserCsvSchema,
   UserLegalSchema,
@@ -594,6 +636,16 @@ export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
 export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
+export type {
+  CreateTaskVariantError,
+  CreateTaskVariantParams,
+  CreateTaskVariantResult,
+} from './firebase-functions/tasks/create-task-variant';
+export type {
+  GetTasksError,
+  GetTasksParams,
+  GetTasksResult,
+} from './firebase-functions/tasks/get-tasks';
 /** @deprecated */
 export type CreateUserType = z.infer<typeof CreateUserSchema>;
 export type {
@@ -615,6 +667,16 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  GetTaskVariantsError,
+  GetTaskVariantsParams,
+  GetTaskVariantsResult,
+} from './firebase-functions/tasks/get-task-variants';
+export type {
+  GetVariantParamSpecsError,
+  GetVariantParamSpecsParams,
+  GetVariantParamSpecsResult,
+} from './firebase-functions/tasks/get-variant-param-specs';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
@@ -633,6 +695,21 @@ export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
+export type {
+  UpdateTaskVariantError,
+  UpdateTaskVariantParams,
+  UpdateTaskVariantResult,
+} from './firebase-functions/tasks/update-task-variant';
+export type {
+  UpsertTaskError,
+  UpsertTaskParams,
+  UpsertTaskResult,
+} from './firebase-functions/tasks/upsert-task';
+export type {
+  UpsertVariantParamSpecError,
+  UpsertVariantParamSpecParams,
+  UpsertVariantParamSpecResult,
+} from './firebase-functions/tasks/upsert-variant-param-spec';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
