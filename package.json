@@ -26,6 +26,7 @@
   ],
   "scripts": {
     "build": "tsdown",
+    "prepare": "tsdown",
     "check": "biome check",
     "check:fix": "biome check --write",
     "dev": "tsdown --watch",
