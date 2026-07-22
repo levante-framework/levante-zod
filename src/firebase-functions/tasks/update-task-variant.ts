@@ -11,6 +11,7 @@ import type { SerializedTaskVariant } from '../firestore';
 /** Parameters schema for `updateTaskVariant` Firebase Function. */
 export const UpdateTaskVariantParamsSchema = z.object({
   id: NonEmptyStringSchema,
+  archived: z.boolean(),
   registered: z.boolean(),
 });
 

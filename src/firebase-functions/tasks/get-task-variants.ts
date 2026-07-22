@@ -11,6 +11,7 @@ import type { SerializedTaskVariant } from '../firestore';
 /** Parameters schema for `getTaskVariants` Firebase Function. */
 export const GetTaskVariantsParamsSchema = z
   .object({
+    archived: z.boolean().optional(),
     registered: z.boolean().optional(),
     taskId: NonEmptyStringSchema.optional(),
     variantIds: z.array(NonEmptyStringSchema).optional(),
@@ -19,7 +20,7 @@ export const GetTaskVariantsParamsSchema = z
     if (data.taskId && data.variantIds) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Must not have both taskId and variantIds',
+        message: 'Must not supply both taskId and variantIds',
         path: ['taskId|variantIds'],
         input: data,
       });
