@@ -28,6 +28,16 @@ export type CreateTaskVariantResult = {
 
 /** Error schema for `createTaskVariant` Firebase Function. */
 export const CreateTaskVariantErrorSchema = z.discriminatedUnion('code', [
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/already-exists'),
+    details: z.object({
+      code: z.literal('params'),
+      params: z.record(
+        z.string(),
+        z.union([z.boolean(), z.number(), z.string()]),
+      ),
+    }),
+  }),
   InvalidArgumentErrorSchema,
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
