@@ -14,7 +14,9 @@ export const GetTaskVariantRevisionsParamsSchema = z.object({
 });
 
 /** Inferred type of {@link GetTaskVariantRevisionsParamsSchema}. */
-export type GetTaskVariantRevisionsParams = z.infer<typeof GetTaskVariantRevisionsParamsSchema>;
+export type GetTaskVariantRevisionsParams = z.infer<
+  typeof GetTaskVariantRevisionsParamsSchema
+>;
 
 /** Result type for `getTaskVariantRevisions` Firebase Function. */
 export type GetTaskVariantRevisionsResult = {
@@ -37,4 +39,6 @@ export const GetTaskVariantRevisionsErrorSchema = z.discriminatedUnion('code', [
 ]);
 
 /** Inferred type of {@link GetTaskVariantRevisionsErrorSchema}. */
-export type GetTaskVariantRevisionsError = z.infer<typeof GetTaskVariantRevisionsErrorSchema>;
+export type GetTaskVariantRevisionsError = z.infer<
+  typeof GetTaskVariantRevisionsErrorSchema
+>;

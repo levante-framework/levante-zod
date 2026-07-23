@@ -42,13 +42,13 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import {
-  GetTaskVariantRevisionsErrorSchema,
-  GetTaskVariantRevisionsParamsSchema,
-} from './firebase-functions/tasks/get-task-variant-revisions';
-import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
 } from './firebase-functions/tasks/create-task-variant';
+import {
+  GetTaskVariantRevisionsErrorSchema,
+  GetTaskVariantRevisionsParamsSchema,
+} from './firebase-functions/tasks/get-task-variant-revisions';
 import {
   GetTaskVariantsErrorSchema,
   GetTaskVariantsParamsSchema,
