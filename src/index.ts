@@ -693,6 +693,11 @@ export type {
 } from './firebase-functions/error';
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
+export type {
+  SerializedTask,
+  SerializedTaskVariant,
+  SerializedVariantParamSpec,
+} from './firebase-functions/firestore';
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
 export type {
