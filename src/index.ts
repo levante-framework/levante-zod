@@ -42,6 +42,10 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import {
+  GetTaskVariantRevisionsErrorSchema,
+  GetTaskVariantRevisionsParamsSchema,
+} from './firebase-functions/tasks/get-task-variant-revisions';
+import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
 } from './firebase-functions/tasks/create-task-variant';
@@ -570,6 +574,8 @@ export {
   GetSyncStatusParamsSchema,
   GetTasksErrorSchema,
   GetTasksParamsSchema,
+  GetTaskVariantRevisionsErrorSchema,
+  GetTaskVariantRevisionsParamsSchema,
   GetTaskVariantsErrorSchema,
   GetTaskVariantsParamsSchema,
   GetVariantParamSpecsErrorSchema,
@@ -668,6 +674,11 @@ export type {
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
 export type {
+  GetTaskVariantRevisionsError,
+  GetTaskVariantRevisionsParams,
+  GetTaskVariantRevisionsResult,
+} from './firebase-functions/tasks/get-task-variant-revisions';
+export type {
   GetTaskVariantsError,
   GetTaskVariantsParams,
   GetTaskVariantsResult,
@@ -696,6 +707,7 @@ export type SchoolType = z.infer<typeof SchoolSchema>;
 export type {
   SerializedTask,
   SerializedTaskVariant,
+  SerializedTaskVariantRevision,
   SerializedVariantParamSpec,
 } from './firebase-functions/firestore';
 export type StatType = z.infer<typeof StatSchema>;

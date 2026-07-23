@@ -34,6 +34,15 @@ export type SerializedTaskVariant = {
   updatedBy?: string;
 };
 
+/** Wire format representation of a Firestore `tasks/{taskId}/variants/{variantId}/revisions/{id}` doc. */
+export type SerializedTaskVariantRevision = {
+  id: string;
+  archived: boolean;
+  registered: boolean;
+  updatedAt: string;
+  updatedBy: string;
+};
+
 /** Wire format representation of a Firestore `variantParamSpecs/{id}` doc. */
 export type SerializedVariantParamSpec = {
   id: string;
