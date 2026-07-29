@@ -11,6 +11,7 @@ import type { SerializedTaskVariant } from '../firestore';
 /** Parameters schema for `createTaskVariant` Firebase Function. */
 export const CreateTaskVariantParamsSchema = z.object({
   name: NonEmptyStringSchema,
+  displayName: NonEmptyStringSchema, // Used to display the variant in the UI
   params: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
   registered: z.boolean(),
   taskId: NonEmptyStringSchema,

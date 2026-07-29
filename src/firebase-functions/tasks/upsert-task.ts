@@ -14,6 +14,7 @@ export const UpsertTaskParamsSchema = z.object({
   description: NonEmptyStringSchema,
   image: NonEmptyStringSchema,
   name: NonEmptyStringSchema,
+  displayName: NonEmptyStringSchema, // Used to display the task in the UI
   id: NonEmptyStringSchema.optional(),
 });
 
