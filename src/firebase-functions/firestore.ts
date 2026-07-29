@@ -27,6 +27,7 @@ export type SerializedTaskVariant = {
   archived: boolean;
   createdAt: string;
   createdBy?: string;
+  displayName: string;
   name: string;
   params: Record<string, boolean | number | string>;
   registered: boolean;
