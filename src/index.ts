@@ -73,6 +73,10 @@ import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
 } from './firebase-functions/users/update-users-info';
+import {
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
+} from './firebase-functions/load-form-definitions';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -592,6 +596,8 @@ export {
   LinkUsersCsvSchema,
   LinkUsersErrorSchema,
   LinkUsersParamsSchema,
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
@@ -686,6 +692,13 @@ export type {
   GetUsersByOrgParams,
   GetUsersByOrgResult,
 } from './firebase-functions/users/get-users-by-org';
+export type {
+  FormSectionInfo,
+  InformationFormField,
+  LoadFormDefinitionsError,
+  LoadFormDefinitionsParams,
+  LoadFormDefinitionsResult,
+} from './firebase-functions/load-form-definitions';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
