@@ -41,6 +41,10 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
+import {
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
+} from './firebase-functions/load-form-definitions';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -544,6 +548,8 @@ export {
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvSchema,
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
@@ -615,6 +621,13 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  FormSectionInfo,
+  InformationFormField,
+  LoadFormDefinitionsError,
+  LoadFormDefinitionsParams,
+  LoadFormDefinitionsResult,
+} from './firebase-functions/load-form-definitions';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
