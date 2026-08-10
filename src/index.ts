@@ -77,6 +77,10 @@ import {
   LoadFormDefinitionsErrorSchema,
   LoadFormDefinitionsParamsSchema,
 } from './firebase-functions/load-form-definitions';
+import {
+  SaveOrgInformationErrorSchema,
+  SaveOrgInformationParamsSchema,
+} from './firebase-functions/save-org-information';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -605,6 +609,8 @@ export {
   OrgRefMapSchema,
   OrgSchema,
   ReadOrgSchema,
+  SaveOrgInformationErrorSchema,
+  SaveOrgInformationParamsSchema,
   SchoolSchema,
   StatSchema,
   TimestampSchema,
@@ -699,6 +705,11 @@ export type {
   LoadFormDefinitionsParams,
   LoadFormDefinitionsResult,
 } from './firebase-functions/load-form-definitions';
+export type {
+  SaveOrgInformationError,
+  SaveOrgInformationParams,
+  SaveOrgInformationResult,
+} from './firebase-functions/save-org-information';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
