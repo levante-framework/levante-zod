@@ -2,6 +2,7 @@ import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
   InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
 
@@ -43,6 +44,7 @@ export type SaveOrgInformationResult = {
 /** Error schema for `saveOrgInformation` Firebase Function. */
 export const SaveOrgInformationErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
+  PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 ]);
 
