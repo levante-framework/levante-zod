@@ -141,6 +141,11 @@ describe('SaveOrgInformationErrorSchema', () => {
       expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
     });
 
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
+    });
+
     it('accepts functions/unauthenticated', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
       expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
