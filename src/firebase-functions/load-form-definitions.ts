@@ -49,7 +49,7 @@ export type LoadFormDefinitionsResult = {
   fullFields: InformationFormField[];
   orgType: 'site' | 'school';
   orgId: string;
-  /** Previously saved answers for this org; empty until save (#110) lands. */
+  /** Previously saved answers for this org. Empty in v1. */
   savedResponses: unknown[];
 };
 
