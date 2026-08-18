@@ -29,7 +29,7 @@
     "check": "biome check",
     "check:fix": "biome check --write",
     "dev": "tsdown --watch",
-    "prepare": "npm run build",
+    "prepare": "tsdown",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
@@ -44,6 +44,7 @@
     "@arethetypeswrong/core": "^0.18.5",
     "@biomejs/biome": "2.5.7",
     "@fast-check/vitest": "^0.4.1",
+    "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.10",
     "fast-check": "^4.9.0",
     "firebase": "^12.17.1",
