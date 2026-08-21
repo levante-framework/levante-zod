@@ -69,7 +69,7 @@ const hasResolvableLinks = (data: LinkUsersParams, ctx: z.RefinementCtx) => {
     if (user.caregiverId.some((id) => !caregiverIds.has(id))) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Must match the id of a caregiver row',
+        message: 'Must match the id of a caregiver user',
         path: ['users', idx, 'caregiverId'],
         input: user,
       });
@@ -77,7 +77,7 @@ const hasResolvableLinks = (data: LinkUsersParams, ctx: z.RefinementCtx) => {
     if (user.teacherId.some((id) => !teacherIds.has(id))) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Must match the id of a teacher row',
+        message: 'Must match the id of a teacher user',
         path: ['users', idx, 'teacherId'],
         input: user,
       });

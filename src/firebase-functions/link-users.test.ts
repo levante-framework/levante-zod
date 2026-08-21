@@ -576,7 +576,7 @@ describe('LinkUsersParamsSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].code).toEqual('custom');
       expect(result.error?.issues[0].message).toEqual(
-        'Must match the id of a caregiver row',
+        'Must match the id of a caregiver user',
       );
       expect(result.error?.issues[0].path).toEqual(['users', 1, 'caregiverId']);
     });
@@ -593,7 +593,7 @@ describe('LinkUsersParamsSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].code).toEqual('custom');
       expect(result.error?.issues[0].message).toEqual(
-        'Must match the id of a teacher row',
+        'Must match the id of a teacher user',
       );
       expect(result.error?.issues[0].path).toEqual(['users', 1, 'teacherId']);
     });
@@ -615,10 +615,12 @@ describe('LinkUsersParamsSchema', () => {
       expect(result.error?.issues.length).toBe(2);
       const issues = result.error?.issues as z.core.$ZodIssueCustom[];
       expect(issues[0].code).toEqual('custom');
-      expect(issues[0].message).toEqual('Must match the id of a caregiver row');
+      expect(issues[0].message).toEqual(
+        'Must match the id of a caregiver user',
+      );
       expect(issues[0].path).toEqual(['users', 2, 'caregiverId']);
       expect(issues[1].code).toEqual('custom');
-      expect(issues[1].message).toEqual('Must match the id of a teacher row');
+      expect(issues[1].message).toEqual('Must match the id of a teacher user');
       expect(issues[1].path).toEqual(['users', 2, 'teacherId']);
     });
 
@@ -638,7 +640,7 @@ describe('LinkUsersParamsSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].code).toEqual('custom');
       expect(result.error?.issues[0].message).toEqual(
-        'Must match the id of a caregiver row',
+        'Must match the id of a caregiver user',
       );
       expect(result.error?.issues[0].path).toEqual(['users', 1, 'caregiverId']);
     });
