@@ -2,7 +2,7 @@ import { fc, it } from '@fast-check/vitest';
 import { FunctionsError } from 'firebase/functions';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
-import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/user-csv';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/add-users-csv';
 import {
   CaregiverUserSchema,
   ChildUserSchema,
@@ -228,6 +228,36 @@ describe('UserBaseSchema', () => {
       const result = UserBaseSchema.safeParse({
         ...$validBase,
         orgIds: { schools: [], classes: ['c1'], cohorts: [] },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Must have either schools and classes OR cohorts',
+          path: ['orgIds'],
+        },
+      ]);
+    });
+
+    it('rejects a user with a stray school (no class) and cohorts', () => {
+      const result = UserBaseSchema.safeParse({
+        ...$validBase,
+        orgIds: { schools: ['s1'], classes: [], cohorts: ['co1'] },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Must have either schools and classes OR cohorts',
+          path: ['orgIds'],
+        },
+      ]);
+    });
+
+    it('rejects a user with a stray class (no school) and cohorts', () => {
+      const result = UserBaseSchema.safeParse({
+        ...$validBase,
+        orgIds: { schools: [], classes: ['c1'], cohorts: ['co1'] },
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues).toEqual([
@@ -600,26 +630,6 @@ describe('CreateUsersParamsSchema', () => {
   });
 
   describe('invalid users', () => {
-    it('rejects >1000 users', () => {
-      const result = CreateUsersParamsSchema.safeParse({
-        ...$validParams,
-        users: Array.from({ length: 1001 }, (_, idx) => ({
-          ...$validChild,
-          id: `u${idx}`,
-        })),
-      });
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0]).toEqual({
-        code: 'too_big',
-        inclusive: true,
-        maximum: 1000,
-        message: 'Too big: expected array to have <=1000 items',
-        origin: 'array',
-        path: ['users'],
-      });
-    });
-
     it.prop({ users: $nonArray })('rejects non-array users', ({ users }) => {
       const result = CreateUsersParamsSchema.safeParse({
         ...$validParams,
@@ -663,8 +673,31 @@ describe('CreateUsersParamsSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
-        code: 'custom',
-        message: 'Must have at least one user',
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected array to have >=1 items',
+        minimum: 1,
+        origin: 'array',
+        path: ['users'],
+      });
+    });
+
+    it('rejects >1000 users', () => {
+      const result = CreateUsersParamsSchema.safeParse({
+        ...$validParams,
+        users: Array.from({ length: 1001 }, (_, idx) => ({
+          ...$validChild,
+          id: `u${idx}`,
+        })),
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_big',
+        inclusive: true,
+        maximum: 1000,
+        message: 'Too big: expected array to have <=1000 items',
+        origin: 'array',
         path: ['users'],
       });
     });
@@ -680,7 +713,7 @@ describe('CreateUsersParamsSchema', () => {
       for (const [idx, issue] of issues.entries()) {
         expect(issue.code).toEqual('custom');
         expect(issue.message).toEqual('Must be unique');
-        expect(issue.path).toEqual([idx, 'id']);
+        expect(issue.path).toEqual(['users', idx, 'id']);
       }
     });
   });
