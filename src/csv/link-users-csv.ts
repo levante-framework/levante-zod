@@ -4,7 +4,6 @@
 import * as z from 'zod';
 import { nonEmptyString } from '../shared/non-empty-string';
 import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
-import { makeTooBigIssue } from '../util/issues';
 import { hasRequiredHeaders, ListableString } from './shared';
 
 /**
@@ -52,24 +51,20 @@ const hasNoLinks = (
   ctx: z.RefinementCtx,
 ) => {
   if (data.caregiverId.length > 0) {
-    ctx.addIssue(
-      makeTooBigIssue({
-        input: data.caregiverId,
-        maximum: 0,
-        origin: 'array',
-        path: ['caregiverId'],
-      }),
-    );
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Only child rows may have a caregiverId',
+      path: ['caregiverId'],
+      input: data.caregiverId,
+    });
   }
   if (data.teacherId.length > 0) {
-    ctx.addIssue(
-      makeTooBigIssue({
-        input: data.teacherId,
-        maximum: 0,
-        origin: 'array',
-        path: ['teacherId'],
-      }),
-    );
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Only child rows may have a teacherId',
+      path: ['teacherId'],
+      input: data.teacherId,
+    });
   }
 };
 

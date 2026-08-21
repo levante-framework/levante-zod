@@ -301,9 +301,9 @@ describe('CaregiverLinkUsersCsvRow', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error!.issues.length).toBe(1);
-        expect(result.error!.issues[0].code).toEqual('too_big');
+        expect(result.error!.issues[0].code).toEqual('custom');
         expect(result.error!.issues[0].message).toEqual(
-          'Too big: expected array to have <=0 items',
+          'Only child rows may have a caregiverId',
         );
         expect(result.error!.issues[0].path).toEqual(['caregiverId']);
       },
@@ -346,9 +346,9 @@ describe('CaregiverLinkUsersCsvRow', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error!.issues.length).toBe(1);
-        expect(result.error!.issues[0].code).toEqual('too_big');
+        expect(result.error!.issues[0].code).toEqual('custom');
         expect(result.error!.issues[0].message).toEqual(
-          'Too big: expected array to have <=0 items',
+          'Only child rows may have a teacherId',
         );
         expect(result.error!.issues[0].path).toEqual(['teacherId']);
       },
@@ -557,9 +557,9 @@ describe('TeacherLinkUsersCsvRow', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error!.issues.length).toBe(1);
-        expect(result.error!.issues[0].code).toEqual('too_big');
+        expect(result.error!.issues[0].code).toEqual('custom');
         expect(result.error!.issues[0].message).toEqual(
-          'Too big: expected array to have <=0 items',
+          'Only child rows may have a caregiverId',
         );
         expect(result.error!.issues[0].path).toEqual(['caregiverId']);
       },
@@ -602,9 +602,9 @@ describe('TeacherLinkUsersCsvRow', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error!.issues.length).toBe(1);
-        expect(result.error!.issues[0].code).toEqual('too_big');
+        expect(result.error!.issues[0].code).toEqual('custom');
         expect(result.error!.issues[0].message).toEqual(
-          'Too big: expected array to have <=0 items',
+          'Only child rows may have a teacherId',
         );
         expect(result.error!.issues[0].path).toEqual(['teacherId']);
       },
