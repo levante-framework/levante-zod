@@ -122,7 +122,7 @@ export const AddUsersCsvSchema = z
         code: 'custom',
         message: 'Must be unique',
         path: [idx, 'id'],
-        input: data[idx],
+        input: data[idx].id,
       });
     }
   });
