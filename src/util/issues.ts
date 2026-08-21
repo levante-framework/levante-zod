@@ -1,53 +1,5 @@
 import type * as z from 'zod';
 
-/** @deprecated */
-export const combineIssues = (
-  issues: z.ZodIssue[],
-): Array<{ field: string; message: string }> => {
-  const grouped = new Map<string, { fields: Set<string>; order: number }>();
-
-  issues.forEach((issue, index) => {
-    const message = issue.message ?? 'Invalid input';
-    if (message.trim() === '') return;
-    const field = issue.path.join('.');
-
-    if (!grouped.has(message)) {
-      grouped.set(message, { fields: new Set(), order: index });
-    }
-
-    if (field) {
-      grouped.get(message)!.fields.add(field);
-    }
-  });
-
-  return Array.from(grouped.entries())
-    .sort((a, b) => a[1].order - b[1].order)
-    .map(([message, data]) => ({
-      field: formatIssueFields(Array.from(data.fields)),
-      message,
-    }));
-};
-
-/** @deprecated */
-export const formatIssueFields = (fields: string[]): string => {
-  const uniqueFields = Array.from(new Set(fields));
-  const hasMonth = uniqueFields.includes('month');
-  const hasYear = uniqueFields.includes('year');
-  const remainingFields = uniqueFields.filter(
-    (field) => field !== 'month' && field !== 'year',
-  );
-
-  if (hasMonth && hasYear) {
-    remainingFields.unshift('month and year');
-  } else if (hasMonth) {
-    remainingFields.unshift('month');
-  } else if (hasYear) {
-    remainingFields.unshift('year');
-  }
-
-  return remainingFields.join(', ');
-};
-
 /**
  * Creates a custom Zod issue
  * @param props.input - The input value that caused the issue
@@ -68,5 +20,55 @@ export function makeCustomIssue(props: {
     message,
     path,
     ...(params !== undefined && { params }),
+  };
+}
+
+/**
+ * Creates a too_big Zod issue
+ * @param props.input - The input value that caused the issue
+ * @param props.maximum - The maximum allowed value
+ * @param props.origin - The type of the value (e.g., 'array' or 'string')
+ * @param props.path - The path of the input value that caused the issue
+ */
+export function makeTooBigIssue(props: {
+  input: unknown;
+  maximum: number;
+  origin: 'array' | 'string';
+  path: (string | number | symbol)[];
+}): z.core.$ZodRawIssue<z.core.$ZodIssueTooBig> {
+  const { input, maximum, origin, path } = props;
+  return {
+    code: 'too_big',
+    inclusive: true,
+    input,
+    maximum,
+    message: `Too big: expected ${origin} to have <=${maximum} ${origin === 'array' ? 'items' : 'characters'}`,
+    origin,
+    path,
+  };
+}
+
+/**
+ * Creates a too_small Zod issue
+ * @param props.input - The input value that caused the issue
+ * @param props.minimum - The minimum allowed value
+ * @param props.origin - The type of the value (e.g., 'array' or 'string')
+ * @param props.path - The path of the input value that caused the issue
+ */
+export function makeTooSmallIssue(props: {
+  input: unknown;
+  minimum: number;
+  origin: 'array' | 'string';
+  path: (string | number | symbol)[];
+}): z.core.$ZodRawIssue<z.core.$ZodIssueTooSmall> {
+  const { input, minimum, origin, path } = props;
+  return {
+    code: 'too_small',
+    inclusive: true,
+    input,
+    minimum,
+    message: `Too small: expected ${origin} to have >=${minimum} ${origin === 'array' ? 'items' : 'characters'}`,
+    origin,
+    path,
   };
 }
