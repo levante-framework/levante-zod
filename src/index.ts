@@ -41,6 +41,14 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
+import {
+  ListUsersErrorSchema,
+  ListUsersParamsSchema,
+} from './firebase-functions/list-users';
+import {
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
+} from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -457,6 +465,7 @@ const UserSchema = z.object({
   archived: z.boolean(),
   classes: OrgAssociationMapSchema,
   createdAt: TimestampSchema,
+  disabled: z.boolean(),
   displayName: z.string(),
   districts: OrgAssociationMapSchema,
   email: z.string(),
@@ -544,6 +553,8 @@ export {
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvSchema,
+  ListUsersErrorSchema,
+  ListUsersParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
@@ -557,6 +568,8 @@ export {
   SchoolSchema,
   StatSchema,
   TimestampSchema,
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
   UserClaimsSchema,
   UserCsvSchema,
   UserLegalSchema,
@@ -621,6 +634,11 @@ export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 /** @deprecated */
 export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
+export type {
+  ListUsersError,
+  ListUsersParams,
+  ListUsersResult,
+} from './firebase-functions/list-users';
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
@@ -633,6 +651,11 @@ export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
+export type {
+  UpdateUserInfoError,
+  UpdateUserInfoParams,
+  UpdateUserInfoResult,
+} from './firebase-functions/update-user-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
