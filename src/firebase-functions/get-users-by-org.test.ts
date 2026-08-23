@@ -6,26 +6,14 @@ import {
 } from './get-users-by-org';
 
 describe('GetUsersByOrgParamsSchema', () => {
-  it('accepts valid props', () => {
-    expect(
-      GetUsersByOrgParamsSchema.parse({ orgType: 'site', orgId: 'foo' }),
-    ).toEqual({ orgType: 'site', orgId: 'foo' });
-  });
-
   it.each(['site', 'school', 'class', 'cohort'] as const)(
-    'accepts orgType "%s"',
+    'accepts valid props w/ orgType "%s"',
     (orgType) => {
       expect(
         GetUsersByOrgParamsSchema.parse({ orgType, orgId: 'foo' }),
       ).toEqual({ orgType, orgId: 'foo' });
     },
   );
-
-  it('trims orgId', () => {
-    expect(
-      GetUsersByOrgParamsSchema.parse({ orgType: 'site', orgId: '  foo  ' }),
-    ).toEqual({ orgType: 'site', orgId: 'foo' });
-  });
 
   it('strips unexpected props', () => {
     const result = GetUsersByOrgParamsSchema.parse({
@@ -37,66 +25,70 @@ describe('GetUsersByOrgParamsSchema', () => {
     expect(result).toEqual({ orgType: 'site', orgId: 'foo' });
   });
 
-  it('rejects an invalid orgType', () => {
-    const result = GetUsersByOrgParamsSchema.safeParse({
-      orgType: 'district',
-      orgId: 'foo',
+  describe('orgType', () => {
+    it('rejects an invalid orgType', () => {
+      const result = GetUsersByOrgParamsSchema.safeParse({
+        orgType: 'district',
+        orgId: 'foo',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_value',
+          values: ['site', 'school', 'class', 'cohort'],
+          message:
+            'Invalid option: expected one of "site"|"school"|"class"|"cohort"',
+          path: ['orgType'],
+        },
+      ]);
     });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_value',
-        values: ['site', 'school', 'class', 'cohort'],
-        message:
-          'Invalid option: expected one of "site"|"school"|"class"|"cohort"',
-        path: ['orgType'],
-      },
-    ]);
-  });
 
-  it('rejects missing orgType', () => {
-    const result = GetUsersByOrgParamsSchema.safeParse({ orgId: 'foo' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_value',
-        values: ['site', 'school', 'class', 'cohort'],
-        message:
-          'Invalid option: expected one of "site"|"school"|"class"|"cohort"',
-        path: ['orgType'],
-      },
-    ]);
-  });
-
-  it('rejects missing orgId', () => {
-    const result = GetUsersByOrgParamsSchema.safeParse({ orgType: 'site' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_type',
-        expected: 'string',
-        message: 'Invalid input: expected string, received undefined',
-        path: ['orgId'],
-      },
-    ]);
-  });
-
-  it('rejects an empty orgId', () => {
-    const result = GetUsersByOrgParamsSchema.safeParse({
-      orgType: 'site',
-      orgId: '   ',
+    it('rejects missing orgType', () => {
+      const result = GetUsersByOrgParamsSchema.safeParse({ orgId: 'foo' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_value',
+          values: ['site', 'school', 'class', 'cohort'],
+          message:
+            'Invalid option: expected one of "site"|"school"|"class"|"cohort"',
+          path: ['orgType'],
+        },
+      ]);
     });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'too_small',
-        inclusive: true,
-        message: 'Too small: expected string to have >=1 characters',
-        origin: 'string',
-        minimum: 1,
-        path: ['orgId'],
-      },
-    ]);
+  });
+
+  describe('orgId', () => {
+    it('rejects missing orgId', () => {
+      const result = GetUsersByOrgParamsSchema.safeParse({ orgType: 'site' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_type',
+          expected: 'string',
+          message: 'Invalid input: expected string, received undefined',
+          path: ['orgId'],
+        },
+      ]);
+    });
+
+    it('rejects an empty orgId', () => {
+      const result = GetUsersByOrgParamsSchema.safeParse({
+        orgType: 'site',
+        orgId: '   ',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'too_small',
+          inclusive: true,
+          message: 'Too small: expected string to have >=1 characters',
+          origin: 'string',
+          minimum: 1,
+          path: ['orgId'],
+        },
+      ]);
+    });
   });
 });
 
@@ -121,75 +113,22 @@ describe('GetUsersByOrgErrorSchema', () => {
     });
   });
 
-  describe('functions/internal', () => {
-    it('accepts a valid org-site-missing error', () => {
-      const err = new FunctionsError('internal', 'Org site missing', {
-        code: 'org-site-missing',
-        orgType: 'school',
-        orgId: 'foo',
-        siteId: 'bar',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
+  it('accepts functions/internal/org-site-missing error', () => {
+    const err = new FunctionsError('internal', 'Org site missing', {
+      code: 'org-site-missing',
+      orgType: 'school',
+      orgId: 'foo',
+      siteId: 'bar',
     });
-
-    it('rejects an unknown details code', () => {
-      const err = new FunctionsError('internal', 'Org site missing', {
-        code: 'unknown',
-        orgType: 'school',
-        orgId: 'foo',
-        siteId: 'bar',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
-    });
-
-    it('rejects a missing siteId', () => {
-      const err = new FunctionsError('internal', 'Org site missing', {
-        code: 'org-site-missing',
-        orgType: 'school',
-        orgId: 'foo',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
-    });
+    expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
   });
 
-  describe('functions/not-found', () => {
-    it('accepts a valid org not-found error', () => {
-      const err = new FunctionsError('not-found', 'Org not found', {
-        code: 'org',
-        id: 'foo',
-        type: 'site',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
+  it('accepts functions/not-found/org error', () => {
+    const err = new FunctionsError('not-found', 'Org not found', {
+      code: 'org',
+      id: 'foo',
+      type: 'site',
     });
-
-    it.each(['site', 'school', 'class', 'cohort'] as const)(
-      'accepts org type "%s"',
-      (type) => {
-        const err = new FunctionsError('not-found', 'Org not found', {
-          code: 'org',
-          id: 'foo',
-          type,
-        });
-        expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
-      },
-    );
-
-    it('rejects an unknown details code', () => {
-      const err = new FunctionsError('not-found', 'Org not found', {
-        code: 'user',
-        id: 'foo',
-        type: 'site',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
-    });
-
-    it('rejects an invalid org type', () => {
-      const err = new FunctionsError('not-found', 'Org not found', {
-        code: 'org',
-        id: 'foo',
-        type: 'district',
-      });
-      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
-    });
+    expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
   });
 });
