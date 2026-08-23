@@ -33,6 +33,15 @@ export type GetUsersByOrgResult = {
 export const GetUsersByOrgErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
   FunctionsErrorSchema.extend({
+    code: z.literal('functions/internal'),
+    details: z.object({
+      code: z.literal('org-site-missing'),
+      orgType: z.string(),
+      orgId: z.string(),
+      siteId: z.string(),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
     details: z.object({
       code: z.literal('org'),

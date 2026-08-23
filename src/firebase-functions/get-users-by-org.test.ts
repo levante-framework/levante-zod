@@ -121,6 +121,37 @@ describe('GetUsersByOrgErrorSchema', () => {
     });
   });
 
+  describe('functions/internal', () => {
+    it('accepts a valid org-site-missing error', () => {
+      const err = new FunctionsError('internal', 'Org site missing', {
+        code: 'org-site-missing',
+        orgType: 'school',
+        orgId: 'foo',
+        siteId: 'bar',
+      });
+      expect(() => GetUsersByOrgErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('rejects an unknown details code', () => {
+      const err = new FunctionsError('internal', 'Org site missing', {
+        code: 'unknown',
+        orgType: 'school',
+        orgId: 'foo',
+        siteId: 'bar',
+      });
+      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
+    });
+
+    it('rejects a missing siteId', () => {
+      const err = new FunctionsError('internal', 'Org site missing', {
+        code: 'org-site-missing',
+        orgType: 'school',
+        orgId: 'foo',
+      });
+      expect(() => GetUsersByOrgErrorSchema.parse(err)).toThrow();
+    });
+  });
+
   describe('functions/not-found', () => {
     it('accepts a valid org not-found error', () => {
       const err = new FunctionsError('not-found', 'Org not found', {
