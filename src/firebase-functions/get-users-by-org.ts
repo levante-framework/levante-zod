@@ -16,17 +16,14 @@ export const GetUsersByOrgParamsSchema = z.object({
 /** Inferred type of {@link GetUsersByOrgParamsSchema}. */
 export type GetUsersByOrgParams = z.infer<typeof GetUsersByOrgParamsSchema>;
 
-/** Wire format representation of a Firestore `users/{uid}` doc. */
-export type SerializedUser = {
-  uid: string;
-  email: string;
-  userType: 'admin' | 'caregiver' | 'child' | 'teacher';
-  childLabelIndex?: number;
-};
-
 /** Result type for `getUsersByOrg` Firebase Function. */
 export type GetUsersByOrgResult = {
-  users: SerializedUser[];
+  users: Array<{
+    uid: string;
+    email: string;
+    userType: 'admin' | 'caregiver' | 'child' | 'teacher';
+    childLabelIndex?: number;
+  }>;
 };
 
 /** Error schema for `getUsersByOrg` Firebase Function. */
@@ -46,7 +43,7 @@ export const GetUsersByOrgErrorSchema = z.discriminatedUnion('code', [
     details: z.object({
       code: z.literal('org'),
       id: z.string(),
-      type: z.enum(['site', 'school', 'class', 'cohort']),
+      type: z.string(),
     }),
   }),
   PermissionDeniedErrorSchema,
