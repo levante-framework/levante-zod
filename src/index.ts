@@ -46,10 +46,6 @@ import {
   GetUsersByOrgParamsSchema,
 } from './firebase-functions/get-users-by-org';
 import {
-  ListUsersErrorSchema,
-  ListUsersParamsSchema,
-} from './firebase-functions/list-users';
-import {
   UpdateUserInfoErrorSchema,
   UpdateUserInfoParamsSchema,
 } from './firebase-functions/update-user-info';
@@ -559,8 +555,6 @@ export {
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvSchema,
-  ListUsersErrorSchema,
-  ListUsersParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
@@ -645,11 +639,6 @@ export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
 /** @deprecated */
 export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
-export type {
-  ListUsersError,
-  ListUsersParams,
-  ListUsersResult,
-} from './firebase-functions/list-users';
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
