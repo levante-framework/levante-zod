@@ -45,6 +45,10 @@ import {
   GetUsersByOrgErrorSchema,
   GetUsersByOrgParamsSchema,
 } from './firebase-functions/get-users-by-org';
+import {
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
+} from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -461,6 +465,7 @@ const UserSchema = z.object({
   archived: z.boolean(),
   classes: OrgAssociationMapSchema,
   createdAt: TimestampSchema,
+  disabled: z.boolean(),
   displayName: z.string(),
   districts: OrgAssociationMapSchema,
   email: z.string(),
@@ -563,6 +568,8 @@ export {
   SchoolSchema,
   StatSchema,
   TimestampSchema,
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
   UserClaimsSchema,
   UserCsvSchema,
   UserLegalSchema,
@@ -644,6 +651,11 @@ export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
+export type {
+  UpdateUserInfoError,
+  UpdateUserInfoParams,
+  UpdateUserInfoResult,
+} from './firebase-functions/update-user-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
