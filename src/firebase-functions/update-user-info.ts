@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
+  FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
@@ -79,14 +80,23 @@ export type UpdateUserInfoParams = z.infer<typeof UpdateUserInfoParamsSchema>;
 
 /** Result type for `updateUserInfo` Firebase Function. */
 export type UpdateUserInfoResult = {
-  status: string;
-  message: string;
-  data: { uid: string }[];
+  users: {
+    uid: string;
+    archived?: boolean;
+    disabled?: boolean;
+  }[];
 };
 
 /** Error schema for `updateUserInfo` Firebase Function. */
 export const UpdateUserInfoErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.object({
+      code: z.literal('user'),
+      uid: z.string(),
+    }),
+  }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 ]);
