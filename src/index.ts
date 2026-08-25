@@ -42,6 +42,10 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import {
+  GetUsersByOrgErrorSchema,
+  GetUsersByOrgParamsSchema,
+} from './firebase-functions/get-users-by-org';
+import {
   ListUsersErrorSchema,
   ListUsersParamsSchema,
 } from './firebase-functions/list-users';
@@ -547,6 +551,8 @@ export {
   GetSiteOverviewParamsSchema,
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
+  GetUsersByOrgErrorSchema,
+  GetUsersByOrgParamsSchema,
   GroupSchema,
   H3CellSchema,
   LatLonSourceSchema,
@@ -628,6 +634,11 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  GetUsersByOrgError,
+  GetUsersByOrgParams,
+  GetUsersByOrgResult,
+} from './firebase-functions/get-users-by-org';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
