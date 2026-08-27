@@ -23,21 +23,21 @@ describe('SaveOrgInformationParamsSchema', () => {
     );
   });
 
-  it('accepts valid school submitted props', () => {
+  it('accepts valid school complete props', () => {
     expect(
       SaveOrgInformationParamsSchema.parse({
         orgType: 'school',
         orgId: 'school-1',
         formVersion: 'version-2',
         responses: { numTeachers: '12' },
-        status: 'submitted',
+        status: 'complete',
       }),
     ).toEqual({
       orgType: 'school',
       orgId: 'school-1',
       formVersion: 'version-2',
       responses: { numTeachers: '12' },
-      status: 'submitted',
+      status: 'complete',
     });
   });
 
@@ -105,10 +105,10 @@ describe('SaveOrgInformationParamsSchema', () => {
     expect(result.error?.issues[0]?.path).toEqual(['formVersion']);
   });
 
-  it('rejects invalid status', () => {
+  it('rejects submitted status', () => {
     const result = SaveOrgInformationParamsSchema.safeParse({
       ...validParams,
-      status: 'complete',
+      status: 'submitted',
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.path).toEqual(['status']);
@@ -148,6 +148,24 @@ describe('SaveOrgInformationErrorSchema', () => {
 
     it('accepts functions/unauthenticated', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
+      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/not-found', () => {
+      const err = new FunctionsError('not-found', 'Not found');
+      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/failed-precondition', () => {
+      const err = new FunctionsError(
+        'failed-precondition',
+        'Failed precondition',
+      );
+      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/internal', () => {
+      const err = new FunctionsError('internal', 'Internal');
       expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
     });
   });

@@ -1,7 +1,10 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
+  FailedPreconditionErrorSchema,
+  InternalErrorSchema,
   InvalidArgumentErrorSchema,
+  NotFoundErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
 
@@ -57,6 +60,9 @@ export type LoadFormDefinitionsResult = {
 export const LoadFormDefinitionsErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
   UnauthenticatedErrorSchema,
+  NotFoundErrorSchema,
+  FailedPreconditionErrorSchema,
+  InternalErrorSchema,
 ]);
 
 /** Inferred type of {@link LoadFormDefinitionsErrorSchema}. */

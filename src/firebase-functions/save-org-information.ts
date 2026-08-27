@@ -1,7 +1,10 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
+  FailedPreconditionErrorSchema,
+  InternalErrorSchema,
   InvalidArgumentErrorSchema,
+  NotFoundErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
@@ -22,8 +25,8 @@ export const SaveOrgInformationParamsSchema = z.object({
    * Values are untyped in v1 (string | number | string[] | …).
    */
   responses: z.record(z.string(), z.unknown()),
-  /** `draft` for Next/Save; `submitted` for Submit. Pending schema confirm. */
-  status: z.enum(['draft', 'submitted']),
+  /** `draft` for Next/Save; `complete` for Submit. */
+  status: z.enum(['draft', 'complete']),
 });
 
 /** Inferred type of {@link SaveOrgInformationParamsSchema}. */
@@ -36,8 +39,8 @@ export type SaveOrgInformationResult = {
   orgType: 'site' | 'school';
   orgId: string;
   formVersion: string;
-  status: 'draft' | 'submitted';
-  /** Firestore path that was merged, e.g. `districts/{id}/siteInformation/response`. */
+  status: 'draft' | 'complete';
+  /** Firestore path that was merged, e.g. `districts/{id}/siteInformation/{formVersion}`. */
   path: string;
 };
 
@@ -46,6 +49,9 @@ export const SaveOrgInformationErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
+  NotFoundErrorSchema,
+  FailedPreconditionErrorSchema,
+  InternalErrorSchema,
 ]);
 
 /** Inferred type of {@link SaveOrgInformationErrorSchema}. */
