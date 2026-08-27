@@ -40,7 +40,7 @@ export type SaveOrgInformationResult = {
   orgId: string;
   formVersion: string;
   status: 'draft' | 'complete';
-  /** Firestore path that was merged, e.g. `districts/{id}/siteInformation/{formVersion}`. */
+  /** Firestore path of the saved document, e.g. `districts/{id}/siteInformation/{formVersion}`. */
   path: string;
 };
 
