@@ -51,3 +51,21 @@ export const UnauthenticatedErrorSchema = FunctionsErrorSchema.extend({
   code: z.literal('functions/unauthenticated'),
   details: z.undefined(),
 });
+
+/** Default schema for `functions/not-found` errors. */
+export const NotFoundErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/not-found'),
+  details: z.undefined(),
+});
+
+/** Default schema for `functions/failed-precondition` errors. */
+export const FailedPreconditionErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/failed-precondition'),
+  details: z.undefined(),
+});
+
+/** Default schema for `functions/internal` errors. */
+export const InternalErrorSchema = FunctionsErrorSchema.extend({
+  code: z.literal('functions/internal'),
+  details: z.undefined(),
+});
