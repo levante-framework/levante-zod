@@ -110,5 +110,23 @@ describe('LoadFormDefinitionsErrorSchema', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
       expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
     });
+
+    it('accepts functions/not-found', () => {
+      const err = new FunctionsError('not-found', 'Not found');
+      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/failed-precondition', () => {
+      const err = new FunctionsError(
+        'failed-precondition',
+        'Failed precondition',
+      );
+      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
+    });
+
+    it('accepts functions/internal', () => {
+      const err = new FunctionsError('internal', 'Internal');
+      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
+    });
   });
 });

@@ -2,9 +2,12 @@ import { FirebaseError } from 'firebase/app';
 import { FunctionsError } from 'firebase/functions';
 import { describe, expect, it } from 'vitest';
 import {
+  FailedPreconditionErrorSchema,
   FirebaseErrorSchema,
   FunctionsErrorSchema,
+  InternalErrorSchema,
   InvalidArgumentErrorSchema,
+  NotFoundErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
@@ -251,6 +254,99 @@ describe('UnauthenticatedErrorSchema', () => {
     };
     const err = new FunctionsError($code, $message, $details);
     const result = UnauthenticatedErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'undefined',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected undefined, received object',
+    });
+  });
+});
+
+describe('NotFoundErrorSchema', () => {
+  const $code = 'not-found';
+  const $message = 'Not found';
+
+  it('accepts bare functions/not-found', () => {
+    const err = new FunctionsError($code, $message);
+    const result = NotFoundErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+    });
+  });
+
+  it('rejects functions/not-found/foo', () => {
+    const $details = {
+      code: 'foo',
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = NotFoundErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'undefined',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected undefined, received object',
+    });
+  });
+});
+
+describe('FailedPreconditionErrorSchema', () => {
+  const $code = 'failed-precondition';
+  const $message = 'Failed precondition';
+
+  it('accepts bare functions/failed-precondition', () => {
+    const err = new FunctionsError($code, $message);
+    const result = FailedPreconditionErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+    });
+  });
+
+  it('rejects functions/failed-precondition/foo', () => {
+    const $details = {
+      code: 'foo',
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = FailedPreconditionErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      expected: 'undefined',
+      code: 'invalid_type',
+      path: ['details'],
+      message: 'Invalid input: expected undefined, received object',
+    });
+  });
+});
+
+describe('InternalErrorSchema', () => {
+  const $code = 'internal';
+  const $message = 'Internal';
+
+  it('accepts bare functions/internal', () => {
+    const err = new FunctionsError($code, $message);
+    const result = InternalErrorSchema.parse(err);
+    expect(result).toEqual({
+      name: 'FirebaseError',
+      code: `functions/${$code}`,
+      message: $message,
+    });
+  });
+
+  it('rejects functions/internal/foo', () => {
+    const $details = {
+      code: 'foo',
+    };
+    const err = new FunctionsError($code, $message, $details);
+    const result = InternalErrorSchema.safeParse(err);
     expect(result.success).toBe(false);
     expect(result.error?.issues.length).toBe(1);
     expect(result.error?.issues[0]).toEqual({
