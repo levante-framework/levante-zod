@@ -28,7 +28,21 @@ describe('findDuplicateIndexes', () => {
     expect(findDuplicateIndexes(['x', 'y', 'y', 'z'])).toEqual([1, 2]);
   });
 
-  it('treats the empty string like any other value', () => {
-    expect(findDuplicateIndexes(['', '', 'a'])).toEqual([0, 1]);
+  it('ignores empty strings by default', () => {
+    expect(findDuplicateIndexes(['', '', 'a'])).toEqual([]);
+  });
+
+  it('ignores empty strings even when other values duplicate', () => {
+    expect(findDuplicateIndexes(['', 'a', '', 'a'])).toEqual([1, 3]);
+  });
+
+  it('treats empty strings like any other value when includeEmpty is true', () => {
+    expect(findDuplicateIndexes(['', '', 'a'], true)).toEqual([0, 1]);
+  });
+
+  it('flags empty-string duplicates alongside other duplicates when opted in', () => {
+    expect(findDuplicateIndexes(['', 'a', '', 'a'], true)).toEqual([
+      0, 1, 2, 3,
+    ]);
   });
 });

@@ -820,7 +820,6 @@ describe('LinkUsersCsvSchema', () => {
     expect(combined).toEqual([
       { message: 'id: Required', rowNums: [2, 3] },
       { message: 'uid: Required', rowNums: [4] },
-      { message: 'id: Must be unique', rowNums: [2, 3] },
     ]);
   });
 });

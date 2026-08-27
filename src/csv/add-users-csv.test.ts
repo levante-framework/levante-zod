@@ -935,7 +935,6 @@ describe('AddUsersCsvSchema', () => {
           'school|class|cohort: Must have either school and class OR cohort',
         rowNums: [4],
       },
-      { message: 'id: Must be unique', rowNums: [2, 3] },
     ]);
   });
 });

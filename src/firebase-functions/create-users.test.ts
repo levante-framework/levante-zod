@@ -716,6 +716,35 @@ describe('CreateUsersParamsSchema', () => {
         expect(issue.path).toEqual(['users', idx, 'id']);
       }
     });
+
+    it('does not flag empty ids as duplicates (only the upstream required issue)', () => {
+      const result = CreateUsersParamsSchema.safeParse({
+        ...$validParams,
+        users: [
+          { ...$validChild, id: '' },
+          { ...$validChild, id: '' },
+        ],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'too_small',
+          inclusive: true,
+          message: 'Too small: expected string to have >=1 characters',
+          origin: 'string',
+          minimum: 1,
+          path: ['users', 0, 'id'],
+        },
+        {
+          code: 'too_small',
+          inclusive: true,
+          message: 'Too small: expected string to have >=1 characters',
+          origin: 'string',
+          minimum: 1,
+          path: ['users', 1, 'id'],
+        },
+      ]);
+    });
   });
 });
 
