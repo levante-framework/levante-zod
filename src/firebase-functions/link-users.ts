@@ -167,6 +167,15 @@ export const LinkUsersErrorSchema = z.discriminatedUnion('code', [
         siteId: z.string(),
         uids: z.array(z.string()),
       }),
+      z.object({
+        code: z.literal('users-usertype-mismatch'),
+        users: z.array(
+          z.object({
+            uid: z.string(),
+            userType: z.string(),
+          }),
+        ),
+      }),
     ]),
   }),
   FunctionsErrorSchema.extend({

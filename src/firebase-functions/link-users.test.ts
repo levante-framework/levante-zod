@@ -781,6 +781,25 @@ describe('LinkUsersErrorSchema', () => {
       });
     });
 
+    it('accepts functions/invalid-argument/users-usertype-mismatch', () => {
+      const $message = 'Users-usertype mismatch';
+      const $details = {
+        code: 'users-usertype-mismatch',
+        users: [
+          { uid: 'uid-1', userType: 'caregiver' },
+          { uid: 'uid-2', userType: 'teacher' },
+        ],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = LinkUsersErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
     it('rejects bare functions/invalid-argument', () => {
       const err = new FunctionsError($code, 'Foo error');
       const result = LinkUsersErrorSchema.safeParse(err);
