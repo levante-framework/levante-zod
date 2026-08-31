@@ -26,6 +26,11 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import {
+  GetUserReportErrorSchema,
+  GetUserReportParamsSchema,
+  GetUserReportResponseSectionSchema,
+} from './firebase-functions/get-user-report';
+import {
   GetUsersByOrgErrorSchema,
   GetUsersByOrgParamsSchema,
 } from './firebase-functions/get-users-by-org';
@@ -528,6 +533,9 @@ export {
   GetSiteOverviewParamsSchema,
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
+  GetUserReportErrorSchema,
+  GetUserReportParamsSchema,
+  GetUserReportResponseSectionSchema,
   GetUsersByOrgErrorSchema,
   GetUsersByOrgParamsSchema,
   GroupSchema,
@@ -590,6 +598,16 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  GetUserReportBestPerformance,
+  GetUserReportError,
+  GetUserReportFullResult,
+  GetUserReportParams,
+  GetUserReportPercentile,
+  GetUserReportResponseSection,
+  GetUserReportResult,
+  GetUserReportSummary,
+} from './firebase-functions/get-user-report';
 export type {
   GetUsersByOrgError,
   GetUsersByOrgParams,
