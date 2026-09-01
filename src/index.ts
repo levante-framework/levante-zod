@@ -1,31 +1,15 @@
 import { cellToLatLng, getResolution } from 'h3-js';
 import * as z from 'zod';
 import {
-  AddUserCsvHeaderSchema,
-  combineUserCsvIssues,
-  UserCsvSchema,
-} from './csv/user-csv';
-import {
-  CsvHeadersSchema,
-  normalizeCsvData,
-  normalizeCsvHeaders,
-  validateCsvData,
-  validateCsvHeaders,
-} from './deprecated/csv';
-import { parseCommaSeparated } from './deprecated/users';
-import {
+  AddUsersCsvHeaderSchema,
   AddUsersCsvSchema,
-  AddUsersSubmitSchema,
-  validateAddUsersCsv,
-  validateAddUsersFileUpload,
-  validateAddUsersSubmit,
-} from './deprecated/users-add';
+} from './csv/add-users-csv';
 import {
+  LinkUsersCsvHeaderSchema,
   LinkUsersCsvSchema,
-  validateLinkUsersCsv,
-} from './deprecated/users-link';
+} from './csv/link-users-csv';
+import { combineUsersCsvIssues } from './csv/util';
 import {
-  CreateUserSchema,
   CreateUsersErrorSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/create-users';
@@ -41,6 +25,14 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
+import {
+  GetUsersByOrgErrorSchema,
+  GetUsersByOrgParamsSchema,
+} from './firebase-functions/get-users-by-org';
+import {
+  LinkUsersErrorSchema,
+  LinkUsersParamsSchema,
+} from './firebase-functions/link-users';
 import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
@@ -540,10 +532,10 @@ const locationDocId = (
   return `h3:${location.h3.effective.cellId}:t:${location.h3.populationThreshold}:${version}`;
 };
 
+export type { AddUsersCsv, AddUsersCsvHeader } from './csv/add-users-csv';
 export {
-  AddUserCsvHeaderSchema,
+  AddUsersCsvHeaderSchema,
   AddUsersCsvSchema,
-  AddUsersSubmitSchema,
   AdminDataSchema,
   AdministrationSchema,
   AssessmentConditionRuleSchema,
@@ -560,11 +552,9 @@ export {
   CreateSchoolSchema,
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
-  CreateUserSchema,
   CreateUsersErrorSchema,
   CreateUsersParamsSchema,
-  CsvHeadersSchema,
-  combineUserCsvIssues,
+  combineUsersCsvIssues,
   DistrictSchema,
   FirebaseErrorSchema,
   FunctionsErrorSchema,
@@ -578,6 +568,8 @@ export {
   GetTaskVariantRevisionsParamsSchema,
   GetTaskVariantsErrorSchema,
   GetTaskVariantsParamsSchema,
+  GetUsersByOrgErrorSchema,
+  GetUsersByOrgParamsSchema,
   GetVariantParamSpecsErrorSchema,
   GetVariantParamSpecsParamsSchema,
   GroupSchema,
@@ -585,16 +577,16 @@ export {
   LatLonSourceSchema,
   LegalInfoSchema,
   LegalSchema,
+  LinkUsersCsvHeaderSchema,
   LinkUsersCsvSchema,
+  LinkUsersErrorSchema,
+  LinkUsersParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
-  normalizeCsvData,
-  normalizeCsvHeaders,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
   OrgSchema,
-  parseCommaSeparated,
   ReadOrgSchema,
   SchoolSchema,
   StatSchema,
@@ -606,22 +598,9 @@ export {
   UpsertVariantParamSpecErrorSchema,
   UpsertVariantParamSpecParamsSchema,
   UserClaimsSchema,
-  UserCsvSchema,
   UserLegalSchema,
   UserSchema,
-  validateAddUsersCsv,
-  validateAddUsersFileUpload,
-  validateAddUsersSubmit,
-  validateCsvData,
-  validateCsvHeaders,
-  validateLinkUsersCsv,
 };
-
-export type AddUserCsvHeaderType = z.infer<typeof AddUserCsvHeaderSchema>;
-/** @deprecated */
-export type AddUsersCsvType = z.infer<typeof AddUsersCsvSchema>;
-/** @deprecated */
-export type AddUsersSubmitType = z.infer<typeof AddUsersSubmitSchema>;
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<
@@ -643,6 +622,11 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type {
+  CreateUsersError,
+  CreateUsersParams,
+  CreateUsersResult,
+} from './firebase-functions/create-users';
+export type {
   CreateTaskVariantError,
   CreateTaskVariantParams,
   CreateTaskVariantResult,
@@ -652,15 +636,6 @@ export type {
   GetTasksParams,
   GetTasksResult,
 } from './firebase-functions/tasks/get-tasks';
-/** @deprecated */
-export type CreateUserType = z.infer<typeof CreateUserSchema>;
-export type {
-  CreateUsersError,
-  CreateUsersParams,
-  CreateUsersResult,
-} from './firebase-functions/create-users';
-/** @deprecated */
-export type CsvHeadersType = z.infer<typeof CsvHeadersSchema>;
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
@@ -673,6 +648,11 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  GetUsersByOrgError,
+  GetUsersByOrgParams,
+  GetUsersByOrgResult,
+} from './firebase-functions/get-users-by-org';
 export type {
   GetTaskVariantRevisionsError,
   GetTaskVariantRevisionsParams,
@@ -692,8 +672,12 @@ export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
-/** @deprecated */
-export type LinkUsersCsvType = z.infer<typeof LinkUsersCsvSchema>;
+export type { LinkUsersCsv, LinkUsersCsvHeader } from './csv/link-users-csv';
+export type {
+  LinkUsersError,
+  LinkUsersParams,
+  LinkUsersResult,
+} from './firebase-functions/link-users';
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
@@ -728,7 +712,6 @@ export type {
   UpsertVariantParamSpecResult,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
-export type UserCsvType = z.infer<typeof UserCsvSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
 export type ZodIssue = z.core.$ZodIssue;
