@@ -40,17 +40,16 @@ export const GetTaskVariantsErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
-    details: z.object({
-      code: z.literal('task'),
-      taskId: z.string(),
-    }),
-  }),
-  FunctionsErrorSchema.extend({
-    code: z.literal('functions/not-found'),
-    details: z.object({
-      code: z.literal('variants'),
-      variantIds: z.array(z.string()),
-    }),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('task'),
+        taskId: z.string(),
+      }),
+      z.object({
+        code: z.literal('variants'),
+        variantIds: z.array(z.string()),
+      }),
+    ]),
   }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
