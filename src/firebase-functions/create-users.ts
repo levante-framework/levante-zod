@@ -1,31 +1,13 @@
 import * as z from 'zod';
-import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/user-csv';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/add-users-csv';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
+import { makeTooBigIssue, makeTooSmallIssue } from '../util/issues';
 import {
   FunctionsErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
-
-/** @deprecated */
-export const CreateUserSchema = z.object({
-  id: z.string(),
-  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
-  month: z.string().optional(),
-  year: z.string().optional(),
-  caregiverId: z.string().optional(),
-  teacherId: z.string().optional(),
-  site: z.string(),
-  school: z.string().optional(),
-  class: z.string().optional(),
-  cohort: z.string().optional(),
-  orgIds: z.object({
-    schools: z.array(z.string()),
-    classes: z.array(z.string()),
-    districts: z.array(z.string()).nonempty(),
-    groups: z.array(z.string()),
-  }),
-});
 
 /** Base schema for CreateUsersParamsSchema.users items. */
 export const UserBaseSchema = z
@@ -38,13 +20,15 @@ export const UserBaseSchema = z
     }),
   })
   .superRefine((data, ctx) => {
-    // All users must have either schools+classes xor cohorts
-    const hasSchoolClass =
-      data.orgIds.schools.length > 0 && data.orgIds.classes.length > 0;
+    // All users must have school+class XOR cohort. A stray school or class
+    // alongside a cohort (or a school without a class, or vice versa) is
+    // invalid.
+    const hasSchool = data.orgIds.schools.length > 0;
+    const hasClass = data.orgIds.classes.length > 0;
     const hasCohort = data.orgIds.cohorts.length > 0;
-    const hasAtLeastOneGroup = hasSchoolClass || hasCohort;
-    const hasBothGroupTypes = hasSchoolClass && hasCohort;
-    if (!hasAtLeastOneGroup || hasBothGroupTypes) {
+    const isSchoolClass = hasSchool && hasClass && !hasCohort;
+    const isCohort = hasCohort && !hasSchool && !hasClass;
+    if (!isSchoolClass && !isCohort) {
       ctx.addIssue({
         code: 'custom',
         message: 'Must have either schools and classes OR cohorts',
@@ -53,6 +37,11 @@ export const UserBaseSchema = z
       });
     }
   });
+
+/** Schema for CreateUsersParamsSchema.users items where userType is 'caregiver'. */
+export const CaregiverUserSchema = UserBaseSchema.extend({
+  userType: z.literal('caregiver'),
+});
 
 /** Schema for CreateUsersParamsSchema.users items where userType is 'child'. */
 export const ChildUserSchema = UserBaseSchema.extend({
@@ -74,11 +63,6 @@ export const ChildUserSchema = UserBaseSchema.extend({
   }
 });
 
-/** Schema for CreateUsersParamsSchema.users items where userType is 'caregiver'. */
-export const CaregiverUserSchema = UserBaseSchema.extend({
-  userType: z.literal('caregiver'),
-});
-
 /** Schema for CreateUsersParamsSchema.users items where userType is 'teacher'. */
 export const TeacherUserSchema = UserBaseSchema.extend({
   userType: z.literal('teacher'),
@@ -86,8 +70,8 @@ export const TeacherUserSchema = UserBaseSchema.extend({
 
 /** Schema for CreateUsersParamsSchema.users items. */
 export const UserSchema = z.discriminatedUnion('userType', [
-  ChildUserSchema,
   CaregiverUserSchema,
+  ChildUserSchema,
   TeacherUserSchema,
 ]);
 
@@ -95,36 +79,42 @@ export const UserSchema = z.discriminatedUnion('userType', [
 export const CreateUsersParamsSchema = z
   .object({
     siteId: NonEmptyStringSchema,
-    users: z.array(UserSchema).max(1000),
+    users: z.array(UserSchema),
   })
   .superRefine((data, ctx) => {
     // Users array must be non-empty
     if (data.users.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have at least one user',
-        path: ['users'],
-        input: data.users,
-      });
+      ctx.addIssue(
+        makeTooSmallIssue({
+          input: data.users,
+          minimum: 1,
+          origin: 'array',
+          path: ['users'],
+        }),
+      );
+      return;
+    }
+
+    // Users array must not exceed 1000 users
+    if (data.users.length > 1000) {
+      ctx.addIssue(
+        makeTooBigIssue({
+          input: data.users,
+          maximum: 1000,
+          origin: 'array',
+          path: ['users'],
+        }),
+      );
       return;
     }
 
     // Users must have unique ids
-    const seen = new Map<string, number[]>();
-    data.users.forEach((user, idx) => {
-      const idxs = seen.get(user.id) ?? [];
-      idxs.push(idx);
-      seen.set(user.id, idxs);
-    });
-    for (const idxs of seen.values()) {
-      if (idxs.length < 2) continue;
-      idxs.forEach((idx) => {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Must be unique',
-          path: [idx, 'id'],
-          input: data.users[idx].id,
-        });
+    for (const idx of findDuplicateIndexes(data.users.map((user) => user.id))) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must be unique',
+        path: ['users', idx, 'id'],
+        input: data.users[idx].id,
       });
     }
   });

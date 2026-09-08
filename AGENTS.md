@@ -27,29 +27,51 @@ This is a pure TypeScript ESM library. It has two primary concerns:
 
 - **Prefer inline `.superRefine(fn)` over `.check(z.superRefine(fn))`** — Both are equivalent, but inline `.superRefine` is simpler for schema-specific logic. Only reach for `.check(z.superRefine(...))` when the refinement is genuinely shared across multiple schemas or when batching several checks in one call.
 
-- **Avoid `z.nonempty` on strings and arrays** — `z.nonempty` can produce redundant issues. Example: an empty array will emit both `invalid_type` and `too_small` for `z.string().nonempty()`. Use `z.superRefine` instead so that invalid types produce only a single `invalid_type` issue.
+- **Avoid `z.nonempty`, `z.min`, and `z.max` on strings and arrays** — These length constraints emit a redundant `too_small`/`too_big` issue on top of `invalid_type` for some inputs. Use `z.superRefine` instead so invalid types produce only a single `invalid_type` issue. Mirror Zod's built-in shape (`too_small`/`too_big` with `inclusive`, `minimum`/`maximum`, `origin`) rather than a generic `custom` code.
 
 ```ts
 // Prefer this:
 .superRefine((data, ctx) => {
   if (data.users.length === 0) {
-    ctx.addIssue({ code: 'custom', message: 'Must have at least one user', path: ['users'] });
+    ctx.addIssue(
+      makeTooSmallIssue({
+        input: data.users,
+        minimum: 1,
+        origin: 'array',
+        path: ['users'],
+      }),
+    );
+    return;
+  }
+  if (data.users.length > 1000) {
+    ctx.addIssue(
+      makeTooBigIssue({
+        input: data.users,
+        maximum: 1000,
+        origin: 'array',
+        path: ['users'],
+      }),
+    );
+    return;
   }
 })
 
 // Over this:
-users: z.array(UserSchema).nonempty()
+users: z.array(UserSchema).nonempty().max(1000)
 ```
 
 ## Testing
 
 ```
 npm test
+npm run test:coverage
 ```
 
 Colocate test files. Use [Vitest](https://vitest.dev) (`describe`/`it`/`expect`). Aim for full branch coverage of validation logic.
 
 When adding or changing a schema or helper, add corresponding tests. Edge cases to cover: boundary values, type coercion, missing required fields, cross-field validation rules.
+
+When a test asserts against a Zod issue, cover all of its `code`, `message`, and `path` so regressions in any of them are caught.
 
 Use property-based testing (i.e. [fast-check](https://fast-check.dev)) when a validator has a large or complex input space — for example, cross-field rules, regex patterns, or numeric ranges — where exhaustive example-based tests would be impractical.
 
