@@ -1,5 +1,7 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
+import { makeTooBigIssue, makeTooSmallIssue } from '../util/issues';
 import {
   FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
@@ -7,21 +9,30 @@ import {
   UnauthenticatedErrorSchema,
 } from './error';
 
-/** The editable fields on a user, excluding the `uid` identifier. */
-const EDITABLE_FIELDS = ['archived', 'disabled'] as const;
-
 /**
- * A single user update accepted by the `updateUserInfo` Firebase Function.
- *
- * Holds primitive, self-contained properties that only affect the user's own
- * document (i.e., not relationships to other entities such as orgs). Add new
- * optional fields here as more such properties become editable.
+ * A single user update accepted by the `updateUserInfo` Firebase Function;
+ * holds primitive, self-contained properties that only affect the user's own
+ * document (i.e., not relationships to other entities such as orgs).
  */
-export const UserInfoSchema = z.object({
-  uid: NonEmptyStringSchema,
-  archived: z.boolean().optional(),
-  disabled: z.boolean().optional(),
-});
+export const UserInfoSchema = z
+  .object({
+    uid: NonEmptyStringSchema,
+    archived: z.boolean().optional(),
+    disabled: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      typeof data.archived === 'undefined' &&
+      typeof data.disabled === 'undefined'
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must have at least one field to update',
+        path: [],
+        input: data,
+      });
+    }
+  });
 
 /** Parameters schema for `updateUserInfo` Firebase Function. */
 export const UpdateUserInfoParamsSchema = z
@@ -31,46 +42,39 @@ export const UpdateUserInfoParamsSchema = z
   .superRefine((data, ctx) => {
     // Users array must be non-empty
     if (data.users.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Must have at least one user',
-        path: ['users'],
-        input: data.users,
-      });
+      ctx.addIssue(
+        makeTooSmallIssue({
+          input: data.users,
+          minimum: 1,
+          origin: 'array',
+          path: ['users'],
+        }),
+      );
       return;
     }
 
-    // Each user must edit at least one field
-    data.users.forEach((user, idx) => {
-      const hasEdit = EDITABLE_FIELDS.some(
-        (field) => user[field] !== undefined,
+    // Users array must not exceed 1000 users
+    if (data.users.length > 1000) {
+      ctx.addIssue(
+        makeTooBigIssue({
+          input: data.users,
+          maximum: 1000,
+          origin: 'array',
+          path: ['users'],
+        }),
       );
-      if (!hasEdit) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Must provide at least one field to update',
-          path: ['users', idx],
-          input: user,
-        });
-      }
-    });
+      return;
+    }
 
-    // Users must have unique uids
-    const seen = new Map<string, number[]>();
-    data.users.forEach((user, idx) => {
-      const idxs = seen.get(user.uid) ?? [];
-      idxs.push(idx);
-      seen.set(user.uid, idxs);
-    });
-    for (const idxs of seen.values()) {
-      if (idxs.length < 2) continue;
-      idxs.forEach((idx) => {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'Must be unique',
-          path: ['users', idx, 'uid'],
-          input: data.users[idx].uid,
-        });
+    // Users must have unique ids
+    for (const idx of findDuplicateIndexes(
+      data.users.map((user) => user.uid),
+    )) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must be unique',
+        path: ['users', idx, 'uid'],
+        input: data.users[idx].uid,
       });
     }
   });
@@ -93,8 +97,8 @@ export const UpdateUserInfoErrorSchema = z.discriminatedUnion('code', [
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
     details: z.object({
-      code: z.literal('user'),
-      uid: z.string(),
+      code: z.literal('users'),
+      uids: z.array(z.string()),
     }),
   }),
   PermissionDeniedErrorSchema,

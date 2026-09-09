@@ -1,13 +1,27 @@
+import { fc, it } from '@fast-check/vitest';
 import { FunctionsError } from 'firebase/functions';
-import { describe, expect, it } from 'vitest';
+import { describe, expect } from 'vitest';
 import type * as z from 'zod';
 import {
   UpdateUserInfoErrorSchema,
   UpdateUserInfoParamsSchema,
+  UserInfoSchema,
 } from './update-user-info';
 
+/** Arbitrary: a non-array value */
+const $nonArray = fc.anything().filter((v) => !Array.isArray(v));
+
+/** Arbitrary: a non-object value */
+const $nonObject = fc.anything().filter((v) => typeof v !== 'object');
+
+/** Fixture: a valid user */
+const $validUser = {
+  uid: 'u1',
+  archived: true,
+};
+
 /** Fixture: valid params */
-const $valid = {
+const $validParams = {
   users: [
     { uid: 'u1', archived: true },
     { uid: 'u2', disabled: false },
@@ -15,29 +29,163 @@ const $valid = {
   ],
 };
 
+describe('UserInfoSchema', () => {
+  describe('valid', () => {
+    it('accepts a valid user', () => {
+      expect(() => UserInfoSchema.parse($validUser)).not.toThrow();
+    });
+
+    it('accepts a user with only disabled', () => {
+      expect(() =>
+        UserInfoSchema.parse({ uid: 'u1', disabled: false }),
+      ).not.toThrow();
+    });
+
+    it('accepts a user with both fields', () => {
+      expect(() =>
+        UserInfoSchema.parse({ uid: 'u1', archived: true, disabled: false }),
+      ).not.toThrow();
+    });
+
+    it('strips unexpected props', () => {
+      const result = UserInfoSchema.safeParse({
+        ...$validUser,
+        unexpected: 'foo',
+      });
+      expect(result.data).toEqual({ ...$validUser });
+    });
+  });
+
+  describe('invalid root', () => {
+    it.prop({ nonObject: $nonObject })(
+      'rejects non-object root',
+      ({ nonObject }) => {
+        const result = UserInfoSchema.safeParse(nonObject);
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.length).toBe(1);
+        const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+        expect(issue.code).toEqual('invalid_type');
+        expect(issue.expected).toEqual('object');
+        expect(issue.message).toMatch(
+          /^Invalid input: expected object, received/,
+        );
+        expect(issue.path).toEqual([]);
+      },
+    );
+  });
+
+  describe('invalid uid', () => {
+    it('rejects a missing uid', () => {
+      const result = UserInfoSchema.safeParse({ archived: true });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+      expect(issue.code).toEqual('invalid_type');
+      expect(issue.expected).toEqual('string');
+      expect(issue.message).toMatch(
+        /^Invalid input: expected string, received/,
+      );
+      expect(issue.path).toEqual(['uid']);
+    });
+
+    it('rejects an empty uid', () => {
+      const result = UserInfoSchema.safeParse({ uid: '', archived: true });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected string to have >=1 characters',
+        minimum: 1,
+        origin: 'string',
+        path: ['uid'],
+      });
+    });
+  });
+
+  describe('invalid fields', () => {
+    it('rejects a non-boolean archived', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1', archived: 'yes' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+      expect(issue.code).toEqual('invalid_type');
+      expect(issue.expected).toEqual('boolean');
+      expect(issue.message).toMatch(
+        /^Invalid input: expected boolean, received/,
+      );
+      expect(issue.path).toEqual(['archived']);
+    });
+
+    it('rejects a non-boolean disabled', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1', disabled: 'no' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+      expect(issue.code).toEqual('invalid_type');
+      expect(issue.expected).toEqual('boolean');
+      expect(issue.message).toMatch(
+        /^Invalid input: expected boolean, received/,
+      );
+      expect(issue.path).toEqual(['disabled']);
+    });
+  });
+
+  describe('invalid superRefine', () => {
+    it('rejects a user with no fields to update', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Must have at least one field to update',
+          path: [],
+        },
+      ]);
+    });
+  });
+});
+
 describe('UpdateUserInfoParamsSchema', () => {
   describe('valid', () => {
     it('accepts valid params', () => {
-      expect(() => UpdateUserInfoParamsSchema.parse($valid)).not.toThrow();
+      expect(() =>
+        UpdateUserInfoParamsSchema.parse($validParams),
+      ).not.toThrow();
     });
 
-    it('accepts a single edited field', () => {
+    it('accepts a single user', () => {
       expect(() =>
-        UpdateUserInfoParamsSchema.parse({
-          users: [{ uid: 'u1', archived: true }],
-        }),
+        UpdateUserInfoParamsSchema.parse({ users: [$validUser] }),
       ).not.toThrow();
     });
 
     it('strips unexpected props', () => {
       const result = UpdateUserInfoParamsSchema.safeParse({
-        users: [{ uid: 'u1', archived: true, unexpected: 'foo' }],
+        ...$validParams,
+        unexpected: 'foo',
       });
-      expect(result.data).toEqual({ users: [{ uid: 'u1', archived: true }] });
+      expect(result.data).toEqual({ ...$validParams });
     });
   });
 
   describe('invalid root', () => {
+    it.prop({ nonObject: $nonObject })(
+      'rejects non-object root',
+      ({ nonObject }) => {
+        const result = UpdateUserInfoParamsSchema.safeParse(nonObject);
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.length).toBe(1);
+        const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+        expect(issue.code).toEqual('invalid_type');
+        expect(issue.expected).toEqual('object');
+        expect(issue.message).toMatch(
+          /^Invalid input: expected object, received/,
+        );
+        expect(issue.path).toEqual([]);
+      },
+    );
+
     it('rejects a missing users prop', () => {
       const result = UpdateUserInfoParamsSchema.safeParse({});
       expect(result.success).toBe(false);
@@ -45,43 +193,38 @@ describe('UpdateUserInfoParamsSchema', () => {
       const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
       expect(issue.code).toEqual('invalid_type');
       expect(issue.expected).toEqual('array');
+      expect(issue.message).toMatch(/^Invalid input: expected array, received/);
       expect(issue.path).toEqual(['users']);
     });
   });
 
   describe('invalid users', () => {
-    it('rejects a user with a missing uid', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
-        users: [{ archived: true }],
-      });
+    it.prop({ users: $nonArray })('rejects non-array users', ({ users }) => {
+      const result = UpdateUserInfoParamsSchema.safeParse({ users });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
       expect(issue.code).toEqual('invalid_type');
-      expect(issue.expected).toEqual('string');
-      expect(issue.path).toEqual(['users', 0, 'uid']);
+      expect(issue.expected).toEqual('array');
+      expect(issue.message).toMatch(/^Invalid input: expected array, received/);
+      expect(issue.path).toEqual(['users']);
     });
 
-    it('rejects a user with an empty uid', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
-        users: [{ uid: '', archived: true }],
-      });
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0].path).toEqual(['users', 0, 'uid']);
-    });
-
-    it('rejects a non-boolean field', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
-        users: [{ uid: 'u1', archived: 'yes' }],
-      });
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
-      expect(issue.code).toEqual('invalid_type');
-      expect(issue.expected).toEqual('boolean');
-      expect(issue.path).toEqual(['users', 0, 'archived']);
-    });
+    it.prop({ user: $nonObject })(
+      'rejects non-object users items',
+      ({ user }) => {
+        const result = UpdateUserInfoParamsSchema.safeParse({ users: [user] });
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.length).toBe(1);
+        const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
+        expect(issue.code).toEqual('invalid_type');
+        expect(issue.expected).toEqual('object');
+        expect(issue.message).toMatch(
+          /^Invalid input: expected object, received/,
+        );
+        expect(issue.path).toEqual(['users', 0]);
+      },
+    );
   });
 
   describe('invalid superRefine', () => {
@@ -90,23 +233,46 @@ describe('UpdateUserInfoParamsSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
-        code: 'custom',
-        message: 'Must have at least one user',
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected array to have >=1 items',
+        minimum: 1,
+        origin: 'array',
         path: ['users'],
       });
     });
 
-    it('rejects a user with no edited fields', () => {
+    it('rejects >1000 users', () => {
       const result = UpdateUserInfoParamsSchema.safeParse({
-        users: [{ uid: 'u1' }],
+        users: Array.from({ length: 1001 }, (_, idx) => ({
+          uid: `u${idx}`,
+          archived: true,
+        })),
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
-        code: 'custom',
-        message: 'Must provide at least one field to update',
-        path: ['users', 0],
+        code: 'too_big',
+        inclusive: true,
+        maximum: 1000,
+        message: 'Too big: expected array to have <=1000 items',
+        origin: 'array',
+        path: ['users'],
       });
+    });
+
+    it('rejects a user with no fields to update', () => {
+      const result = UpdateUserInfoParamsSchema.safeParse({
+        users: [{ uid: 'u1' }],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Must have at least one field to update',
+          path: ['users', 0],
+        },
+      ]);
     });
 
     it('rejects duplicate uids', () => {
@@ -129,15 +295,89 @@ describe('UpdateUserInfoParamsSchema', () => {
 });
 
 describe('UpdateUserInfoErrorSchema', () => {
-  describe('common error codes', () => {
+  describe('invalid-argument', () => {
+    const $code = 'invalid-argument';
+
     it('accepts functions/invalid-argument/schema', () => {
-      const err = new FunctionsError('invalid-argument', 'Schema error', {
+      const $message = 'Schema error';
+      const $details = {
         code: 'schema',
         issues: [{ path: 'users[0].uid', message: 'Must be non-empty' }],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = UpdateUserInfoErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
       });
-      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
     });
 
+    it('rejects bare functions/invalid-argument', () => {
+      const err = new FunctionsError($code, 'Foo error');
+      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+  });
+
+  describe('not-found', () => {
+    const $code = 'not-found';
+    const $message = 'Not found';
+    const $details = {
+      code: 'users',
+      uids: ['uid-1', 'uid-2'],
+    };
+
+    it('accepts functions/not-found/users', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = UpdateUserInfoErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/not-found', () => {
+      const err = new FunctionsError($code, $message);
+      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/not-found/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        uids: ['uid-1'],
+      });
+      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['users'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "users"',
+      });
+    });
+  });
+
+  describe('common error codes', () => {
     it('accepts functions/permission-denied', () => {
       const err = new FunctionsError('permission-denied', 'Permission denied');
       expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
