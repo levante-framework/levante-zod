@@ -2,7 +2,7 @@ import { fc, it } from '@fast-check/vitest';
 import { FunctionsError } from 'firebase/functions';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
-import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../csv/add-users-csv';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../../csv/add-users-csv';
 import {
   CaregiverUserSchema,
   ChildUserSchema,

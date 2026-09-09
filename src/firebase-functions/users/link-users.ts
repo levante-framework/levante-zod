@@ -1,12 +1,12 @@
 import * as z from 'zod';
-import { NonEmptyStringSchema } from '../shared/non-empty-string';
-import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
-import { makeTooBigIssue, makeTooSmallIssue } from '../util/issues';
+import { NonEmptyStringSchema } from '../../shared/non-empty-string';
+import { findDuplicateIndexes } from '../../util/find-duplicate-indexes';
+import { makeTooBigIssue, makeTooSmallIssue } from '../../util/issues';
 import {
   FunctionsErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
-} from './error';
+} from '../error';
 
 /** Base schema for LinkUsersParamsSchema.users items. */
 export const UserBaseSchema = z.object({
