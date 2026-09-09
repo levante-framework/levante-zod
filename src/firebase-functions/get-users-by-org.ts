@@ -20,6 +20,8 @@ export type GetUsersByOrgParams = z.infer<typeof GetUsersByOrgParamsSchema>;
 export type GetUsersByOrgResult = {
   users: Array<{
     uid: string;
+    archived: boolean;
+    disabled: boolean;
     email: string;
     userType: 'admin' | 'caregiver' | 'child' | 'teacher';
     childLabelIndex?: number;

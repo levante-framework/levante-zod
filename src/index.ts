@@ -65,6 +65,10 @@ import {
   UpsertVariantParamSpecErrorSchema,
   UpsertVariantParamSpecParamsSchema,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
+import {
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
+} from './firebase-functions/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -481,6 +485,7 @@ const UserSchema = z.object({
   archived: z.boolean(),
   classes: OrgAssociationMapSchema,
   createdAt: TimestampSchema,
+  disabled: z.boolean(),
   displayName: z.string(),
   districts: OrgAssociationMapSchema,
   email: z.string(),
@@ -593,6 +598,8 @@ export {
   TimestampSchema,
   UpdateTaskVariantErrorSchema,
   UpdateTaskVariantParamsSchema,
+  UpdateUserInfoErrorSchema,
+  UpdateUserInfoParamsSchema,
   UpsertTaskErrorSchema,
   UpsertTaskParamsSchema,
   UpsertVariantParamSpecErrorSchema,
@@ -711,6 +718,11 @@ export type {
   UpsertVariantParamSpecParams,
   UpsertVariantParamSpecResult,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
+export type {
+  UpdateUserInfoError,
+  UpdateUserInfoParams,
+  UpdateUserInfoResult,
+} from './firebase-functions/update-user-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
