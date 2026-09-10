@@ -3,10 +3,10 @@ import { FunctionsError } from 'firebase/functions';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
 import {
-  UpdateUserInfoErrorSchema,
-  UpdateUserInfoParamsSchema,
+  UpdateUsersInfoErrorSchema,
+  UpdateUsersInfoParamsSchema,
   UserInfoSchema,
-} from './update-user-info';
+} from './update-users-info';
 
 /** Arbitrary: a non-array value */
 const $nonArray = fc.anything().filter((v) => !Array.isArray(v));
@@ -146,22 +146,22 @@ describe('UserInfoSchema', () => {
   });
 });
 
-describe('UpdateUserInfoParamsSchema', () => {
+describe('UpdateUsersInfoParamsSchema', () => {
   describe('valid', () => {
     it('accepts valid params', () => {
       expect(() =>
-        UpdateUserInfoParamsSchema.parse($validParams),
+        UpdateUsersInfoParamsSchema.parse($validParams),
       ).not.toThrow();
     });
 
     it('accepts a single user', () => {
       expect(() =>
-        UpdateUserInfoParamsSchema.parse({ users: [$validUser] }),
+        UpdateUsersInfoParamsSchema.parse({ users: [$validUser] }),
       ).not.toThrow();
     });
 
     it('strips unexpected props', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
+      const result = UpdateUsersInfoParamsSchema.safeParse({
         ...$validParams,
         unexpected: 'foo',
       });
@@ -173,7 +173,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     it.prop({ nonObject: $nonObject })(
       'rejects non-object root',
       ({ nonObject }) => {
-        const result = UpdateUserInfoParamsSchema.safeParse(nonObject);
+        const result = UpdateUsersInfoParamsSchema.safeParse(nonObject);
         expect(result.success).toBe(false);
         expect(result.error?.issues.length).toBe(1);
         const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -187,7 +187,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     );
 
     it('rejects a missing users prop', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({});
+      const result = UpdateUsersInfoParamsSchema.safeParse({});
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -200,7 +200,7 @@ describe('UpdateUserInfoParamsSchema', () => {
 
   describe('invalid users', () => {
     it.prop({ users: $nonArray })('rejects non-array users', ({ users }) => {
-      const result = UpdateUserInfoParamsSchema.safeParse({ users });
+      const result = UpdateUsersInfoParamsSchema.safeParse({ users });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -213,7 +213,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     it.prop({ user: $nonObject })(
       'rejects non-object users items',
       ({ user }) => {
-        const result = UpdateUserInfoParamsSchema.safeParse({ users: [user] });
+        const result = UpdateUsersInfoParamsSchema.safeParse({ users: [user] });
         expect(result.success).toBe(false);
         expect(result.error?.issues.length).toBe(1);
         const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -229,7 +229,7 @@ describe('UpdateUserInfoParamsSchema', () => {
 
   describe('invalid superRefine', () => {
     it('rejects an empty users array', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({ users: [] });
+      const result = UpdateUsersInfoParamsSchema.safeParse({ users: [] });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
@@ -243,7 +243,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     });
 
     it('rejects >1000 users', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
+      const result = UpdateUsersInfoParamsSchema.safeParse({
         users: Array.from({ length: 1001 }, (_, idx) => ({
           uid: `u${idx}`,
           archived: true,
@@ -262,7 +262,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     });
 
     it('rejects a user with no fields to update', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
+      const result = UpdateUsersInfoParamsSchema.safeParse({
         users: [{ uid: 'u1' }],
       });
       expect(result.success).toBe(false);
@@ -276,7 +276,7 @@ describe('UpdateUserInfoParamsSchema', () => {
     });
 
     it('rejects duplicate uids', () => {
-      const result = UpdateUserInfoParamsSchema.safeParse({
+      const result = UpdateUsersInfoParamsSchema.safeParse({
         users: [
           { uid: 'dup', archived: true },
           { uid: 'dup', disabled: true },
@@ -294,7 +294,7 @@ describe('UpdateUserInfoParamsSchema', () => {
   });
 });
 
-describe('UpdateUserInfoErrorSchema', () => {
+describe('UpdateUsersInfoErrorSchema', () => {
   describe('invalid-argument', () => {
     const $code = 'invalid-argument';
 
@@ -305,7 +305,7 @@ describe('UpdateUserInfoErrorSchema', () => {
         issues: [{ path: 'users[0].uid', message: 'Must be non-empty' }],
       };
       const err = new FunctionsError($code, $message, $details);
-      const result = UpdateUserInfoErrorSchema.parse(err);
+      const result = UpdateUsersInfoErrorSchema.parse(err);
       expect(result).toEqual({
         name: 'FirebaseError',
         code: `functions/${$code}`,
@@ -316,7 +316,7 @@ describe('UpdateUserInfoErrorSchema', () => {
 
     it('rejects bare functions/invalid-argument', () => {
       const err = new FunctionsError($code, 'Foo error');
-      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      const result = UpdateUsersInfoErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
@@ -338,7 +338,7 @@ describe('UpdateUserInfoErrorSchema', () => {
 
     it('accepts functions/not-found/users', () => {
       const err = new FunctionsError($code, $message, $details);
-      const result = UpdateUserInfoErrorSchema.parse(err);
+      const result = UpdateUsersInfoErrorSchema.parse(err);
       expect(result).toEqual({
         name: 'FirebaseError',
         code: `functions/${$code}`,
@@ -349,7 +349,7 @@ describe('UpdateUserInfoErrorSchema', () => {
 
     it('rejects bare functions/not-found', () => {
       const err = new FunctionsError($code, $message);
-      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      const result = UpdateUsersInfoErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
@@ -365,7 +365,7 @@ describe('UpdateUserInfoErrorSchema', () => {
         code: 'foo',
         uids: ['uid-1'],
       });
-      const result = UpdateUserInfoErrorSchema.safeParse(err);
+      const result = UpdateUsersInfoErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
@@ -380,12 +380,12 @@ describe('UpdateUserInfoErrorSchema', () => {
   describe('common error codes', () => {
     it('accepts functions/permission-denied', () => {
       const err = new FunctionsError('permission-denied', 'Permission denied');
-      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
+      expect(() => UpdateUsersInfoErrorSchema.parse(err)).not.toThrow();
     });
 
     it('accepts functions/unauthenticated', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
-      expect(() => UpdateUserInfoErrorSchema.parse(err)).not.toThrow();
+      expect(() => UpdateUsersInfoErrorSchema.parse(err)).not.toThrow();
     });
   });
 });

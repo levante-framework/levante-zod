@@ -10,7 +10,7 @@ import {
 } from '../error';
 
 /**
- * A single user update accepted by the `updateUserInfo` Firebase Function;
+ * A single user update accepted by the `updateUsersInfo` Firebase Function;
  * holds primitive, self-contained properties that only affect the user's own
  * document (i.e., not relationships to other entities such as orgs).
  */
@@ -34,8 +34,8 @@ export const UserInfoSchema = z
     }
   });
 
-/** Parameters schema for `updateUserInfo` Firebase Function. */
-export const UpdateUserInfoParamsSchema = z
+/** Parameters schema for `updateUsersInfo` Firebase Function. */
+export const UpdateUsersInfoParamsSchema = z
   .object({
     users: z.array(UserInfoSchema),
   })
@@ -79,11 +79,11 @@ export const UpdateUserInfoParamsSchema = z
     }
   });
 
-/** Inferred type of {@link UpdateUserInfoParamsSchema}. */
-export type UpdateUserInfoParams = z.infer<typeof UpdateUserInfoParamsSchema>;
+/** Inferred type of {@link UpdateUsersInfoParamsSchema}. */
+export type UpdateUsersInfoParams = z.infer<typeof UpdateUsersInfoParamsSchema>;
 
-/** Result type for `updateUserInfo` Firebase Function. */
-export type UpdateUserInfoResult = {
+/** Result type for `updateUsersInfo` Firebase Function. */
+export type UpdateUsersInfoResult = {
   users: {
     uid: string;
     archived?: boolean;
@@ -91,8 +91,8 @@ export type UpdateUserInfoResult = {
   }[];
 };
 
-/** Error schema for `updateUserInfo` Firebase Function. */
-export const UpdateUserInfoErrorSchema = z.discriminatedUnion('code', [
+/** Error schema for `updateUsersInfo` Firebase Function. */
+export const UpdateUsersInfoErrorSchema = z.discriminatedUnion('code', [
   InvalidArgumentErrorSchema,
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
@@ -105,5 +105,5 @@ export const UpdateUserInfoErrorSchema = z.discriminatedUnion('code', [
   UnauthenticatedErrorSchema,
 ]);
 
-/** Inferred type of {@link UpdateUserInfoErrorSchema}. */
-export type UpdateUserInfoError = z.infer<typeof UpdateUserInfoErrorSchema>;
+/** Inferred type of {@link UpdateUsersInfoErrorSchema}. */
+export type UpdateUsersInfoError = z.infer<typeof UpdateUsersInfoErrorSchema>;
