@@ -1,11 +1,11 @@
 import * as z from 'zod';
-import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { NonEmptyStringSchema } from '../../shared/non-empty-string';
 import {
   FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
-} from './error';
+} from '../error';
 
 /** Parameters schema for `getUsersByOrg` Firebase Function. */
 export const GetUsersByOrgParamsSchema = z.object({

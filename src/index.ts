@@ -10,10 +10,6 @@ import {
 } from './csv/link-users-csv';
 import { combineUsersCsvIssues } from './csv/util';
 import {
-  CreateUsersErrorSchema,
-  CreateUsersParamsSchema,
-} from './firebase-functions/create-users';
-import {
   FirebaseErrorSchema,
   FunctionsErrorSchema,
 } from './firebase-functions/error';
@@ -25,14 +21,6 @@ import {
   GetSyncStatusErrorSchema,
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
-import {
-  GetUsersByOrgErrorSchema,
-  GetUsersByOrgParamsSchema,
-} from './firebase-functions/get-users-by-org';
-import {
-  LinkUsersErrorSchema,
-  LinkUsersParamsSchema,
-} from './firebase-functions/link-users';
 import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
@@ -66,9 +54,21 @@ import {
   UpsertVariantParamSpecParamsSchema,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
 import {
+  CreateUsersErrorSchema,
+  CreateUsersParamsSchema,
+} from './firebase-functions/users/create-users';
+import {
+  GetUsersByOrgErrorSchema,
+  GetUsersByOrgParamsSchema,
+} from './firebase-functions/users/get-users-by-org';
+import {
+  LinkUsersErrorSchema,
+  LinkUsersParamsSchema,
+} from './firebase-functions/users/link-users';
+import {
   UpdateUserInfoErrorSchema,
   UpdateUserInfoParamsSchema,
-} from './firebase-functions/update-user-info';
+} from './firebase-functions/users/update-user-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -629,11 +629,6 @@ export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type {
-  CreateUsersError,
-  CreateUsersParams,
-  CreateUsersResult,
-} from './firebase-functions/create-users';
-export type {
   CreateTaskVariantError,
   CreateTaskVariantParams,
   CreateTaskVariantResult,
@@ -643,6 +638,11 @@ export type {
   GetTasksParams,
   GetTasksResult,
 } from './firebase-functions/tasks/get-tasks';
+export type {
+  CreateUsersError,
+  CreateUsersParams,
+  CreateUsersResult,
+} from './firebase-functions/users/create-users';
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
@@ -655,11 +655,6 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
-export type {
-  GetUsersByOrgError,
-  GetUsersByOrgParams,
-  GetUsersByOrgResult,
-} from './firebase-functions/get-users-by-org';
 export type {
   GetTaskVariantRevisionsError,
   GetTaskVariantRevisionsParams,
@@ -675,6 +670,11 @@ export type {
   GetVariantParamSpecsParams,
   GetVariantParamSpecsResult,
 } from './firebase-functions/tasks/get-variant-param-specs';
+export type {
+  GetUsersByOrgError,
+  GetUsersByOrgParams,
+  GetUsersByOrgResult,
+} from './firebase-functions/users/get-users-by-org';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LatLonSourceType = z.infer<typeof LatLonSourceSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
@@ -684,7 +684,7 @@ export type {
   LinkUsersError,
   LinkUsersParams,
   LinkUsersResult,
-} from './firebase-functions/link-users';
+} from './firebase-functions/users/link-users';
 export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
@@ -722,7 +722,7 @@ export type {
   UpdateUserInfoError,
   UpdateUserInfoParams,
   UpdateUserInfoResult,
-} from './firebase-functions/update-user-info';
+} from './firebase-functions/users/update-user-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
