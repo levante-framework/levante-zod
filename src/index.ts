@@ -58,6 +58,10 @@ import {
   CreateUsersParamsSchema,
 } from './firebase-functions/users/create-users';
 import {
+  GetUserOverviewErrorSchema,
+  GetUserOverviewParamsSchema,
+} from './firebase-functions/users/get-user-overview';
+import {
   GetUsersByOrgErrorSchema,
   GetUsersByOrgParamsSchema,
 } from './firebase-functions/users/get-users-by-org';
@@ -573,6 +577,8 @@ export {
   GetTaskVariantRevisionsParamsSchema,
   GetTaskVariantsErrorSchema,
   GetTaskVariantsParamsSchema,
+  GetUserOverviewErrorSchema,
+  GetUserOverviewParamsSchema,
   GetUsersByOrgErrorSchema,
   GetUsersByOrgParamsSchema,
   GetVariantParamSpecsErrorSchema,
@@ -670,6 +676,11 @@ export type {
   GetVariantParamSpecsParams,
   GetVariantParamSpecsResult,
 } from './firebase-functions/tasks/get-variant-param-specs';
+export type {
+  GetUserOverviewError,
+  GetUserOverviewParams,
+  GetUserOverviewResult,
+} from './firebase-functions/users/get-user-overview';
 export type {
   GetUsersByOrgError,
   GetUsersByOrgParams,
