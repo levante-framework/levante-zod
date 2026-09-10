@@ -60,7 +60,7 @@ export const GetUserOverviewErrorSchema = z.discriminatedUnion('code', [
       z.object({
         code: z.literal('usertype'),
         uid: z.string(),
-        userType: z.literal('admin'),
+        userType: z.string(),
       }),
     ]),
   }),
