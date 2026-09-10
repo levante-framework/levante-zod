@@ -66,9 +66,9 @@ import {
   LinkUsersParamsSchema,
 } from './firebase-functions/users/link-users';
 import {
-  UpdateUserInfoErrorSchema,
-  UpdateUserInfoParamsSchema,
-} from './firebase-functions/users/update-user-info';
+  UpdateUsersInfoErrorSchema,
+  UpdateUsersInfoParamsSchema,
+} from './firebase-functions/users/update-users-info';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -598,8 +598,8 @@ export {
   TimestampSchema,
   UpdateTaskVariantErrorSchema,
   UpdateTaskVariantParamsSchema,
-  UpdateUserInfoErrorSchema,
-  UpdateUserInfoParamsSchema,
+  UpdateUsersInfoErrorSchema,
+  UpdateUsersInfoParamsSchema,
   UpsertTaskErrorSchema,
   UpsertTaskParamsSchema,
   UpsertVariantParamSpecErrorSchema,
@@ -719,10 +719,10 @@ export type {
   UpsertVariantParamSpecResult,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
 export type {
-  UpdateUserInfoError,
-  UpdateUserInfoParams,
-  UpdateUserInfoResult,
-} from './firebase-functions/users/update-user-info';
+  UpdateUsersInfoError,
+  UpdateUsersInfoParams,
+  UpdateUsersInfoResult,
+} from './firebase-functions/users/update-users-info';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
 export type UserLegalType = z.infer<typeof UserLegalSchema>;
 export type UserType = z.infer<typeof UserSchema>;
