@@ -71,8 +71,8 @@ export const GetUserOverviewErrorSchema = z.discriminatedUnion('code', [
       uid: z.string(),
     }),
   }),
-  UnauthenticatedErrorSchema,
   PermissionDeniedErrorSchema,
+  UnauthenticatedErrorSchema,
 ]);
 
 /** Inferred type of {@link GetUserOverviewErrorSchema}. */
