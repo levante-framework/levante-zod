@@ -13,6 +13,7 @@ export const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
 export const LocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),
+    privacyMet: z.boolean(),
     latLon: z
       .object({
         lat: z.number().min(-90).max(90),
@@ -23,54 +24,76 @@ export const LocationSchema = z
       .optional(),
     h3: z.object({
       scheme: z.literal('h3_v1'),
-      baseline: H3CellSchema,
-      effective: H3CellSchema,
+      baseline: H3CellSchema.optional(),
+      effective: H3CellSchema.optional(),
       populationThreshold: z.number().int().positive(),
     }),
     populationSource: z.enum(['kontur', 'worldpop', 'unknown']).optional(),
-    computedAt: z.iso.datetime().optional(),
+    computedAt: z.iso.datetime().optional(), // when location was computed
+    createdAt: z.iso.datetime().optional(), // when location was persisted to database
   })
   .superRefine((value, ctx) => {
-    try {
-      const baselineResolution = getResolution(value.h3.baseline.h3Index);
-      if (baselineResolution !== value.h3.baseline.resolution) {
+    const effective = value.h3.effective;
+    const baseline = value.h3.baseline;
+
+    if (!value.privacyMet) {
+      if (effective !== undefined) {
         ctx.addIssue({
           code: 'custom',
-          path: ['h3', 'baseline', 'resolution'],
-          message: `baseline resolution mismatch (cell=${baselineResolution}, field=${value.h3.baseline.resolution})`,
+          path: ['h3', 'effective'],
+          message: `h3.effective must be undefined if privacyMet is false`,
         });
       }
-    } catch {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['h3', 'baseline', 'h3Index'],
-        message: 'Invalid baseline H3 index',
-      });
+
+      return;
     }
 
-    try {
-      const effectiveResolution = getResolution(value.h3.effective.h3Index);
-      if (effectiveResolution !== value.h3.effective.resolution) {
+    if (baseline) {
+      try {
+        const baselineResolution = getResolution(baseline.h3Index);
+        if (baselineResolution !== baseline.resolution) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['h3', 'baseline', 'resolution'],
+            message: `baseline resolution mismatch (cell=${baselineResolution}, field=${baseline.resolution})`,
+          });
+        }
+      } catch {
         ctx.addIssue({
           code: 'custom',
-          path: ['h3', 'effective', 'resolution'],
-          message: `effective resolution mismatch (cell=${effectiveResolution}, field=${value.h3.effective.resolution})`,
+          path: ['h3', 'baseline', 'h3Index'],
+          message: 'Invalid baseline H3 index',
         });
       }
-    } catch {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['h3', 'effective', 'h3Index'],
-        message: 'Invalid effective H3 index',
-      });
     }
 
-    if (value.h3.effective.resolution < value.h3.baseline.resolution) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['h3', 'effective', 'resolution'],
-        message: 'effective.resolution must be >= baseline.resolution',
-      });
+    if (effective) {
+      try {
+        const effectiveResolution = getResolution(effective.h3Index);
+        if (effectiveResolution !== effective.resolution) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['h3', 'effective', 'resolution'],
+            message: `effective resolution mismatch (cell=${effectiveResolution}, field=${effective.resolution})`,
+          });
+        }
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['h3', 'effective', 'h3Index'],
+          message: 'Invalid effective H3 index',
+        });
+      }
+
+      if (baseline) {
+        if (effective.resolution < baseline.resolution) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['h3', 'effective', 'resolution'],
+            message: 'effective.resolution must be >= baseline.resolution',
+          });
+        }
+      }
     }
 
     if (
@@ -84,8 +107,8 @@ export const LocationSchema = z
       });
     }
 
-    if (value.latLon?.source === 'h3_center') {
-      const [centerLat, centerLon] = cellToLatLng(value.h3.effective.h3Index);
+    if (value.latLon?.source === 'h3_center' && effective) {
+      const [centerLat, centerLon] = cellToLatLng(effective.h3Index);
       const epsilon = 1e-6;
       if (
         Math.abs(value.latLon.lat - centerLat) > epsilon ||
@@ -105,5 +128,5 @@ export const locationDocId = (
   location: Pick<z.infer<typeof LocationSchema>, 'schemaVersion' | 'h3'>,
 ): string => {
   const version = location.schemaVersion.replace(/^location_/, '');
-  return `h3:${location.h3.effective.h3Index}:t:${location.h3.populationThreshold}:${version}`;
+  return `h3:${location.h3.effective?.h3Index ?? 'null'}:t:${location.h3.populationThreshold}:${version}`;
 };
