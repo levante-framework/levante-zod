@@ -1,12 +1,13 @@
 import { cellToLatLng, getResolution } from 'h3-js';
 import * as z from 'zod';
-
-export const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
+import { NonEmptyStringSchema } from './shared/non-empty-string';
 
 export const H3CellSchema = z.object({
-  cellId: z.string().min(1),
-  resolution: z.number().int().min(0).max(15),
+  cellId: NonEmptyStringSchema,
+  resolution: z.int().min(0).max(15),
 });
+
+export const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
 
 export const LocationSchema = z
   .object({
