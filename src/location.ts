@@ -2,8 +2,9 @@ import { cellToLatLng, getResolution } from 'h3-js';
 import * as z from 'zod';
 import { NonEmptyStringSchema } from './shared/non-empty-string';
 
+/** An {@link https://h3geo.org | H3} cell: its H3 index and hierarchical resolution (0–15). */
 export const H3CellSchema = z.object({
-  cellId: NonEmptyStringSchema,
+  h3Index: NonEmptyStringSchema,
   resolution: z.int().min(0).max(15),
 });
 
@@ -31,7 +32,7 @@ export const LocationSchema = z
   })
   .superRefine((value, ctx) => {
     try {
-      const baselineResolution = getResolution(value.h3.baseline.cellId);
+      const baselineResolution = getResolution(value.h3.baseline.h3Index);
       if (baselineResolution !== value.h3.baseline.resolution) {
         ctx.addIssue({
           code: 'custom',
@@ -42,13 +43,13 @@ export const LocationSchema = z
     } catch {
       ctx.addIssue({
         code: 'custom',
-        path: ['h3', 'baseline', 'cellId'],
-        message: 'Invalid baseline H3 cellId',
+        path: ['h3', 'baseline', 'h3Index'],
+        message: 'Invalid baseline H3 index',
       });
     }
 
     try {
-      const effectiveResolution = getResolution(value.h3.effective.cellId);
+      const effectiveResolution = getResolution(value.h3.effective.h3Index);
       if (effectiveResolution !== value.h3.effective.resolution) {
         ctx.addIssue({
           code: 'custom',
@@ -59,8 +60,8 @@ export const LocationSchema = z
     } catch {
       ctx.addIssue({
         code: 'custom',
-        path: ['h3', 'effective', 'cellId'],
-        message: 'Invalid effective H3 cellId',
+        path: ['h3', 'effective', 'h3Index'],
+        message: 'Invalid effective H3 index',
       });
     }
 
@@ -84,7 +85,7 @@ export const LocationSchema = z
     }
 
     if (value.latLon?.source === 'h3_center') {
-      const [centerLat, centerLon] = cellToLatLng(value.h3.effective.cellId);
+      const [centerLat, centerLon] = cellToLatLng(value.h3.effective.h3Index);
       const epsilon = 1e-6;
       if (
         Math.abs(value.latLon.lat - centerLat) > epsilon ||
@@ -104,5 +105,5 @@ export const locationDocId = (
   location: Pick<z.infer<typeof LocationSchema>, 'schemaVersion' | 'h3'>,
 ): string => {
   const version = location.schemaVersion.replace(/^location_/, '');
-  return `h3:${location.h3.effective.cellId}:t:${location.h3.populationThreshold}:${version}`;
+  return `h3:${location.h3.effective.h3Index}:t:${location.h3.populationThreshold}:${version}`;
 };

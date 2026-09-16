@@ -10,16 +10,16 @@ const $nonObject = fc.anything().filter((v) => typeof v !== 'object');
 const $nonString = fc.anything().filter((v) => typeof v !== 'string');
 
 /** A valid H3CellSchema input */
-const $validCell = { cellId: '8928308280fffff', resolution: 9 };
+const $validCell = { h3Index: '8928308280fffff', resolution: 9 };
 
 describe('H3CellSchema', () => {
   it('accepts a valid cell', () => {
     expect(H3CellSchema.parse($validCell)).toEqual($validCell);
   });
 
-  it('trims cellId', () => {
+  it('trims h3Index', () => {
     expect(
-      H3CellSchema.parse({ ...$validCell, cellId: '  8928308280fffff  ' }),
+      H3CellSchema.parse({ ...$validCell, h3Index: '  8928308280fffff  ' }),
     ).toEqual($validCell);
   });
 
@@ -43,9 +43,9 @@ describe('H3CellSchema', () => {
     },
   );
 
-  describe('cellId', () => {
-    it('rejects a missing cellId', () => {
-      const { cellId: _cellId, ...rest } = $validCell;
+  describe('h3Index', () => {
+    it('rejects a missing h3Index', () => {
+      const { h3Index: _h3Index, ...rest } = $validCell;
       const result = H3CellSchema.safeParse(rest);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
@@ -53,14 +53,14 @@ describe('H3CellSchema', () => {
         code: 'invalid_type',
         expected: 'string',
         message: 'Invalid input: expected string, received undefined',
-        path: ['cellId'],
+        path: ['h3Index'],
       });
     });
 
-    it.prop({ cellId: $nonString })(
-      'rejects a non-string cellId',
-      ({ cellId }) => {
-        const result = H3CellSchema.safeParse({ ...$validCell, cellId });
+    it.prop({ h3Index: $nonString })(
+      'rejects a non-string h3Index',
+      ({ h3Index }) => {
+        const result = H3CellSchema.safeParse({ ...$validCell, h3Index });
         expect(result.success).toBe(false);
         expect(result.error?.issues.length).toBe(1);
         const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -69,12 +69,12 @@ describe('H3CellSchema', () => {
         expect(issue.message).toMatch(
           /Invalid input: expected string, received/,
         );
-        expect(issue.path).toEqual(['cellId']);
+        expect(issue.path).toEqual(['h3Index']);
       },
     );
 
-    it('rejects an empty cellId', () => {
-      const result = H3CellSchema.safeParse({ ...$validCell, cellId: '   ' });
+    it('rejects an empty h3Index', () => {
+      const result = H3CellSchema.safeParse({ ...$validCell, h3Index: '   ' });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
@@ -83,7 +83,7 @@ describe('H3CellSchema', () => {
         message: 'Too small: expected string to have >=1 characters',
         minimum: 1,
         origin: 'string',
-        path: ['cellId'],
+        path: ['h3Index'],
       });
     });
   });
