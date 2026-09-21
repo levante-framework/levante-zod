@@ -8,8 +8,6 @@ export const H3CellSchema = z.object({
   resolution: z.int().min(0).max(15),
 });
 
-export const LatLonSourceSchema = z.enum(['gps', 'h3_center', 'approximate']);
-
 export const LocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),
@@ -18,8 +16,7 @@ export const LocationSchema = z
       .object({
         lat: z.number().min(-90).max(90),
         lon: z.number().min(-180).max(180),
-        source: LatLonSourceSchema,
-        blurRadiusMeters: z.number().positive().optional(),
+        source: z.literal('h3_center'),
       })
       .optional(),
     h3: z.object({
@@ -94,17 +91,6 @@ export const LocationSchema = z
           });
         }
       }
-    }
-
-    if (
-      value.latLon?.source === 'approximate' &&
-      !value.latLon.blurRadiusMeters
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['latLon', 'blurRadiusMeters'],
-        message: 'blurRadiusMeters is required when source is approximate',
-      });
     }
 
     if (value.latLon?.source === 'h3_center' && effective) {
