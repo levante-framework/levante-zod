@@ -8,6 +8,9 @@ export const H3CellSchema = z.object({
   resolution: z.int().min(0).max(15),
 });
 
+/** Inferred type of {@link H3CellSchema}. */
+export type H3Cell = z.infer<typeof H3CellSchema>;
+
 export const LocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),

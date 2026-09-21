@@ -544,7 +544,6 @@ export type {
   CreateUsersResult,
 } from './firebase-functions/users/create-users';
 export type DistrictType = z.infer<typeof DistrictSchema>;
-export type H3CellType = z.infer<typeof H3CellSchema>;
 export type {
   GetSiteOverviewError,
   GetSiteOverviewParams,
@@ -580,6 +579,7 @@ export type {
   GetUsersByOrgParams,
   GetUsersByOrgResult,
 } from './firebase-functions/users/get-users-by-org';
+export type { H3Cell } from './location';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
