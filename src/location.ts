@@ -61,16 +61,18 @@ export type H3Cell = z.infer<typeof H3CellSchema>;
  *
  * NB: `h3.baseline` is an always-resolution-5 cell for inter-location
  * comparison; `h3.effective` is the finest cell (resolution 5+) still meeting
- * the privacy threshold. Both are `undefined` when the location cannot be
+ * the privacy threshold. `h3` is `undefined` when the location cannot be
  * k-anonymized at resolution 5+.
  */
 export const CoarseLocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),
-    h3: z.object({
-      baseline: H3CellSchema.optional(),
-      effective: H3CellSchema.optional(),
-    }),
+    h3: z
+      .object({
+        baseline: H3CellSchema,
+        effective: H3CellSchema,
+      })
+      .optional(),
     population: z.object({
       source: z.enum(['kontur', 'worldpop']),
       threshold: z.number().int().positive(),
@@ -79,8 +81,9 @@ export const CoarseLocationSchema = z
   })
   .superRefine((value, ctx) => {
     const { h3 } = value;
+    if (!h3) return;
 
-    if (h3.baseline && h3.baseline.resolution !== 5) {
+    if (h3.baseline.resolution !== 5) {
       ctx.addIssue({
         code: 'custom',
         message: 'h3.baseline.resolution must be 5',
@@ -89,7 +92,7 @@ export const CoarseLocationSchema = z
       });
     }
 
-    if (h3.effective && h3.effective.resolution < 5) {
+    if (h3.effective.resolution < 5) {
       ctx.addIssue({
         code: 'custom',
         message: 'h3.effective.resolution must be >= 5',

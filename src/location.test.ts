@@ -318,9 +318,24 @@ describe('CoarseLocationSchema', () => {
     );
   });
 
-  it('accepts a location with no baseline/effective (privacy not met)', () => {
-    const location = { ...$validCoarseLocation, h3: {} };
+  it('accepts a location with no h3 (privacy not met)', () => {
+    const { h3: _h3, ...location } = $validCoarseLocation;
     expect(CoarseLocationSchema.parse(location)).toEqual(location);
+  });
+
+  it('rejects a partial h3 (missing effective)', () => {
+    const result = CoarseLocationSchema.safeParse({
+      ...$validCoarseLocation,
+      h3: { baseline: $validCellRes5 },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.length).toBe(1);
+    expect(result.error?.issues[0]).toEqual({
+      code: 'invalid_type',
+      expected: 'object',
+      message: 'Invalid input: expected object, received undefined',
+      path: ['h3', 'effective'],
+    });
   });
 
   it.prop({ nonObject: $nonObject })(
@@ -435,7 +450,7 @@ describe('CoarseLocationSchema', () => {
     it('rejects an effective cell coarser than resolution 5', () => {
       const result = CoarseLocationSchema.safeParse({
         ...$validCoarseLocation,
-        h3: { effective: $validCellRes0 },
+        h3: { baseline: $validCellRes5, effective: $validCellRes0 },
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
