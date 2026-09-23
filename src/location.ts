@@ -92,7 +92,7 @@ export const CoarseLocationSchema = z
       .optional(),
     population: z.object({
       source: z.enum(['kontur', 'worldpop']),
-      threshold: z.number().int().positive(),
+      threshold: z.int().positive(),
     }),
     computedAt: z.iso.datetime(),
   })
