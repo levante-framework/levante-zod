@@ -72,7 +72,7 @@ import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
 } from './firebase-functions/users/update-users-info';
-import { H3CellSchema, LocationSchema, locationDocId } from './location';
+import { H3CellSchema, LocationSchema } from './location';
 import { makeCustomIssue } from './util/issues';
 
 // Type alias for Firestore Timestamp
@@ -487,7 +487,6 @@ export {
   LinkUsersErrorSchema,
   LinkUsersParamsSchema,
   LocationSchema,
-  locationDocId,
   makeCustomIssue,
   OrgAssociationMapSchema,
   OrgRefMapSchema,
@@ -579,7 +578,7 @@ export type {
   GetUsersByOrgParams,
   GetUsersByOrgResult,
 } from './firebase-functions/users/get-users-by-org';
-export type { H3Cell } from './location';
+export type { H3Cell, Location } from './location';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
 export type LegalType = z.infer<typeof LegalSchema>;
@@ -589,7 +588,6 @@ export type {
   LinkUsersParams,
   LinkUsersResult,
 } from './firebase-functions/users/link-users';
-export type LocationType = z.infer<typeof LocationSchema>;
 export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
