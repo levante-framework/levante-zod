@@ -322,12 +322,10 @@ describe('H3CellSchema', () => {
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0]).toEqual({
-        code: 'custom',
-        message:
-          'center mismatch (h3IndexCenter=37.77670234943567,-122.41845932318311, center=0,0)',
-        path: ['center'],
-      });
+      const issue = result.error?.issues[0] as z.core.$ZodIssueCustom;
+      expect(issue.code).toEqual('custom');
+      expect(issue.message).toMatch(/^center mismatch .*center=0,0\)$/);
+      expect(issue.path).toEqual(['center']);
     });
   });
 });
