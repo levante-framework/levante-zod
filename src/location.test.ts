@@ -1,7 +1,7 @@
 import { fc, it } from '@fast-check/vitest';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
-import { H3CellSchema, LocationSchema } from './location';
+import { CoarseLocationSchema, H3CellSchema } from './location';
 
 /** Arbitrary: a non-object value */
 const $nonObject = fc.anything().filter((v) => typeof v !== 'object');
@@ -43,8 +43,8 @@ const $validCellRes5 = {
   center: [37.790261155803734, -122.34547859788444],
 };
 
-/** A valid Location */
-const $validLocation = {
+/** A valid CoarseLocation */
+const $validCoarseLocation = {
   schemaVersion: 'location_v1',
   h3: { baseline: $validCellRes5, effective: $validCell },
   population: { source: 'kontur', threshold: 20000 },
@@ -311,20 +311,22 @@ describe('H3CellSchema', () => {
   });
 });
 
-describe('LocationSchema', () => {
+describe('CoarseLocationSchema', () => {
   it('accepts a valid location', () => {
-    expect(LocationSchema.parse($validLocation)).toEqual($validLocation);
+    expect(CoarseLocationSchema.parse($validCoarseLocation)).toEqual(
+      $validCoarseLocation,
+    );
   });
 
   it('accepts a location with no baseline/effective (privacy not met)', () => {
-    const location = { ...$validLocation, h3: {} };
-    expect(LocationSchema.parse(location)).toEqual(location);
+    const location = { ...$validCoarseLocation, h3: {} };
+    expect(CoarseLocationSchema.parse(location)).toEqual(location);
   });
 
   it.prop({ nonObject: $nonObject })(
     'rejects a non-object root',
     ({ nonObject }) => {
-      const result = LocationSchema.safeParse(nonObject);
+      const result = CoarseLocationSchema.safeParse(nonObject);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       const issue = result.error?.issues[0] as z.core.$ZodIssueInvalidType;
@@ -335,8 +337,8 @@ describe('LocationSchema', () => {
   );
 
   it('rejects an invalid schemaVersion', () => {
-    const result = LocationSchema.safeParse({
-      ...$validLocation,
+    const result = CoarseLocationSchema.safeParse({
+      ...$validCoarseLocation,
       schemaVersion: 'location_v2',
     });
     expect(result.success).toBe(false);
@@ -350,8 +352,8 @@ describe('LocationSchema', () => {
   });
 
   it('rejects a non-ISO computedAt', () => {
-    const result = LocationSchema.safeParse({
-      ...$validLocation,
+    const result = CoarseLocationSchema.safeParse({
+      ...$validCoarseLocation,
       computedAt: 'not-a-date',
     });
     expect(result.success).toBe(false);
@@ -366,9 +368,9 @@ describe('LocationSchema', () => {
 
   describe('population', () => {
     it('rejects an invalid source', () => {
-      const result = LocationSchema.safeParse({
-        ...$validLocation,
-        population: { ...$validLocation.population, source: 'census' },
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
+        population: { ...$validCoarseLocation.population, source: 'census' },
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
@@ -381,9 +383,9 @@ describe('LocationSchema', () => {
     });
 
     it('rejects a non-positive threshold', () => {
-      const result = LocationSchema.safeParse({
-        ...$validLocation,
-        population: { ...$validLocation.population, threshold: 0 },
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
+        population: { ...$validCoarseLocation.population, threshold: 0 },
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
@@ -400,10 +402,10 @@ describe('LocationSchema', () => {
 
   describe('h3', () => {
     it('delegates baseline validation to H3CellSchema', () => {
-      const result = LocationSchema.safeParse({
-        ...$validLocation,
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
         h3: {
-          ...$validLocation.h3,
+          ...$validCoarseLocation.h3,
           baseline: { ...$validCellRes5, h3Index: 'nothex' },
         },
       });
@@ -417,9 +419,9 @@ describe('LocationSchema', () => {
     });
 
     it('rejects a baseline whose resolution is not 5', () => {
-      const result = LocationSchema.safeParse({
-        ...$validLocation,
-        h3: { ...$validLocation.h3, baseline: $validCell },
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
+        h3: { ...$validCoarseLocation.h3, baseline: $validCell },
       });
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
@@ -431,8 +433,8 @@ describe('LocationSchema', () => {
     });
 
     it('rejects an effective cell coarser than resolution 5', () => {
-      const result = LocationSchema.safeParse({
-        ...$validLocation,
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
         h3: { effective: $validCellRes0 },
       });
       expect(result.success).toBe(false);

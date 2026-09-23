@@ -59,12 +59,12 @@ export type H3Cell = z.infer<typeof H3CellSchema>;
  * A privacy-respecting location, coarsened to an {@link H3CellSchema | H3 cell}
  * whose population meets a minimum threshold (k-anonymity).
  *
- * NB: `h3.baseline` is a coarse cell (resolution 5) for inter-location
+ * NB: `h3.baseline` is an always-resolution-5 cell for inter-location
  * comparison; `h3.effective` is the finest cell (resolution 5+) still meeting
  * the privacy threshold. Both are `undefined` when the location cannot be
  * k-anonymized at resolution 5+.
  */
-export const LocationSchema = z
+export const CoarseLocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),
     h3: z.object({
@@ -99,5 +99,5 @@ export const LocationSchema = z
     }
   });
 
-/** Inferred type of {@link LocationSchema}. */
-export type Location = z.infer<typeof LocationSchema>;
+/** Inferred type of {@link CoarseLocationSchema}. */
+export type CoarseLocation = z.infer<typeof CoarseLocationSchema>;
