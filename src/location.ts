@@ -46,7 +46,7 @@ export const H3CellSchema = z
         code: 'custom',
         message: `resolution mismatch (h3IndexResolution=${h3IndexResolution}, resolution=${resolution})`,
         path: ['resolution'],
-        input: value,
+        input: resolution,
       });
     }
 
@@ -64,7 +64,7 @@ export const H3CellSchema = z
         code: 'custom',
         message: `center mismatch (h3IndexCenter=${h3IndexCenter}, center=${center})`,
         path: ['center'],
-        input: value,
+        input: center,
       });
     }
   });
