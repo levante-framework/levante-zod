@@ -374,9 +374,8 @@ describe('LocationSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_value',
-        values: ['kontur', 'worldpop', 'unknown'],
-        message:
-          'Invalid option: expected one of "kontur"|"worldpop"|"unknown"',
+        values: ['kontur', 'worldpop'],
+        message: 'Invalid option: expected one of "kontur"|"worldpop"',
         path: ['population', 'source'],
       });
     });

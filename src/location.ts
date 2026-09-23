@@ -72,7 +72,7 @@ export const LocationSchema = z
       effective: H3CellSchema.optional(),
     }),
     population: z.object({
-      source: z.enum(['kontur', 'worldpop', 'unknown']),
+      source: z.enum(['kontur', 'worldpop']),
       threshold: z.number().int().positive(),
     }),
     computedAt: z.iso.datetime(),
