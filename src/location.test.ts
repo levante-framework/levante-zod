@@ -294,6 +294,27 @@ describe('H3CellSchema', () => {
       });
     });
 
+    it('accepts a center within the floating-point tolerance', () => {
+      const cell = {
+        ...$validCell,
+        center: [$validCell.center[0] + 1e-10, $validCell.center[1] - 1e-10],
+      };
+      expect(H3CellSchema.parse(cell)).toEqual(cell);
+    });
+
+    it('rejects a center outside the floating-point tolerance', () => {
+      const result = H3CellSchema.safeParse({
+        ...$validCell,
+        center: [$validCell.center[0] + 1e-5, $validCell.center[1]],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      const issue = result.error?.issues[0] as z.core.$ZodIssueCustom;
+      expect(issue.code).toEqual('custom');
+      expect(issue.message).toMatch(/^center mismatch/);
+      expect(issue.path).toEqual(['center']);
+    });
+
     it('rejects a center that does not match the H3 index', () => {
       const result = H3CellSchema.safeParse({
         ...$validCell,
