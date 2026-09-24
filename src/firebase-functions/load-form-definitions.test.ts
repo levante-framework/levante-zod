@@ -97,6 +97,172 @@ describe('LoadFormDefinitionsParamsSchema', () => {
 });
 
 describe('LoadFormDefinitionsErrorSchema', () => {
+  describe('failed-precondition', () => {
+    const $code = 'failed-precondition';
+    const $message = 'Org unregistered';
+    const $details = {
+      code: 'unregistered',
+      id: 'org-1',
+    };
+
+    it('accepts functions/failed-precondition/unregistered', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = LoadFormDefinitionsErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/failed-precondition', () => {
+      const err = new FunctionsError($code, $message);
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/failed-precondition/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        id: 'org-1',
+      });
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['unregistered'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "unregistered"',
+      });
+    });
+  });
+
+  describe('internal', () => {
+    const $code = 'internal';
+    const $message = 'School site missing';
+    const $details = {
+      code: 'school-site-missing',
+      id: 'school-1',
+    };
+
+    it('accepts functions/internal/school-site-missing', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = LoadFormDefinitionsErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/internal', () => {
+      const err = new FunctionsError($code, $message);
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/internal/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        id: 'school-1',
+      });
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['school-site-missing'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "school-site-missing"',
+      });
+    });
+  });
+
+  describe('not-found', () => {
+    const $code = 'not-found';
+
+    it('accepts functions/not-found/form-definition', () => {
+      const $message = 'Form definition not found';
+      const $details = {
+        code: 'form-definition',
+        id: 'form-1',
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = LoadFormDefinitionsErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('accepts functions/not-found/org', () => {
+      const $message = 'Org not found';
+      const $details = {
+        code: 'org',
+        id: 'org-1',
+        type: 'site',
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = LoadFormDefinitionsErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/not-found', () => {
+      const err = new FunctionsError($code, 'Not found');
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/not-found/foo', () => {
+      const err = new FunctionsError($code, 'Not found', {
+        code: 'foo',
+        id: 'x',
+      });
+      const result = LoadFormDefinitionsErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        errors: [],
+        note: 'No matching discriminator',
+        discriminator: 'code',
+        path: ['details', 'code'],
+        message: 'Invalid input',
+      });
+    });
+  });
+
   describe('common error codes', () => {
     it('accepts functions/invalid-argument/schema', () => {
       const err = new FunctionsError('invalid-argument', 'Schema error', {
@@ -106,26 +272,13 @@ describe('LoadFormDefinitionsErrorSchema', () => {
       expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
     });
 
+    it('accepts functions/permission-denied', () => {
+      const err = new FunctionsError('permission-denied', 'Permission denied');
+      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
+    });
+
     it('accepts functions/unauthenticated', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
-      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/not-found', () => {
-      const err = new FunctionsError('not-found', 'Not found');
-      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/failed-precondition', () => {
-      const err = new FunctionsError(
-        'failed-precondition',
-        'Failed precondition',
-      );
-      expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/internal', () => {
-      const err = new FunctionsError('internal', 'Internal');
       expect(() => LoadFormDefinitionsErrorSchema.parse(err)).not.toThrow();
     });
   });

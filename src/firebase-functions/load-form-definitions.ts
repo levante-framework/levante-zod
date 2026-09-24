@@ -1,10 +1,9 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
-  FailedPreconditionErrorSchema,
-  InternalErrorSchema,
+  FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
-  NotFoundErrorSchema,
+  PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
 
@@ -58,11 +57,37 @@ export type LoadFormDefinitionsResult = {
 
 /** Error schema for `loadFormDefinitions` Firebase Function. */
 export const LoadFormDefinitionsErrorSchema = z.discriminatedUnion('code', [
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/failed-precondition'),
+    details: z.object({
+      code: z.literal('unregistered'),
+      id: z.string(),
+    }),
+  }),
   InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/internal'),
+    details: z.object({
+      code: z.literal('school-site-missing'),
+      id: z.string(),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('form-definition'),
+        id: z.string(),
+      }),
+      z.object({
+        code: z.literal('org'),
+        id: z.string(),
+        type: z.string(),
+      }),
+    ]),
+  }),
+  PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
-  NotFoundErrorSchema,
-  FailedPreconditionErrorSchema,
-  InternalErrorSchema,
 ]);
 
 /** Inferred type of {@link LoadFormDefinitionsErrorSchema}. */
