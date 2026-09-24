@@ -76,20 +76,19 @@ export type H3Cell = z.infer<typeof H3CellSchema>;
  * A privacy-respecting location, coarsened to an {@link H3CellSchema | H3 cell}
  * whose population meets a minimum threshold (k-anonymity).
  *
- * NB: `h3.baseline` is an always-resolution-5 cell for inter-location
- * comparison; `h3.effective` is the finest cell (resolution 5+) still meeting
- * the privacy threshold. `h3` is `undefined` when the location cannot be
- * k-anonymized at resolution 5+.
+ * NB: `h3.effective` is the finest cell still meeting the privacy threshold.
+ * `h3.baseline` is a resolution-5 cell for inter-location comparison, present
+ * only when resolution 5 meets the threshold; when it doesn't, `baseline` is
+ * `undefined` and `effective` is coarser (resolution <= 4). Both are
+ * `undefined` when the location cannot be k-anonymized.
  */
 export const CoarseLocationSchema = z
   .object({
     schemaVersion: z.literal('location_v1'),
-    h3: z
-      .object({
-        baseline: H3CellSchema,
-        effective: H3CellSchema,
-      })
-      .optional(),
+    h3: z.object({
+      baseline: H3CellSchema.optional(),
+      effective: H3CellSchema.optional(),
+    }),
     population: z.object({
       source: z.enum(['kontur', 'worldpop']),
       threshold: z.int().positive(),
@@ -97,24 +96,45 @@ export const CoarseLocationSchema = z
     computedAt: z.iso.datetime(),
   })
   .superRefine((value, ctx) => {
-    const { h3 } = value;
-    if (!h3) return;
+    const { baseline, effective } = value.h3;
 
-    if (h3.baseline.resolution !== 5) {
+    if (baseline) {
+      if (baseline.resolution !== 5) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'h3.baseline.resolution must be 5',
+          path: ['h3', 'baseline', 'resolution'],
+          input: baseline.resolution,
+        });
+      }
+
+      // Baseline exists only when resolution 5 met the threshold, so the
+      // effective cell must exist and be a refinement (resolution >= 5).
+      if (!effective) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'h3.effective must be defined when h3.baseline is defined',
+          path: ['h3', 'effective'],
+          input: effective,
+        });
+      } else if (effective.resolution < 5) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'h3.effective.resolution must be >= 5 when h3.baseline is defined',
+          path: ['h3', 'effective', 'resolution'],
+          input: effective.resolution,
+        });
+      }
+    } else if (effective && effective.resolution >= 5) {
+      // No baseline means resolution 5 failed the threshold, so the effective
+      // cell was coarsened further (resolution <= 4).
       ctx.addIssue({
         code: 'custom',
-        message: 'h3.baseline.resolution must be 5',
-        path: ['h3', 'baseline', 'resolution'],
-        input: h3.baseline.resolution,
-      });
-    }
-
-    if (h3.effective.resolution < 5) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'h3.effective.resolution must be >= 5',
+        message:
+          'h3.effective.resolution must be < 5 when h3.baseline is undefined',
         path: ['h3', 'effective', 'resolution'],
-        input: h3.effective.resolution,
+        input: effective.resolution,
       });
     }
   });

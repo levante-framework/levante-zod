@@ -337,23 +337,21 @@ describe('CoarseLocationSchema', () => {
     );
   });
 
-  it('accepts a location with no h3 (privacy not met)', () => {
-    const { h3: _h3, ...location } = $validCoarseLocation;
+  it('accepts a location with empty h3 (privacy not met)', () => {
+    const location = { ...$validCoarseLocation, h3: {} };
     expect(CoarseLocationSchema.parse(location)).toEqual(location);
   });
 
-  it('rejects a partial h3 (missing effective)', () => {
-    const result = CoarseLocationSchema.safeParse({
-      ...$validCoarseLocation,
-      h3: { baseline: $validCellRes5 },
-    });
+  it('rejects a missing h3', () => {
+    const { h3: _h3, ...location } = $validCoarseLocation;
+    const result = CoarseLocationSchema.safeParse(location);
     expect(result.success).toBe(false);
     expect(result.error?.issues.length).toBe(1);
     expect(result.error?.issues[0]).toEqual({
       code: 'invalid_type',
       expected: 'object',
       message: 'Invalid input: expected object, received undefined',
-      path: ['h3', 'effective'],
+      path: ['h3'],
     });
   });
 
@@ -466,7 +464,21 @@ describe('CoarseLocationSchema', () => {
       });
     });
 
-    it('rejects an effective cell coarser than resolution 5', () => {
+    it('rejects a missing effective when baseline is defined', () => {
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
+        h3: { baseline: $validCellRes5 },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'custom',
+        message: 'h3.effective must be defined when h3.baseline is defined',
+        path: ['h3', 'effective'],
+      });
+    });
+
+    it('rejects an effective coarser than 5 when baseline is defined', () => {
       const result = CoarseLocationSchema.safeParse({
         ...$validCoarseLocation,
         h3: { baseline: $validCellRes5, effective: $validCellRes0 },
@@ -475,9 +487,33 @@ describe('CoarseLocationSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'custom',
-        message: 'h3.effective.resolution must be >= 5',
+        message:
+          'h3.effective.resolution must be >= 5 when h3.baseline is defined',
         path: ['h3', 'effective', 'resolution'],
       });
+    });
+
+    it('rejects an effective at resolution >= 5 without a baseline', () => {
+      const result = CoarseLocationSchema.safeParse({
+        ...$validCoarseLocation,
+        h3: { effective: $validCell },
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'custom',
+        message:
+          'h3.effective.resolution must be < 5 when h3.baseline is undefined',
+        path: ['h3', 'effective', 'resolution'],
+      });
+    });
+
+    it('accepts a coarsened effective (<= 4) without a baseline', () => {
+      const location = {
+        ...$validCoarseLocation,
+        h3: { effective: $validCellRes0 },
+      };
+      expect(CoarseLocationSchema.parse(location)).toEqual(location);
     });
   });
 });
