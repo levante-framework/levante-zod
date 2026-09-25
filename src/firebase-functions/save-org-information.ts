@@ -1,10 +1,7 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 import {
-  FailedPreconditionErrorSchema,
-  InternalErrorSchema,
-  InvalidArgumentErrorSchema,
-  NotFoundErrorSchema,
+  FunctionsErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from './error';
@@ -46,12 +43,56 @@ export type SaveOrgInformationResult = {
 
 /** Error schema for `saveOrgInformation` Firebase Function. */
 export const SaveOrgInformationErrorSchema = z.discriminatedUnion('code', [
-  InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/failed-precondition'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('unregistered'),
+        id: z.string(),
+      }),
+      z.object({
+        code: z.literal('missing-fields'),
+        fields: z.array(z.string()),
+      }),
+    ]),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/internal'),
+    details: z.object({
+      code: z.literal('org-incomplete'),
+      type: z.string(),
+      id: z.string(),
+    }),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/invalid-argument'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('schema'),
+        issues: z.array(z.object({ path: z.string(), message: z.string() })),
+      }),
+      z.object({
+        code: z.literal('responses'),
+        issues: z.array(z.object({ path: z.string(), message: z.string() })),
+      }),
+    ]),
+  }),
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('org'),
+        type: z.string(),
+        id: z.string(),
+      }),
+      z.object({
+        code: z.literal('form-version'),
+        id: z.string(),
+      }),
+    ]),
+  }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
-  NotFoundErrorSchema,
-  FailedPreconditionErrorSchema,
-  InternalErrorSchema,
 ]);
 
 /** Inferred type of {@link SaveOrgInformationErrorSchema}. */

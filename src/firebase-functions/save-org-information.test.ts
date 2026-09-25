@@ -132,15 +132,260 @@ describe('SaveOrgInformationParamsSchema', () => {
 });
 
 describe('SaveOrgInformationErrorSchema', () => {
-  describe('common error codes', () => {
-    it('accepts functions/invalid-argument/schema', () => {
-      const err = new FunctionsError('invalid-argument', 'Schema error', {
-        code: 'schema',
-        issues: [{ path: 'orgType', message: 'Invalid option' }],
+  describe('failed-precondition', () => {
+    const $code = 'failed-precondition';
+
+    it('accepts functions/failed-precondition/unregistered', () => {
+      const $message = 'Org unregistered';
+      const $details = {
+        code: 'unregistered',
+        id: 'org-1',
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
       });
-      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
     });
 
+    it('accepts functions/failed-precondition/missing-fields', () => {
+      const $message = 'Missing required fields';
+      const $details = {
+        code: 'missing-fields',
+        fields: ['numTeachers', 'sampleApproach'],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/failed-precondition', () => {
+      const err = new FunctionsError($code, 'Failed precondition');
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/failed-precondition/foo', () => {
+      const err = new FunctionsError($code, 'Failed precondition', {
+        code: 'foo',
+        id: 'org-1',
+      });
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        errors: [],
+        note: 'No matching discriminator',
+        discriminator: 'code',
+        path: ['details', 'code'],
+        message: 'Invalid input',
+      });
+    });
+  });
+
+  describe('internal', () => {
+    const $code = 'internal';
+    const $message = 'Org incomplete';
+    const $details = {
+      code: 'org-incomplete',
+      type: 'site',
+      id: 'org-1',
+    };
+
+    it('accepts functions/internal/org-incomplete', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/internal', () => {
+      const err = new FunctionsError($code, $message);
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/internal/foo', () => {
+      const err = new FunctionsError($code, $message, {
+        code: 'foo',
+        type: 'site',
+        id: 'org-1',
+      });
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['org-incomplete'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "org-incomplete"',
+      });
+    });
+  });
+
+  describe('invalid-argument', () => {
+    const $code = 'invalid-argument';
+
+    it('accepts functions/invalid-argument/schema', () => {
+      const $message = 'Schema error';
+      const $details = {
+        code: 'schema',
+        issues: [{ path: 'orgType', message: 'Invalid option' }],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('accepts functions/invalid-argument/responses', () => {
+      const $message = 'Responses error';
+      const $details = {
+        code: 'responses',
+        issues: [{ path: 'numTeachers', message: 'Expected a number' }],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/invalid-argument', () => {
+      const err = new FunctionsError($code, 'Invalid argument');
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/invalid-argument/foo', () => {
+      const err = new FunctionsError($code, 'Invalid argument', {
+        code: 'foo',
+        issues: [],
+      });
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        errors: [],
+        note: 'No matching discriminator',
+        discriminator: 'code',
+        path: ['details', 'code'],
+        message: 'Invalid input',
+      });
+    });
+  });
+
+  describe('not-found', () => {
+    const $code = 'not-found';
+
+    it('accepts functions/not-found/org', () => {
+      const $message = 'Org not found';
+      const $details = {
+        code: 'org',
+        type: 'site',
+        id: 'org-1',
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('accepts functions/not-found/form-version', () => {
+      const $message = 'Form version not found';
+      const $details = {
+        code: 'form-version',
+        id: 'version-1',
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = SaveOrgInformationErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects bare functions/not-found', () => {
+      const err = new FunctionsError($code, 'Not found');
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        expected: 'object',
+        code: 'invalid_type',
+        path: ['details'],
+        message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/not-found/foo', () => {
+      const err = new FunctionsError($code, 'Not found', {
+        code: 'foo',
+        id: 'org-1',
+      });
+      const result = SaveOrgInformationErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        errors: [],
+        note: 'No matching discriminator',
+        discriminator: 'code',
+        path: ['details', 'code'],
+        message: 'Invalid input',
+      });
+    });
+  });
+
+  describe('common error codes', () => {
     it('accepts functions/permission-denied', () => {
       const err = new FunctionsError('permission-denied', 'Permission denied');
       expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
@@ -148,24 +393,6 @@ describe('SaveOrgInformationErrorSchema', () => {
 
     it('accepts functions/unauthenticated', () => {
       const err = new FunctionsError('unauthenticated', 'Unauthenticated');
-      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/not-found', () => {
-      const err = new FunctionsError('not-found', 'Not found');
-      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/failed-precondition', () => {
-      const err = new FunctionsError(
-        'failed-precondition',
-        'Failed precondition',
-      );
-      expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
-    });
-
-    it('accepts functions/internal', () => {
-      const err = new FunctionsError('internal', 'Internal');
       expect(() => SaveOrgInformationErrorSchema.parse(err)).not.toThrow();
     });
   });
