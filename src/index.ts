@@ -22,6 +22,14 @@ import {
   GetSyncStatusParamsSchema,
 } from './firebase-functions/get-sync-status';
 import {
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
+} from './firebase-functions/load-form-definitions';
+import {
+  SaveOrgInformationErrorSchema,
+  SaveOrgInformationParamsSchema,
+} from './firebase-functions/save-org-information';
+import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
 } from './firebase-functions/tasks/create-task-variant';
@@ -592,6 +600,8 @@ export {
   LinkUsersCsvSchema,
   LinkUsersErrorSchema,
   LinkUsersParamsSchema,
+  LoadFormDefinitionsErrorSchema,
+  LoadFormDefinitionsParamsSchema,
   LocationSchema,
   locationDocId,
   makeCustomIssue,
@@ -599,6 +609,8 @@ export {
   OrgRefMapSchema,
   OrgSchema,
   ReadOrgSchema,
+  SaveOrgInformationErrorSchema,
+  SaveOrgInformationParamsSchema,
   SchoolSchema,
   StatSchema,
   TimestampSchema,
@@ -661,6 +673,18 @@ export type {
   GetSyncStatusParams,
   GetSyncStatusResult,
 } from './firebase-functions/get-sync-status';
+export type {
+  FormSectionInfo,
+  InformationFormField,
+  LoadFormDefinitionsError,
+  LoadFormDefinitionsParams,
+  LoadFormDefinitionsResult,
+} from './firebase-functions/load-form-definitions';
+export type {
+  SaveOrgInformationError,
+  SaveOrgInformationParams,
+  SaveOrgInformationResult,
+} from './firebase-functions/save-org-information';
 export type {
   GetTaskVariantRevisionsError,
   GetTaskVariantRevisionsParams,
