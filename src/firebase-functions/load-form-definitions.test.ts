@@ -148,13 +148,14 @@ describe('LoadFormDefinitionsErrorSchema', () => {
 
   describe('internal', () => {
     const $code = 'internal';
-    const $message = 'School site missing';
+    const $message = 'Org incomplete';
     const $details = {
-      code: 'school-site-missing',
-      id: 'school-1',
+      code: 'org-incomplete',
+      type: 'site',
+      id: 'org-1',
     };
 
-    it('accepts functions/internal/school-site-missing', () => {
+    it('accepts functions/internal/org-incomplete', () => {
       const err = new FunctionsError($code, $message, $details);
       const result = LoadFormDefinitionsErrorSchema.parse(err);
       expect(result).toEqual({
@@ -181,16 +182,17 @@ describe('LoadFormDefinitionsErrorSchema', () => {
     it('rejects functions/internal/foo', () => {
       const err = new FunctionsError($code, $message, {
         code: 'foo',
-        id: 'school-1',
+        type: 'site',
+        id: 'org-1',
       });
       const result = LoadFormDefinitionsErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_value',
-        values: ['school-site-missing'],
+        values: ['org-incomplete'],
         path: ['details', 'code'],
-        message: 'Invalid input: expected "school-site-missing"',
+        message: 'Invalid input: expected "org-incomplete"',
       });
     });
   });

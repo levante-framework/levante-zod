@@ -68,7 +68,8 @@ export const LoadFormDefinitionsErrorSchema = z.discriminatedUnion('code', [
   FunctionsErrorSchema.extend({
     code: z.literal('functions/internal'),
     details: z.object({
-      code: z.literal('school-site-missing'),
+      code: z.literal('org-incomplete'),
+      type: z.string(),
       id: z.string(),
     }),
   }),
@@ -81,8 +82,8 @@ export const LoadFormDefinitionsErrorSchema = z.discriminatedUnion('code', [
       }),
       z.object({
         code: z.literal('org'),
-        id: z.string(),
         type: z.string(),
+        id: z.string(),
       }),
     ]),
   }),
