@@ -536,8 +536,10 @@ describe('UserSchema', () => {
           errors: [],
           note: 'No matching discriminator',
           discriminator: 'userType',
+          options: ['caregiver', 'child', 'teacher'],
           path: ['userType'],
-          message: 'Invalid input',
+          message:
+            "Invalid discriminator value. Expected 'caregiver' | 'child' | 'teacher'",
         },
       ]);
     });
@@ -549,11 +551,13 @@ describe('UserSchema', () => {
       expect(result.error?.issues).toEqual([
         {
           code: 'invalid_union',
-          errors: [],
-          note: 'No matching discriminator',
           discriminator: 'userType',
+          errors: [],
+          message:
+            "Invalid discriminator value. Expected 'caregiver' | 'child' | 'teacher'",
+          note: 'No matching discriminator',
+          options: ['caregiver', 'child', 'teacher'],
           path: ['userType'],
-          message: 'Invalid input',
         },
       ]);
     });
@@ -912,11 +916,13 @@ describe('CreateUsersErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_union',
-        errors: [],
-        note: 'No matching discriminator',
         discriminator: 'code',
+        errors: [],
+        message:
+          "Invalid discriminator value. Expected 'schema' | 'org-site-mismatch'",
+        note: 'No matching discriminator',
+        options: ['schema', 'org-site-mismatch'],
         path: ['details', 'code'],
-        message: 'Invalid input',
       });
     });
   });
