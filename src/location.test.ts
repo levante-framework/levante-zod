@@ -227,10 +227,12 @@ describe('H3CellSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
-        code: 'invalid_type',
-        expected: 'number',
-        message: 'Invalid input: expected number, received undefined',
-        path: ['center', 1],
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected array to have >=2 items',
+        minimum: 2,
+        origin: 'array',
+        path: ['center'],
       });
     });
 
