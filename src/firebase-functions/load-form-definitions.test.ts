@@ -256,11 +256,13 @@ describe('LoadFormDefinitionsErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_union',
-        errors: [],
-        note: 'No matching discriminator',
         discriminator: 'code',
+        errors: [],
+        message:
+          "Invalid discriminator value. Expected 'form-definition' | 'org'",
+        note: 'No matching discriminator',
+        options: ['form-definition', 'org'],
         path: ['details', 'code'],
-        message: 'Invalid input',
       });
     });
   });

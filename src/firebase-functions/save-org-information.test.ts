@@ -190,11 +190,13 @@ describe('SaveOrgInformationErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_union',
-        errors: [],
-        note: 'No matching discriminator',
         discriminator: 'code',
+        errors: [],
+        message:
+          "Invalid discriminator value. Expected 'unregistered' | 'missing-fields'",
+        note: 'No matching discriminator',
+        options: ['unregistered', 'missing-fields'],
         path: ['details', 'code'],
-        message: 'Invalid input',
       });
     });
   });
@@ -308,11 +310,12 @@ describe('SaveOrgInformationErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_union',
-        errors: [],
-        note: 'No matching discriminator',
         discriminator: 'code',
+        errors: [],
+        message: "Invalid discriminator value. Expected 'schema' | 'responses'",
+        note: 'No matching discriminator',
+        options: ['schema', 'responses'],
         path: ['details', 'code'],
-        message: 'Invalid input',
       });
     });
   });
@@ -376,11 +379,12 @@ describe('SaveOrgInformationErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_union',
-        errors: [],
-        note: 'No matching discriminator',
         discriminator: 'code',
+        errors: [],
+        message: "Invalid discriminator value. Expected 'org' | 'form-version'",
+        note: 'No matching discriminator',
+        options: ['org', 'form-version'],
         path: ['details', 'code'],
-        message: 'Invalid input',
       });
     });
   });
