@@ -37,8 +37,8 @@
   "sideEffects": false,
   "types": "dist/index.d.ts",
   "dependencies": {
-    "h3-js": "^4.4.0",
-    "zod": "^4.3.6"
+    "h3-js": "^4.5.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "^0.18.5",
