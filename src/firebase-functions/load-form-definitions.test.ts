@@ -59,7 +59,14 @@ describe('LoadFormDefinitionsParamsSchema', () => {
       orgId: 'district-1',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgType']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: ['site', 'school'],
+        message: 'Invalid option: expected one of "site"|"school"',
+        path: ['orgType'],
+      },
+    ]);
   });
 
   it('rejects invalid orgType', () => {
@@ -68,7 +75,14 @@ describe('LoadFormDefinitionsParamsSchema', () => {
       orgId: 'district-1',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgType']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: ['site', 'school'],
+        message: 'Invalid option: expected one of "site"|"school"',
+        path: ['orgType'],
+      },
+    ]);
   });
 
   it('rejects empty orgId', () => {
@@ -77,7 +91,16 @@ describe('LoadFormDefinitionsParamsSchema', () => {
       orgId: '   ',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgId']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_small',
+        inclusive: true,
+        minimum: 1,
+        origin: 'string',
+        message: 'Too small: expected string to have >=1 characters',
+        path: ['orgId'],
+      },
+    ]);
   });
 
   it('rejects missing orgId', () => {

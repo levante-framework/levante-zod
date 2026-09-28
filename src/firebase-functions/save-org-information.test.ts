@@ -75,7 +75,14 @@ describe('SaveOrgInformationParamsSchema', () => {
     const { orgType: _, ...rest } = validParams;
     const result = SaveOrgInformationParamsSchema.safeParse(rest);
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgType']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: ['site', 'school'],
+        message: 'Invalid option: expected one of "site"|"school"',
+        path: ['orgType'],
+      },
+    ]);
   });
 
   it('rejects invalid orgType', () => {
@@ -84,7 +91,14 @@ describe('SaveOrgInformationParamsSchema', () => {
       orgType: 'district',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgType']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: ['site', 'school'],
+        message: 'Invalid option: expected one of "site"|"school"',
+        path: ['orgType'],
+      },
+    ]);
   });
 
   it('rejects empty orgId', () => {
@@ -93,7 +107,16 @@ describe('SaveOrgInformationParamsSchema', () => {
       orgId: '   ',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['orgId']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_small',
+        inclusive: true,
+        minimum: 1,
+        origin: 'string',
+        message: 'Too small: expected string to have >=1 characters',
+        path: ['orgId'],
+      },
+    ]);
   });
 
   it('rejects empty formVersion', () => {
@@ -102,7 +125,16 @@ describe('SaveOrgInformationParamsSchema', () => {
       formVersion: '   ',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['formVersion']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_small',
+        inclusive: true,
+        minimum: 1,
+        origin: 'string',
+        message: 'Too small: expected string to have >=1 characters',
+        path: ['formVersion'],
+      },
+    ]);
   });
 
   it('rejects submitted status', () => {
@@ -111,7 +143,14 @@ describe('SaveOrgInformationParamsSchema', () => {
       status: 'submitted',
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['status']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: ['draft', 'complete'],
+        message: 'Invalid option: expected one of "draft"|"complete"',
+        path: ['status'],
+      },
+    ]);
   });
 
   it('rejects responses when not an object', () => {
@@ -120,14 +159,28 @@ describe('SaveOrgInformationParamsSchema', () => {
       responses: ['sampleApproach'],
     });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['responses']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'record',
+        message: 'Invalid input: expected record, received array',
+        path: ['responses'],
+      },
+    ]);
   });
 
   it('rejects missing responses', () => {
     const { responses: _, ...rest } = validParams;
     const result = SaveOrgInformationParamsSchema.safeParse(rest);
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['responses']);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'record',
+        message: 'Invalid input: expected record, received undefined',
+        path: ['responses'],
+      },
+    ]);
   });
 });
 
