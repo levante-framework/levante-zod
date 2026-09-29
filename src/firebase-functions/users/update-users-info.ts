@@ -19,6 +19,8 @@ export const UserInfoSchema = z
     uid: NonEmptyStringSchema,
     archived: z.boolean().optional(),
     disabled: z.boolean().optional(),
+    // Child-only: the function rejects birth-field edits on non-child users
+    // (see the `child-only-fields` invalid-argument error below).
     birthMonth: z.int().min(1).max(12).optional(),
     birthYear: z.int().min(CHILD_YEAR_MIN).max(CHILD_YEAR_MAX).optional(),
   })
@@ -89,11 +91,16 @@ export type UpdateUsersInfoParams = z.infer<typeof UpdateUsersInfoParamsSchema>;
 /** Result type for `updateUsersInfo` Firebase Function. */
 export type UpdateUsersInfoResult = {
   users: {
+    // Identity
     uid: string;
-    archived?: boolean;
-    disabled?: boolean;
+
+    // Child-only
     birthMonth?: number;
     birthYear?: number;
+
+    // Status
+    archived?: boolean;
+    disabled?: boolean;
   }[];
 };
 
