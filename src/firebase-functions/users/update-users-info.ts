@@ -5,7 +5,6 @@ import { findDuplicateIndexes } from '../../util/find-duplicate-indexes';
 import { makeTooBigIssue, makeTooSmallIssue } from '../../util/issues';
 import {
   FunctionsErrorSchema,
-  InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from '../error';
@@ -100,7 +99,24 @@ export type UpdateUsersInfoResult = {
 
 /** Error schema for `updateUsersInfo` Firebase Function. */
 export const UpdateUsersInfoErrorSchema = z.discriminatedUnion('code', [
-  InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/invalid-argument'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('child-only-fields'),
+        uids: z.array(z.string()),
+      }),
+      z.object({
+        code: z.literal('schema'),
+        issues: z.array(
+          z.object({
+            path: z.string(),
+            message: z.string(),
+          }),
+        ),
+      }),
+    ]),
+  }),
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
     details: z.object({

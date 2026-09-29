@@ -412,6 +412,22 @@ describe('UpdateUsersInfoErrorSchema', () => {
   describe('invalid-argument', () => {
     const $code = 'invalid-argument';
 
+    it('accepts functions/invalid-argument/child-only-fields', () => {
+      const $message = 'Child-only fields';
+      const $details = {
+        code: 'child-only-fields',
+        uids: ['uid-1', 'uid-2'],
+      };
+      const err = new FunctionsError($code, $message, $details);
+      const result = UpdateUsersInfoErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
     it('accepts functions/invalid-argument/schema', () => {
       const $message = 'Schema error';
       const $details = {
@@ -438,6 +454,25 @@ describe('UpdateUsersInfoErrorSchema', () => {
         code: 'invalid_type',
         path: ['details'],
         message: 'Invalid input: expected object, received undefined',
+      });
+    });
+
+    it('rejects functions/invalid-argument/foo', () => {
+      const err = new FunctionsError($code, 'Foo error', {
+        code: 'foo',
+      });
+      const result = UpdateUsersInfoErrorSchema.safeParse(err);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_union',
+        discriminator: 'code',
+        errors: [],
+        message:
+          "Invalid discriminator value. Expected 'child-only-fields' | 'schema'",
+        note: 'No matching discriminator',
+        options: ['child-only-fields', 'schema'],
+        path: ['details', 'code'],
       });
     });
   });
