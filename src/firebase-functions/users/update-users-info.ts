@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../../csv/add-users-csv';
 import { NonEmptyStringSchema } from '../../shared/non-empty-string';
 import { findDuplicateIndexes } from '../../util/find-duplicate-indexes';
 import { makeTooBigIssue, makeTooSmallIssue } from '../../util/issues';
@@ -19,11 +20,15 @@ export const UserInfoSchema = z
     uid: NonEmptyStringSchema,
     archived: z.boolean().optional(),
     disabled: z.boolean().optional(),
+    birthMonth: z.int().min(1).max(12).optional(),
+    birthYear: z.int().min(CHILD_YEAR_MIN).max(CHILD_YEAR_MAX).optional(),
   })
   .superRefine((data, ctx) => {
     if (
       typeof data.archived === 'undefined' &&
-      typeof data.disabled === 'undefined'
+      typeof data.disabled === 'undefined' &&
+      typeof data.birthMonth === 'undefined' &&
+      typeof data.birthYear === 'undefined'
     ) {
       ctx.addIssue({
         code: 'custom',

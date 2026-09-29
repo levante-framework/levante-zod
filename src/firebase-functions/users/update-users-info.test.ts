@@ -2,6 +2,7 @@ import { fc, it } from '@fast-check/vitest';
 import { FunctionsError } from 'firebase/functions';
 import { describe, expect } from 'vitest';
 import type * as z from 'zod';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../../csv/add-users-csv';
 import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
@@ -44,6 +45,28 @@ describe('UserInfoSchema', () => {
     it('accepts a user with both fields', () => {
       expect(() =>
         UserInfoSchema.parse({ uid: 'u1', archived: true, disabled: false }),
+      ).not.toThrow();
+    });
+
+    it('accepts a user with only birthMonth', () => {
+      expect(() =>
+        UserInfoSchema.parse({ uid: 'u1', birthMonth: 6 }),
+      ).not.toThrow();
+    });
+
+    it('accepts a user with only birthYear', () => {
+      expect(() =>
+        UserInfoSchema.parse({ uid: 'u1', birthYear: CHILD_YEAR_MIN }),
+      ).not.toThrow();
+    });
+
+    it('accepts a user with both birth fields', () => {
+      expect(() =>
+        UserInfoSchema.parse({
+          uid: 'u1',
+          birthMonth: 12,
+          birthYear: CHILD_YEAR_MAX,
+        }),
       ).not.toThrow();
     });
 
@@ -128,6 +151,97 @@ describe('UserInfoSchema', () => {
         /^Invalid input: expected boolean, received/,
       );
       expect(issue.path).toEqual(['disabled']);
+    });
+
+    it('rejects a birthMonth below 1', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1', birthMonth: 0 });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected number to be >=1',
+        minimum: 1,
+        origin: 'number',
+        path: ['birthMonth'],
+      });
+    });
+
+    it('rejects a birthMonth above 12', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1', birthMonth: 13 });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_big',
+        inclusive: true,
+        message: 'Too big: expected number to be <=12',
+        maximum: 12,
+        origin: 'number',
+        path: ['birthMonth'],
+      });
+    });
+
+    it('rejects a non-integer birthMonth', () => {
+      const result = UserInfoSchema.safeParse({ uid: 'u1', birthMonth: 1.5 });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_type',
+        expected: 'int',
+        format: 'safeint',
+        message: 'Invalid input: expected int, received number',
+        path: ['birthMonth'],
+      });
+    });
+
+    it('rejects a birthYear below CHILD_YEAR_MIN', () => {
+      const result = UserInfoSchema.safeParse({
+        uid: 'u1',
+        birthYear: CHILD_YEAR_MIN - 1,
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_small',
+        inclusive: true,
+        message: `Too small: expected number to be >=${CHILD_YEAR_MIN}`,
+        minimum: CHILD_YEAR_MIN,
+        origin: 'number',
+        path: ['birthYear'],
+      });
+    });
+
+    it('rejects a birthYear above CHILD_YEAR_MAX', () => {
+      const result = UserInfoSchema.safeParse({
+        uid: 'u1',
+        birthYear: CHILD_YEAR_MAX + 1,
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'too_big',
+        inclusive: true,
+        message: `Too big: expected number to be <=${CHILD_YEAR_MAX}`,
+        maximum: CHILD_YEAR_MAX,
+        origin: 'number',
+        path: ['birthYear'],
+      });
+    });
+
+    it('rejects a non-integer birthYear', () => {
+      const result = UserInfoSchema.safeParse({
+        uid: 'u1',
+        birthYear: 2020.5,
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_type',
+        expected: 'int',
+        format: 'safeint',
+        message: 'Invalid input: expected int, received number',
+        path: ['birthYear'],
+      });
     });
   });
 
