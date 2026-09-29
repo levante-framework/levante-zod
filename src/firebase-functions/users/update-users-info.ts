@@ -93,6 +93,8 @@ export type UpdateUsersInfoResult = {
     uid: string;
     archived?: boolean;
     disabled?: boolean;
+    birthMonth?: number;
+    birthYear?: number;
   }[];
 };
 
