@@ -39,6 +39,13 @@ export type InformationFormField = {
   notes?: string;
 };
 
+/** One saved org-information response for a form version. */
+export type SavedFormResponse = {
+  formVersion: string;
+  status: 'draft' | 'complete';
+  responses: Record<string, unknown>;
+};
+
 /** Result type for `loadFormDefinitions` Firebase Function. */
 export type LoadFormDefinitionsResult = {
   formId: string;
@@ -51,8 +58,8 @@ export type LoadFormDefinitionsResult = {
   fullFields: InformationFormField[];
   orgType: 'site' | 'school';
   orgId: string;
-  /** Previously saved answers for this org. Empty in v1. */
-  savedResponses: unknown[];
+  /** Saved answers for the current form version. Empty when none exist. */
+  savedResponses: SavedFormResponse[];
 };
 
 /** Error schema for `loadFormDefinitions` Firebase Function. */
