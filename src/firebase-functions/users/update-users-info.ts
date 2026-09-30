@@ -1,3 +1,6 @@
+// @TODO: add discriminated union on userType when editable fields next added to
+// this endpoint (would obsolete `functions/invalid-argument/child-only-fields`)
+
 import * as z from 'zod';
 import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../../csv/add-users-csv';
 import { NonEmptyStringSchema } from '../../shared/non-empty-string';
