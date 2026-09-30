@@ -20,6 +20,10 @@ export type GetUserOverviewResult = {
   uid: string;
   email: string;
   userType: 'caregiver' | 'child' | 'teacher';
+
+  // Child-only
+  birthMonth?: number;
+  birthYear?: number;
   childLabelIndex?: number;
 
   // Status

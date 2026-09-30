@@ -1,10 +1,13 @@
+// @TODO: add discriminated union on userType when editable fields next added to
+// this endpoint (would obsolete `functions/invalid-argument/child-only-fields`)
+
 import * as z from 'zod';
+import { CHILD_YEAR_MAX, CHILD_YEAR_MIN } from '../../csv/add-users-csv';
 import { NonEmptyStringSchema } from '../../shared/non-empty-string';
 import { findDuplicateIndexes } from '../../util/find-duplicate-indexes';
 import { makeTooBigIssue, makeTooSmallIssue } from '../../util/issues';
 import {
   FunctionsErrorSchema,
-  InvalidArgumentErrorSchema,
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 } from '../error';
@@ -19,11 +22,17 @@ export const UserInfoSchema = z
     uid: NonEmptyStringSchema,
     archived: z.boolean().optional(),
     disabled: z.boolean().optional(),
+    // Child-only: the function rejects birth-field edits on non-child users
+    // (see the `child-only-fields` invalid-argument error below).
+    birthMonth: z.int().min(1).max(12).optional(),
+    birthYear: z.int().min(CHILD_YEAR_MIN).max(CHILD_YEAR_MAX).optional(),
   })
   .superRefine((data, ctx) => {
     if (
       typeof data.archived === 'undefined' &&
-      typeof data.disabled === 'undefined'
+      typeof data.disabled === 'undefined' &&
+      typeof data.birthMonth === 'undefined' &&
+      typeof data.birthYear === 'undefined'
     ) {
       ctx.addIssue({
         code: 'custom',
@@ -85,7 +94,14 @@ export type UpdateUsersInfoParams = z.infer<typeof UpdateUsersInfoParamsSchema>;
 /** Result type for `updateUsersInfo` Firebase Function. */
 export type UpdateUsersInfoResult = {
   users: {
+    // Identity
     uid: string;
+
+    // Child-only
+    birthMonth?: number;
+    birthYear?: number;
+
+    // Status
     archived?: boolean;
     disabled?: boolean;
   }[];
@@ -93,7 +109,24 @@ export type UpdateUsersInfoResult = {
 
 /** Error schema for `updateUsersInfo` Firebase Function. */
 export const UpdateUsersInfoErrorSchema = z.discriminatedUnion('code', [
-  InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/invalid-argument'),
+    details: z.discriminatedUnion('code', [
+      z.object({
+        code: z.literal('child-only-fields'),
+        uids: z.array(z.string()),
+      }),
+      z.object({
+        code: z.literal('schema'),
+        issues: z.array(
+          z.object({
+            path: z.string(),
+            message: z.string(),
+          }),
+        ),
+      }),
+    ]),
+  }),
   FunctionsErrorSchema.extend({
     code: z.literal('functions/not-found'),
     details: z.object({
