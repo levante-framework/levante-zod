@@ -37,6 +37,7 @@
   "sideEffects": false,
   "types": "dist/index.d.ts",
   "dependencies": {
+    "@cospired/i18n-iso-languages": "^4.2.0",
     "h3-js": "^4.5.0",
     "zod": "^4.6.5"
   },

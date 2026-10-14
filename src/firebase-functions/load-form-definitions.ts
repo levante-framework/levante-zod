@@ -29,7 +29,12 @@ export type FormSectionInfo = {
 export type InformationFormField = {
   itemId: string;
   variableName: string;
-  kind: 'text' | 'number' | 'single-select' | 'multi-select';
+  kind:
+    | 'text'
+    | 'number'
+    | 'single-select'
+    | 'multi-select'
+    | 'language-selection';
   required: boolean;
   sectionId: string;
   questionText: string;
