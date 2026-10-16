@@ -3,22 +3,19 @@
  * all validate answers with this module instead of a field-specific string.
  */
 
-import { getAlpha2Codes } from '@cospired/i18n-iso-languages';
 import * as z from 'zod';
 import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
+import iso6391Alpha2 from './iso6391-alpha2.json';
 
 export const LANGUAGE_OTHER = 'other';
 
-const iso6391Alpha2Codes = new Set(Object.keys(getAlpha2Codes()));
+const iso6391Alpha2Codes = new Set(iso6391Alpha2);
 
 /**
- * A lowercase ISO 639-1 alpha-2 language code from
- * `@cospired/i18n-iso-languages`. Rejects alpha-3 aliases (`eng`),
- * uppercase (`EN`), and free text (`English`).
+ * A lowercase ISO 639-1 alpha-2 language code. Rejects alpha-3 aliases
+ * (`eng`), uppercase (`EN`), and free text (`English`).
  */
 export const Iso6391Alpha2Schema = z.string().superRefine((code, ctx) => {
-  // isValid also accepts alpha-3 (`eng`) and uppercase (`EN`); the
-  // getAlpha2Codes keys are the lowercase alpha-2 codes we actually store.
   if (iso6391Alpha2Codes.has(code)) return;
 
   ctx.addIssue({

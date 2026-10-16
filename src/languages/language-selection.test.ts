@@ -1,5 +1,5 @@
-import { getAlpha2Codes } from '@cospired/i18n-iso-languages';
 import { describe, expect, it } from 'vitest';
+import iso6391Alpha2 from './iso6391-alpha2.json';
 import {
   Iso6391Alpha2Schema,
   LANGUAGE_OTHER,
@@ -26,15 +26,25 @@ const $enAndOther = {
   otherDescription: 'Kichwa',
 };
 
+describe('iso6391-alpha2.json', () => {
+  it('contains unique lowercase alpha-2 codes', () => {
+    expect(iso6391Alpha2.length).toBeGreaterThan(0);
+    expect(new Set(iso6391Alpha2).size).toEqual(iso6391Alpha2.length);
+    expect(iso6391Alpha2).not.toContain(LANGUAGE_OTHER);
+    for (const code of iso6391Alpha2) {
+      expect(code).toMatch(/^[a-z]{2}$/);
+    }
+  });
+});
+
 describe('Iso6391Alpha2Schema', () => {
   it('accepts a lowercase alpha-2 code', () => {
     expect(Iso6391Alpha2Schema.parse('en')).toEqual('en');
   });
 
-  it('accepts every alpha-2 code from getAlpha2Codes', () => {
-    const codes = Object.keys(getAlpha2Codes());
-    expect(codes.length).toBeGreaterThan(0);
-    for (const code of codes) {
+  it('accepts every alpha-2 code from the local list', () => {
+    expect(iso6391Alpha2.length).toBeGreaterThan(0);
+    for (const code of iso6391Alpha2) {
       expect(Iso6391Alpha2Schema.parse(code)).toEqual(code);
     }
   });
