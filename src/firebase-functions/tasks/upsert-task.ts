@@ -14,6 +14,8 @@ export const UpsertTaskParamsSchema = z.object({
   description: NonEmptyStringSchema,
   image: NonEmptyStringSchema,
   name: NonEmptyStringSchema,
+  registered: z.boolean(),
+  validUserTypes: z.array(z.string()),
   id: NonEmptyStringSchema.optional(),
 });
 

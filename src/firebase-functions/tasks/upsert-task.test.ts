@@ -15,6 +15,8 @@ const $validParams = {
   description: 'A task',
   image: 'task.png',
   name: 'my-task',
+  registered: true,
+  validUserTypes: ['student'],
 };
 
 describe('UpsertTaskParamsSchema', () => {
@@ -63,6 +65,70 @@ describe('UpsertTaskParamsSchema', () => {
           path: ['archived'],
         },
       ]);
+    });
+  });
+
+  describe('registered', () => {
+    it.prop({ v: $nonBoolean })('rejects a non-boolean registered', ({ v }) => {
+      const result = UpsertTaskParamsSchema.safeParse({
+        ...$validParams,
+        registered: v,
+      });
+      expect(result.success).toBe(false);
+      expect(result.error!.issues.length).toBe(1);
+      expect(result.error!.issues[0].code).toEqual('invalid_type');
+      expect(result.error!.issues[0].message).toMatch(
+        /^Invalid input: expected boolean, received/,
+      );
+      expect(result.error!.issues[0].path).toEqual(['registered']);
+    });
+
+    it('rejects a missing registered', () => {
+      const { registered: _registered, ...rest } = $validParams;
+      const result = UpsertTaskParamsSchema.safeParse(rest);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_type',
+          expected: 'boolean',
+          message: 'Invalid input: expected boolean, received undefined',
+          path: ['registered'],
+        },
+      ]);
+    });
+  });
+
+  describe('validUserTypes', () => {
+    it('accepts a string array', () => {
+      const params = {
+        ...$validParams,
+        validUserTypes: ['parent', 'teacher'],
+      };
+      expect(UpsertTaskParamsSchema.parse(params)).toEqual(params);
+    });
+
+    it('rejects a missing validUserTypes', () => {
+      const { validUserTypes: _validUserTypes, ...rest } = $validParams;
+      const result = UpsertTaskParamsSchema.safeParse(rest);
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_type',
+          expected: 'array',
+          message: 'Invalid input: expected array, received undefined',
+          path: ['validUserTypes'],
+        },
+      ]);
+    });
+
+    it('rejects a non-array validUserTypes', () => {
+      const result = UpsertTaskParamsSchema.safeParse({
+        ...$validParams,
+        validUserTypes: 'student',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error!.issues[0].path).toEqual(['validUserTypes']);
+      expect(result.error!.issues[0].code).toEqual('invalid_type');
     });
   });
 

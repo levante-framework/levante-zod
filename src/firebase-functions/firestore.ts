@@ -13,8 +13,10 @@ export type SerializedTask = {
   description: string;
   image: string;
   name: string;
+  registered: boolean;
   updatedAt: string;
   updatedBy?: string;
+  validUserTypes: string[];
 };
 
 /**
