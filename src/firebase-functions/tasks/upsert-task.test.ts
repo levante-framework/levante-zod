@@ -16,7 +16,7 @@ const $validParams = {
   image: 'task.png',
   name: 'my-task',
   registered: true,
-  validUserTypes: ['student'],
+  validUserTypes: ['child'],
 };
 
 describe('UpsertTaskParamsSchema', () => {
@@ -99,10 +99,10 @@ describe('UpsertTaskParamsSchema', () => {
   });
 
   describe('validUserTypes', () => {
-    it('accepts a string array', () => {
+    it('accepts an array of valid user types', () => {
       const params = {
         ...$validParams,
-        validUserTypes: ['parent', 'teacher'],
+        validUserTypes: ['caregiver', 'child', 'teacher'],
       };
       expect(UpsertTaskParamsSchema.parse(params)).toEqual(params);
     });
@@ -124,11 +124,54 @@ describe('UpsertTaskParamsSchema', () => {
     it('rejects a non-array validUserTypes', () => {
       const result = UpsertTaskParamsSchema.safeParse({
         ...$validParams,
-        validUserTypes: 'student',
+        validUserTypes: 'child',
       });
       expect(result.success).toBe(false);
       expect(result.error!.issues[0].path).toEqual(['validUserTypes']);
       expect(result.error!.issues[0].code).toEqual('invalid_type');
+    });
+
+    it('rejects an empty validUserTypes', () => {
+      const result = UpsertTaskParamsSchema.safeParse({
+        ...$validParams,
+        validUserTypes: [],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'too_small',
+          inclusive: true,
+          message: 'Too small: expected array to have >=1 items',
+          origin: 'array',
+          minimum: 1,
+          path: ['validUserTypes'],
+        },
+      ]);
+    });
+
+    it('rejects an invalid user type', () => {
+      const result = UpsertTaskParamsSchema.safeParse({
+        ...$validParams,
+        validUserTypes: ['student'],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error!.issues[0].code).toEqual('invalid_value');
+      expect(result.error!.issues[0].path).toEqual(['validUserTypes', 0]);
+    });
+
+    it('rejects duplicate user types', () => {
+      const result = UpsertTaskParamsSchema.safeParse({
+        ...$validParams,
+        validUserTypes: ['child', 'teacher', 'child'],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'Duplicate user type: child',
+          path: ['validUserTypes', 2],
+        },
+      ]);
     });
   });
 
