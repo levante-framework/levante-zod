@@ -127,8 +127,14 @@ describe('UpsertTaskParamsSchema', () => {
         validUserTypes: 'child',
       });
       expect(result.success).toBe(false);
-      expect(result.error!.issues[0].path).toEqual(['validUserTypes']);
-      expect(result.error!.issues[0].code).toEqual('invalid_type');
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_type',
+          expected: 'array',
+          message: 'Invalid input: expected array, received string',
+          path: ['validUserTypes'],
+        },
+      ]);
     });
 
     it('rejects an empty validUserTypes', () => {
@@ -155,8 +161,15 @@ describe('UpsertTaskParamsSchema', () => {
         validUserTypes: ['student'],
       });
       expect(result.success).toBe(false);
-      expect(result.error!.issues[0].code).toEqual('invalid_value');
-      expect(result.error!.issues[0].path).toEqual(['validUserTypes', 0]);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'invalid_value',
+          values: ['caregiver', 'child', 'teacher'],
+          message:
+            'Invalid option: expected one of "caregiver"|"child"|"teacher"',
+          path: ['validUserTypes', 0],
+        },
+      ]);
     });
 
     it('rejects duplicate user types', () => {
