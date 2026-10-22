@@ -16,7 +16,7 @@ export type SerializedTask = {
   registered: boolean;
   updatedAt: string;
   updatedBy?: string;
-  validUserTypes: string[];
+  validUserTypes: ('caregiver' | 'child' | 'teacher')[];
 };
 
 /**
