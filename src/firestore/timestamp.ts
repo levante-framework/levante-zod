@@ -3,8 +3,8 @@
 
 import * as z from 'zod';
 
-/** Schema for Firestore Timestamp. */
+/** Schema for Firestore Timestamp. @deprecated */
 export const TimestampSchema = z.iso.datetime();
 
-/* Inferred type of {@link TimestampSchema}. */
+/** Inferred type of {@link TimestampSchema}. @deprecated */
 export type TimestampType = z.infer<typeof TimestampSchema>;
