@@ -55,3 +55,28 @@ export const UserSchema = z.object({
 
 /** Inferred type of {@link UserSchema}. @deprecated */
 export type UserType = z.infer<typeof UserSchema>;
+
+export const BaseUserDocSchema = z.looseObject({
+  email: z.string(),
+  archived: z.boolean(),
+  disabled: z.boolean(),
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
+
+  // uid: z.string(), // TODO participants only?
+  // username: z.string().optional(), // TODO: For participants this is the non-domain part of the email. I'm not sure about admins.
+  // roles: TODO...
+  // districts: TODO...
+  // schools: TODO...
+  // classes: TODO...
+  // groups: TODO...
+});
+
+/**
+ * Schema for Firestore documents in the `users` collection.
+ * TODO descriminated union by userType: z.enum(['admin', 'parent', 'student', 'teacher'])
+ */
+export const UserDocSchema = BaseUserDocSchema;
+
+/** Inferred type of {@link UserDocSchema}. */
+export type UserDocType = z.infer<typeof UserDocSchema>;

@@ -84,6 +84,7 @@ import { TimestampSchema } from './firestore/timestamp';
 import {
   AdminDataSchema,
   OrgAssociationMapSchema,
+  UserDocSchema,
   UserLegalSchema,
   UserSchema,
 } from './firestore/users';
@@ -481,6 +482,7 @@ export {
   UpsertVariantParamSpecErrorSchema,
   UpsertVariantParamSpecParamsSchema,
   UserClaimsSchema,
+  UserDocSchema,
   UserLegalSchema,
   UserSchema,
 };
@@ -641,6 +643,7 @@ export type { ZodType } from 'zod';
 export type {
   AdminDataType,
   OrgAssociationMapType,
+  UserDocType,
   UserLegalType,
   UserType,
 } from './firestore/users';
