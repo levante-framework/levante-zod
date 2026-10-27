@@ -80,13 +80,15 @@ import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
 } from './firebase-functions/users/update-users-info';
+import { TimestampSchema } from './firestore/timestamp';
+import {
+  AdminDataSchema,
+  OrgAssociationMapSchema,
+  UserLegalSchema,
+  UserSchema,
+} from './firestore/users';
 import { CoarseLocationSchema, H3CellSchema } from './location';
 import { makeCustomIssue } from './util/issues';
-
-// Type alias for Firestore Timestamp
-// @CC: "To check whether this is compatible with firestore - they encode
-// this using seconds and nanoseconds and it usually has to be converted"
-const TimestampSchema = z.iso.datetime();
 
 // Generic structure for organization references used in multiple places
 const OrgRefMapSchema = z.object({
@@ -97,24 +99,6 @@ const OrgRefMapSchema = z.object({
   families: z.array(z.string()),
   groups: z.array(z.string()),
   schools: z.array(z.string()),
-});
-
-// Structure for organizational associations within Users
-const OrgAssociationMapSchema = z.object({
-  all: z.array(z.string()),
-  current: z.array(z.string()),
-  dates: z.record(z.string(), TimestampSchema),
-});
-
-// Structure for user legal document acceptance within Users
-const UserLegalSchema = z.object({
-  assent: z.record(z.string(), TimestampSchema),
-  tos: z.record(z.string(), TimestampSchema),
-});
-
-// Structure for Admin-specific data within Users
-const AdminDataSchema = z.object({
-  administrationsCreated: z.array(z.string()),
 });
 
 // Structure for Assessment Condition Rules within Administrations
@@ -386,31 +370,6 @@ const UserClaimsSchema = z.object({
   testData: z.boolean().optional(),
 });
 
-// Interface for documents in the `users` collection
-const UserSchema = z.object({
-  adminData: AdminDataSchema.optional(),
-  assignments: z
-    .object({
-      assigned: z.array(z.string()),
-      completed: z.array(z.string()),
-      started: z.array(z.string()),
-    })
-    .optional(),
-  archived: z.boolean(),
-  classes: OrgAssociationMapSchema,
-  createdAt: TimestampSchema,
-  disabled: z.boolean(),
-  displayName: z.string(),
-  districts: OrgAssociationMapSchema,
-  email: z.string(),
-  groups: OrgAssociationMapSchema,
-  legal: UserLegalSchema,
-  schools: OrgAssociationMapSchema,
-  sso: z.string().optional(),
-  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
-  testData: z.boolean().optional(),
-});
-
 const OrgSchema = z.object({
   archived: z.boolean(),
   classes: z.array(z.string()).optional(),
@@ -519,7 +478,6 @@ export {
   UserLegalSchema,
   UserSchema,
 };
-export type AdminDataType = z.infer<typeof AdminDataSchema>;
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
 export type AssessmentConditionRuleType = z.infer<
   typeof AssessmentConditionRuleSchema
@@ -612,7 +570,6 @@ export type {
   LinkUsersParams,
   LinkUsersResult,
 } from './firebase-functions/users/link-users';
-export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
 export type OrgType = z.infer<typeof OrgSchema>;
 export type {
@@ -628,7 +585,6 @@ export type {
   SerializedVariantParamSpec,
 } from './firebase-functions/firestore';
 export type StatType = z.infer<typeof StatSchema>;
-export type TimestampType = z.infer<typeof TimestampSchema>;
 export type {
   UpdateTaskVariantError,
   UpdateTaskVariantParams,
@@ -649,8 +605,13 @@ export type {
   UpdateUsersInfoParams,
   UpdateUsersInfoResult,
 } from './firebase-functions/users/update-users-info';
+export type { TimestampType } from './firestore/timestamp';
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
-export type UserLegalType = z.infer<typeof UserLegalSchema>;
-export type UserType = z.infer<typeof UserSchema>;
 export type ZodIssue = z.core.$ZodIssue;
 export type { ZodType } from 'zod';
+export type {
+  AdminDataType,
+  OrgAssociationMapType,
+  UserLegalType,
+  UserType,
+} from './firestore/users';
