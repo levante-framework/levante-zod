@@ -88,6 +88,11 @@ import {
   UserLegalSchema,
   UserSchema,
 } from './firestore/users';
+import {
+  Iso6391Alpha2Schema,
+  LANGUAGE_OTHER,
+  LanguageSelectionSchema,
+} from './languages/language-selection';
 import { CoarseLocationSchema, H3CellSchema } from './location';
 import { makeCustomIssue } from './util/issues';
 
@@ -455,6 +460,9 @@ export {
   GetVariantParamSpecsParamsSchema,
   GroupSchema,
   H3CellSchema,
+  Iso6391Alpha2Schema,
+  LANGUAGE_OTHER,
+  LanguageSelectionSchema,
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvHeaderSchema,
@@ -551,6 +559,7 @@ export type {
   LoadFormDefinitionsError,
   LoadFormDefinitionsParams,
   LoadFormDefinitionsResult,
+  SavedFormResponse,
 } from './firebase-functions/load-form-definitions';
 export type {
   SaveOrgInformationError,
@@ -582,6 +591,10 @@ export type {
   GetUsersByOrgParams,
   GetUsersByOrgResult,
 } from './firebase-functions/users/get-users-by-org';
+export type {
+  Iso6391Alpha2,
+  LanguageSelection,
+} from './languages/language-selection';
 export type { CoarseLocation, H3Cell } from './location';
 /** Inferred type of {@link GroupSchema}. @deprecated */
 export type GroupType = z.infer<typeof GroupSchema>;

@@ -29,7 +29,12 @@ export type FormSectionInfo = {
 export type InformationFormField = {
   itemId: string;
   variableName: string;
-  kind: 'text' | 'number' | 'single-select' | 'multi-select';
+  kind:
+    | 'text'
+    | 'number'
+    | 'single-select'
+    | 'multi-select'
+    | 'language-selection';
   required: boolean;
   sectionId: string;
   questionText: string;
@@ -37,6 +42,13 @@ export type InformationFormField = {
   displayLogic?: { field: string; includes: string };
   infoExample?: string;
   notes?: string;
+};
+
+/** One saved org-information response for a form version. */
+export type SavedFormResponse = {
+  formVersion: string;
+  status: 'draft' | 'complete';
+  responses: Record<string, unknown>;
 };
 
 /** Result type for `loadFormDefinitions` Firebase Function. */
@@ -51,8 +63,11 @@ export type LoadFormDefinitionsResult = {
   fullFields: InformationFormField[];
   orgType: 'site' | 'school';
   orgId: string;
-  /** Previously saved answers for this org. Empty in v1. */
-  savedResponses: unknown[];
+  /**
+   * Saved answers for the current form version. Contains at most one entry
+   * (`formVersion` always matches the loaded version); empty when none exist.
+   */
+  savedResponses: SavedFormResponse[];
 };
 
 /** Error schema for `loadFormDefinitions` Firebase Function. */
