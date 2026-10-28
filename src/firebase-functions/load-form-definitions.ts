@@ -58,7 +58,10 @@ export type LoadFormDefinitionsResult = {
   fullFields: InformationFormField[];
   orgType: 'site' | 'school';
   orgId: string;
-  /** Saved answers for the current form version. Empty when none exist. */
+  /**
+   * Saved answers for the current form version. Contains at most one entry
+   * (`formVersion` always matches the loaded version); empty when none exist.
+   */
   savedResponses: SavedFormResponse[];
 };
 
