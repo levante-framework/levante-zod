@@ -63,8 +63,6 @@ export const BaseUserDocSchema = z.looseObject({
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
 
-  // uid: z.string(), // TODO participants only?
-  // username: z.string().optional(), // TODO: For participants this is the non-domain part of the email. I'm not sure about admins.
   // roles: TODO...
   // districts: TODO...
   // schools: TODO...
@@ -72,11 +70,34 @@ export const BaseUserDocSchema = z.looseObject({
   // groups: TODO...
 });
 
+export const ParticipantUserDocSchema = BaseUserDocSchema.extend({
+  userType: z.enum(['parent', 'student', 'teacher']),
+  uid: z.string(),
+  username: z.string(),
+}).superRefine((data, ctx) => {
+  const localPart = data.email.split('@')[0] ?? '';
+  if (data.username !== localPart) {
+    ctx.addIssue({
+      code: 'custom',
+      message: `username must match the local part of email: expected '${localPart}'`,
+      path: ['username'],
+      input: data.username,
+    });
+  }
+});
+
+export const AdminUserDocSchema = BaseUserDocSchema.extend({
+  userType: z.literal('admin'),
+});
+
 /**
  * Schema for Firestore documents in the `users` collection.
  * TODO descriminated union by userType: z.enum(['admin', 'parent', 'student', 'teacher'])
  */
-export const UserDocSchema = BaseUserDocSchema;
+export const UserDocSchema = z.discriminatedUnion('userType', [
+  ParticipantUserDocSchema,
+  AdminUserDocSchema,
+]);
 
 /** Inferred type of {@link UserDocSchema}. */
 export type UserDocType = z.infer<typeof UserDocSchema>;
