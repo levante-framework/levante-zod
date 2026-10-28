@@ -571,6 +571,7 @@ export type {
   LoadFormDefinitionsError,
   LoadFormDefinitionsParams,
   LoadFormDefinitionsResult,
+  SavedFormResponse,
 } from './firebase-functions/load-form-definitions';
 export type {
   SaveOrgInformationError,
