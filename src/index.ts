@@ -80,6 +80,11 @@ import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
 } from './firebase-functions/users/update-users-info';
+import {
+  Iso6391Alpha2Schema,
+  LANGUAGE_OTHER,
+  LanguageSelectionSchema,
+} from './languages/language-selection';
 import { CoarseLocationSchema, H3CellSchema } from './location';
 import { makeCustomIssue } from './util/issues';
 
@@ -489,6 +494,9 @@ export {
   GetVariantParamSpecsParamsSchema,
   GroupSchema,
   H3CellSchema,
+  Iso6391Alpha2Schema,
+  LANGUAGE_OTHER,
+  LanguageSelectionSchema,
   LegalInfoSchema,
   LegalSchema,
   LinkUsersCsvHeaderSchema,
@@ -603,6 +611,10 @@ export type {
   GetUsersByOrgParams,
   GetUsersByOrgResult,
 } from './firebase-functions/users/get-users-by-org';
+export type {
+  Iso6391Alpha2,
+  LanguageSelection,
+} from './languages/language-selection';
 export type { CoarseLocation, H3Cell } from './location';
 export type GroupType = z.infer<typeof GroupSchema>;
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
