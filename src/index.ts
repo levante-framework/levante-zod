@@ -80,6 +80,14 @@ import {
   UpdateUsersInfoErrorSchema,
   UpdateUsersInfoParamsSchema,
 } from './firebase-functions/users/update-users-info';
+import { TimestampSchema } from './firestore/timestamp';
+import {
+  AdminDataSchema,
+  OrgAssociationMapSchema,
+  UserDocSchema,
+  UserLegalSchema,
+  UserSchema,
+} from './firestore/users';
 import {
   Iso6391Alpha2Schema,
   LANGUAGE_OTHER,
@@ -88,12 +96,7 @@ import {
 import { CoarseLocationSchema, H3CellSchema } from './location';
 import { makeCustomIssue } from './util/issues';
 
-// Type alias for Firestore Timestamp
-// @CC: "To check whether this is compatible with firestore - they encode
-// this using seconds and nanoseconds and it usually has to be converted"
-const TimestampSchema = z.iso.datetime();
-
-// Generic structure for organization references used in multiple places
+/** Schema for organization references used in multiple places. @deprecated */
 const OrgRefMapSchema = z.object({
   classes: z.array(z.string()),
   districts: z.array(z.string()),
@@ -104,38 +107,20 @@ const OrgRefMapSchema = z.object({
   schools: z.array(z.string()),
 });
 
-// Structure for organizational associations within Users
-const OrgAssociationMapSchema = z.object({
-  all: z.array(z.string()),
-  current: z.array(z.string()),
-  dates: z.record(z.string(), TimestampSchema),
-});
-
-// Structure for user legal document acceptance within Users
-const UserLegalSchema = z.object({
-  assent: z.record(z.string(), TimestampSchema),
-  tos: z.record(z.string(), TimestampSchema),
-});
-
-// Structure for Admin-specific data within Users
-const AdminDataSchema = z.object({
-  administrationsCreated: z.array(z.string()),
-});
-
-// Structure for Assessment Condition Rules within Administrations
+/** Schema for Assessment Condition Rules within Administrations. @deprecated */
 const AssessmentConditionRuleSchema = z.object({
   field: z.string(),
   op: z.string(),
   value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
 });
 
-// Structure for Assessment Conditions within Administrations
+/** Schema for Assessment Conditions within Administrations. @deprecated */
 const AssessmentConditionsSchema = z.object({
   assigned: z.record(z.string(), z.unknown()),
   conditions: z.array(AssessmentConditionRuleSchema),
 });
 
-// Structure for individual Assessments within Administrations
+/** Schema for individual Assessments within Administrations. @deprecated */
 const AssessmentSchema = z.object({
   conditions: AssessmentConditionsSchema,
   params: z.record(z.string(), z.unknown()),
@@ -145,7 +130,7 @@ const AssessmentSchema = z.object({
   variantName: z.string(),
 });
 
-// Structure for Legal information within Administrations and AssignedOrgs
+/** Schema for Legal information within Administrations and AssignedOrgs. @deprecated */
 const LegalInfoSchema = z.object({
   amount: z.string(),
   assent: z.union([z.string(), z.null()]),
@@ -153,7 +138,7 @@ const LegalInfoSchema = z.object({
   expectedTime: z.string(),
 });
 
-// Interface for documents in the `administrations` collection
+/** Schema for documents in the `administrations` collection. @deprecated */
 const AdministrationSchema = z.object({
   assessments: z.array(AssessmentSchema),
   classes: z.array(z.string()),
@@ -176,7 +161,7 @@ const AdministrationSchema = z.object({
   testData: z.boolean(),
 });
 
-// Interface for documents in the `assignedOrgs` subcollection of `administrations`
+/** Schema for documents in the `assignedOrgs` subcollection of `administrations`. @deprecated */
 const AssignedOrgSchema = z.object({
   administrationId: z.string(),
   createdBy: z.string(),
@@ -193,7 +178,7 @@ const AssignedOrgSchema = z.object({
   timestamp: TimestampSchema,
 });
 
-// Interface for the assignments subcollection of `users`
+/** Schema for the assignments subcollection of `users`. @deprecated */
 const AssignmentAssessmentSchema = z.object({
   progress: z.object({
     survey: z.string(),
@@ -243,11 +228,11 @@ const AssignmentAssessmentSchema = z.object({
   name: z.string(),
 });
 
-// Structure for Claims within UserClaims
-// @CC: "I guess we still need this because we haven't gotten around to it
-// yet - but we are going to remove the use of the userClaims collection
-// entirely (we should be relying on custom auth claims instead)"
+/** Schema for Claims within UserClaims. @deprecated */
 const ClaimsSchema = z.object({
+  // @CC: "I guess we still need this because we haven't gotten around to it
+  // yet - but we are going to remove the use of the userClaims collection
+  // entirely (we should be relying on custom auth claims instead)"
   adminOrgs: OrgRefMapSchema,
   adminUid: z.string().optional(),
   minimalAdminOrgs: OrgRefMapSchema,
@@ -255,7 +240,7 @@ const ClaimsSchema = z.object({
   super_admin: z.boolean(),
 });
 
-// Interface for documents in the `classes` collection
+/** Schema for documents in the `classes` collection. @deprecated */
 const ClassSchema = z.object({
   archived: z.boolean(),
   createdAt: TimestampSchema,
@@ -270,6 +255,7 @@ const ClassSchema = z.object({
   type: z.string(),
 });
 
+/** Schema for creating a class. @deprecated */
 const CreateClassSchema = ClassSchema.pick({
   name: true,
   normalizedName: true,
@@ -282,7 +268,7 @@ const CreateClassSchema = ClassSchema.pick({
   siteId: z.string().optional(),
 });
 
-// Interface for documents in the `districts` collection
+/** Schema for documents in the `districts` collection. @deprecated */
 const DistrictSchema = z.object({
   archived: z.boolean(),
   createdAt: TimestampSchema,
@@ -296,6 +282,7 @@ const DistrictSchema = z.object({
   schools: z.array(z.string()).optional(),
 });
 
+/** Schema for creating a district. @deprecated */
 const CreateDistrictSchema = DistrictSchema.pick({
   name: true,
   normalizedName: true,
@@ -307,7 +294,7 @@ const CreateDistrictSchema = DistrictSchema.pick({
   siteId: z.string().optional(),
 });
 
-// Interface for documents in the `groups` collection
+/** Schema for documents in the `groups` collection. @deprecated */
 const GroupSchema = z.object({
   archived: z.boolean(),
   createdAt: TimestampSchema,
@@ -321,6 +308,7 @@ const GroupSchema = z.object({
   type: z.string(),
 });
 
+/** Schema for creating a group. @deprecated */
 const CreateGroupSchema = GroupSchema.pick({
   name: true,
   normalizedName: true,
@@ -333,10 +321,10 @@ const CreateGroupSchema = GroupSchema.pick({
   siteId: z.string().optional(),
 });
 
-// Tracks versions of legal documents using GitHub as a reference point.
+/** Schema for Tracks versions of legal documents using GitHub as a reference point. @deprecated */
 const LegalSchema = z.object({});
 
-// Interface for documents in the `readOrgs` subcollection of `administrations`
+/** Schema for documents in the `readOrgs` subcollection of `administrations`. @deprecated */
 const ReadOrgSchema = z.object({
   administrationId: z.string(),
   createdBy: z.string(),
@@ -352,7 +340,7 @@ const ReadOrgSchema = z.object({
   timestamp: TimestampSchema,
 });
 
-// Interface for documents in the `schools` collection
+/** Schema for documents in the `schools` collection. @deprecated */
 const SchoolSchema = z.object({
   archived: z.boolean(),
   classes: z.array(z.string()).optional(),
@@ -367,6 +355,7 @@ const SchoolSchema = z.object({
   type: z.string(),
 });
 
+/** Schema for creating a school. @deprecated */
 const CreateSchoolSchema = SchoolSchema.pick({
   name: true,
   normalizedName: true,
@@ -378,44 +367,20 @@ const CreateSchoolSchema = SchoolSchema.pick({
   siteId: z.string().optional(),
 });
 
-// Interface for the stats subcollection of `administrations`
+/** Schema for the stats subcollection of `administrations`. @deprecated */
 const StatSchema = z.object({
   assignment: z.record(z.string(), z.number()),
   survey: z.record(z.string(), z.number()),
 });
 
-// Interface for documents in the `userClaims` collection
+/** Schema for documents in the `userClaims` collection. @deprecated */
 const UserClaimsSchema = z.object({
   claims: ClaimsSchema,
   lastUpdated: z.number(),
   testData: z.boolean().optional(),
 });
 
-// Interface for documents in the `users` collection
-const UserSchema = z.object({
-  adminData: AdminDataSchema.optional(),
-  assignments: z
-    .object({
-      assigned: z.array(z.string()),
-      completed: z.array(z.string()),
-      started: z.array(z.string()),
-    })
-    .optional(),
-  archived: z.boolean(),
-  classes: OrgAssociationMapSchema,
-  createdAt: TimestampSchema,
-  disabled: z.boolean(),
-  displayName: z.string(),
-  districts: OrgAssociationMapSchema,
-  email: z.string(),
-  groups: OrgAssociationMapSchema,
-  legal: UserLegalSchema,
-  schools: OrgAssociationMapSchema,
-  sso: z.string().optional(),
-  userType: z.enum(['admin', 'teacher', 'student', 'parent']),
-  testData: z.boolean().optional(),
-});
-
+/** Schema for documents in the `orgs` collection. @deprecated */
 const OrgSchema = z.object({
   archived: z.boolean(),
   classes: z.array(z.string()).optional(),
@@ -435,6 +400,7 @@ const OrgSchema = z.object({
   updatedAt: TimestampSchema,
 });
 
+/** Schema for creating an org. @deprecated */
 const CreateOrgSchema = OrgSchema.pick({
   districtId: true,
   name: true,
@@ -524,28 +490,41 @@ export {
   UpsertVariantParamSpecErrorSchema,
   UpsertVariantParamSpecParamsSchema,
   UserClaimsSchema,
+  UserDocSchema,
   UserLegalSchema,
   UserSchema,
 };
-export type AdminDataType = z.infer<typeof AdminDataSchema>;
+/** Inferred type of {@link AdministrationSchema}. @deprecated */
 export type AdministrationType = z.infer<typeof AdministrationSchema>;
+/** Inferred type of {@link AssessmentConditionRuleSchema}. @deprecated */
 export type AssessmentConditionRuleType = z.infer<
   typeof AssessmentConditionRuleSchema
 >;
+/** Inferred type of {@link AssessmentConditionsSchema}. @deprecated */
 export type AssessmentConditionsType = z.infer<
   typeof AssessmentConditionsSchema
 >;
+/** Inferred type of {@link AssessmentSchema}. @deprecated */
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
+/** Inferred type of {@link AssignedOrgSchema}. @deprecated */
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
+/** Inferred type of {@link AssignmentAssessmentSchema}. @deprecated */
 export type AssignmentAssessmentType = z.infer<
   typeof AssignmentAssessmentSchema
 >;
+/** Inferred type of {@link ClaimsSchema}. @deprecated */
 export type ClaimsType = z.infer<typeof ClaimsSchema>;
+/** Inferred type of {@link ClassSchema}. @deprecated */
 export type ClassType = z.infer<typeof ClassSchema>;
+/** Inferred type of {@link CreateClassSchema}. @deprecated */
 export type CreateClassType = z.infer<typeof CreateClassSchema>;
+/** Inferred type of {@link CreateDistrictSchema}. @deprecated */
 export type CreateDistrictType = z.infer<typeof CreateDistrictSchema>;
+/** Inferred type of {@link CreateGroupSchema}. @deprecated */
 export type CreateGroupType = z.infer<typeof CreateGroupSchema>;
+/** Inferred type of {@link CreateOrgSchema}. @deprecated */
 export type CreateOrgType = z.infer<typeof CreateOrgSchema>;
+/** Inferred type of {@link CreateSchoolSchema}. @deprecated */
 export type CreateSchoolType = z.infer<typeof CreateSchoolSchema>;
 export type {
   CreateTaskVariantError,
@@ -562,6 +541,7 @@ export type {
   CreateUsersParams,
   CreateUsersResult,
 } from './firebase-functions/users/create-users';
+/** Inferred type of {@link DistrictSchema}. @deprecated */
 export type DistrictType = z.infer<typeof DistrictSchema>;
 export type {
   GetSiteOverviewError,
@@ -616,8 +596,11 @@ export type {
   LanguageSelection,
 } from './languages/language-selection';
 export type { CoarseLocation, H3Cell } from './location';
+/** Inferred type of {@link GroupSchema}. @deprecated */
 export type GroupType = z.infer<typeof GroupSchema>;
+/** Inferred type of {@link LegalInfoSchema}. @deprecated */
 export type LegalInfoType = z.infer<typeof LegalInfoSchema>;
+/** Inferred type of {@link LegalSchema}. @deprecated */
 export type LegalType = z.infer<typeof LegalSchema>;
 export type { LinkUsersCsv, LinkUsersCsvHeader } from './csv/link-users-csv';
 export type {
@@ -625,14 +608,17 @@ export type {
   LinkUsersParams,
   LinkUsersResult,
 } from './firebase-functions/users/link-users';
-export type OrgAssociationMapType = z.infer<typeof OrgAssociationMapSchema>;
+/** Inferred type of {@link OrgRefMapSchema}. @deprecated */
 export type OrgRefMapType = z.infer<typeof OrgRefMapSchema>;
+/** Inferred type of {@link OrgSchema}. @deprecated */
 export type OrgType = z.infer<typeof OrgSchema>;
 export type {
   ParsedFirebaseError,
   ParsedFunctionsError,
 } from './firebase-functions/error';
+/** Inferred type of {@link ReadOrgSchema}. @deprecated */
 export type ReadOrgType = z.infer<typeof ReadOrgSchema>;
+/** Inferred type of {@link SchoolSchema}. @deprecated */
 export type SchoolType = z.infer<typeof SchoolSchema>;
 export type {
   SerializedTask,
@@ -640,8 +626,8 @@ export type {
   SerializedTaskVariantRevision,
   SerializedVariantParamSpec,
 } from './firebase-functions/firestore';
+/** Inferred type of {@link StatSchema}. @deprecated */
 export type StatType = z.infer<typeof StatSchema>;
-export type TimestampType = z.infer<typeof TimestampSchema>;
 export type {
   UpdateTaskVariantError,
   UpdateTaskVariantParams,
@@ -662,8 +648,15 @@ export type {
   UpdateUsersInfoParams,
   UpdateUsersInfoResult,
 } from './firebase-functions/users/update-users-info';
+export type { TimestampType } from './firestore/timestamp';
+/** Inferred type of {@link UserClaimsSchema}. @deprecated */
 export type UserClaimsType = z.infer<typeof UserClaimsSchema>;
-export type UserLegalType = z.infer<typeof UserLegalSchema>;
-export type UserType = z.infer<typeof UserSchema>;
 export type ZodIssue = z.core.$ZodIssue;
 export type { ZodType } from 'zod';
+export type {
+  AdminDataType,
+  OrgAssociationMapType,
+  UserDocType,
+  UserLegalType,
+  UserType,
+} from './firestore/users';
