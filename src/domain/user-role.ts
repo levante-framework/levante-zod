@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
 
 /** Schema for user roles. */
-export const RoleSchema = z.discriminatedUnion('role', [
+export const UserRoleSchema = z.discriminatedUnion('role', [
   z.object({
     role: z.literal('super_admin'),
     siteId: z.literal('any'),
@@ -21,5 +21,5 @@ export const RoleSchema = z.discriminatedUnion('role', [
   }),
 ]);
 
-/** Inferred type of {@link RoleSchema}. */
-export type RoleType = z.infer<typeof RoleSchema>;
+/** Inferred type of {@link UserRoleSchema}. */
+export type UserRole = z.infer<typeof UserRoleSchema>;

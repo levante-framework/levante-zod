@@ -1,6 +1,6 @@
 import { fc, it } from '@fast-check/vitest';
 import { describe, expect } from 'vitest';
-import { RoleSchema } from './role';
+import { UserRoleSchema } from './user-role';
 
 /**
  * Arbitrary: a defined non-string value. Excludes `undefined`, which is a
@@ -46,9 +46,9 @@ const $validSuperAdminRole = {
   siteId: 'any',
 };
 
-describe('RoleSchema', () => {
+describe('UserRoleSchema', () => {
   it('accepts a valid super_admin role', () => {
-    const result = RoleSchema.safeParse($validSuperAdminRole);
+    const result = UserRoleSchema.safeParse($validSuperAdminRole);
     expect(result.success).toBe(true);
     expect(result.data).toEqual($validSuperAdminRole);
   });
@@ -58,7 +58,7 @@ describe('RoleSchema', () => {
     siteId: $nonEmptyString,
     siteName: $nonEmptyString,
   })('accepts valid site-scoped roles', ({ role, siteId, siteName }) => {
-    const result = RoleSchema.safeParse({
+    const result = UserRoleSchema.safeParse({
       role,
       siteId,
       siteName,
@@ -69,13 +69,13 @@ describe('RoleSchema', () => {
 
   it('accepts a site-scoped role without a siteName', () => {
     const { siteName: _siteName, ...withoutSiteName } = $validSiteScopedRole;
-    const result = RoleSchema.safeParse(withoutSiteName);
+    const result = UserRoleSchema.safeParse(withoutSiteName);
     expect(result.success).toBe(true);
     expect(result.data).toEqual(withoutSiteName);
   });
 
   it.prop({ v: $nonObject })('rejects a non-object input', ({ v }) => {
-    const result = RoleSchema.safeParse(v);
+    const result = UserRoleSchema.safeParse(v);
     expect(result.success).toBe(false);
     expect(result.error?.issues.length).toBe(1);
     expect(result.error?.issues[0].code).toEqual('invalid_type');
@@ -90,7 +90,7 @@ describe('RoleSchema', () => {
     // branch to route to in either case, so both yield the same invalid_union
     // issue on `role`.
     it('rejects an unknown role', () => {
-      const result = RoleSchema.safeParse({
+      const result = UserRoleSchema.safeParse({
         ...$validSuperAdminRole,
         role: 'wizard',
       });
@@ -106,7 +106,7 @@ describe('RoleSchema', () => {
 
   describe('invalid siteId', () => {
     it('rejects a super_admin whose siteId is not "any"', () => {
-      const result = RoleSchema.safeParse({
+      const result = UserRoleSchema.safeParse({
         ...$validSuperAdminRole,
         siteId: 'site-123',
       });
@@ -122,7 +122,7 @@ describe('RoleSchema', () => {
     });
 
     it('rejects an empty siteId for site-scoped roles', () => {
-      const result = RoleSchema.safeParse({
+      const result = UserRoleSchema.safeParse({
         ...$validSiteScopedRole,
         siteId: '',
       });
@@ -142,7 +142,7 @@ describe('RoleSchema', () => {
     it.prop({ siteId: $nonString })(
       'rejects a non-string siteId for site-scoped roles',
       ({ siteId }) => {
-        const result = RoleSchema.safeParse({
+        const result = UserRoleSchema.safeParse({
           ...$validSiteScopedRole,
           siteId,
         });
@@ -161,7 +161,7 @@ describe('RoleSchema', () => {
     // NB: `siteName` is optional, so an omitted value is accepted (covered
     // above); only a present-but-empty string is rejected.
     it('rejects an empty siteName', () => {
-      const result = RoleSchema.safeParse({
+      const result = UserRoleSchema.safeParse({
         ...$validSiteScopedRole,
         siteName: '',
       });
@@ -181,7 +181,7 @@ describe('RoleSchema', () => {
     it.prop({ siteName: $definedNonString })(
       'rejects a non-string siteName',
       ({ siteName }) => {
-        const result = RoleSchema.safeParse({
+        const result = UserRoleSchema.safeParse({
           ...$validSiteScopedRole,
           siteName,
         });
