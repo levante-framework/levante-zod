@@ -1,4 +1,6 @@
 import * as z from 'zod';
+import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { RoleSchema } from './role';
 import { TimestampSchema } from './timestamp';
 
 /** Schema for Admin-specific data within Users. @deprecated */
@@ -57,13 +59,13 @@ export const UserSchema = z.object({
 export type UserType = z.infer<typeof UserSchema>;
 
 export const BaseUserDocSchema = z.looseObject({
-  email: z.string(),
+  email: NonEmptyStringSchema,
   archived: z.boolean(),
   disabled: z.boolean(),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
+  roles: z.array(RoleSchema),
 
-  // roles: TODO...
   // districts: TODO...
   // schools: TODO...
   // classes: TODO...
