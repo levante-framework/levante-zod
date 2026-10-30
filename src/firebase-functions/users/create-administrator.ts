@@ -12,11 +12,11 @@ import {
 export const CreateAdministratorParamsSchema = z
   .object({
     email: z.email(),
-    name: {
+    name: z.object({
       first: NonEmptyStringSchema,
       middle: NonEmptyStringSchema.optional(),
       last: NonEmptyStringSchema,
-    },
+    }),
     roles: z.array(UserRoleSchema),
   })
   .superRefine((data, ctx) => {
