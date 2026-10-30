@@ -61,6 +61,10 @@ import {
   UpsertVariantParamSpecParamsSchema,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
 import {
+  CreateAdministratorErrorSchema,
+  CreateAdministratorParamsSchema,
+} from './firebase-functions/users/create-administrator';
+import {
   CreateUsersErrorSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/users/create-users';
@@ -463,6 +467,8 @@ export {
   ClaimsSchema,
   ClassSchema,
   CoarseLocationSchema,
+  CreateAdministratorErrorSchema,
+  CreateAdministratorParamsSchema,
   CreateClassSchema,
   CreateDistrictSchema,
   CreateGroupSchema,
@@ -557,6 +563,11 @@ export type {
   GetTasksParams,
   GetTasksResult,
 } from './firebase-functions/tasks/get-tasks';
+export type {
+  CreateAdministratorError,
+  CreateAdministratorParams,
+  CreateAdministratorResult,
+} from './firebase-functions/users/create-administrator';
 export type {
   CreateUsersError,
   CreateUsersParams,
