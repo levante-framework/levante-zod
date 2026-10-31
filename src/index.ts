@@ -13,6 +13,10 @@ import {
   FunctionsErrorSchema,
 } from './firebase-functions/error';
 import {
+  GetOrgInformationStatusErrorSchema,
+  GetOrgInformationStatusParamsSchema,
+} from './firebase-functions/get-org-information-status';
+import {
   GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
 } from './firebase-functions/get-site-overview';
@@ -476,6 +480,8 @@ export {
   DistrictSchema,
   FirebaseErrorSchema,
   FunctionsErrorSchema,
+  GetOrgInformationStatusErrorSchema,
+  GetOrgInformationStatusParamsSchema,
   GetSiteOverviewErrorSchema,
   GetSiteOverviewParamsSchema,
   GetSyncStatusErrorSchema,
@@ -563,6 +569,11 @@ export type {
   CreateUsersResult,
 } from './firebase-functions/users/create-users';
 export type DistrictType = z.infer<typeof DistrictSchema>;
+export type {
+  GetOrgInformationStatusError,
+  GetOrgInformationStatusParams,
+  GetOrgInformationStatusResult,
+} from './firebase-functions/get-org-information-status';
 export type {
   GetSiteOverviewError,
   GetSiteOverviewParams,
