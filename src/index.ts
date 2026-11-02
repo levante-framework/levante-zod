@@ -8,6 +8,7 @@ import {
   LinkUsersCsvSchema,
 } from './csv/link-users-csv';
 import { combineUsersCsvIssues } from './csv/util';
+import { UserRoleSchema } from './domain/user-role';
 import {
   FirebaseErrorSchema,
   FunctionsErrorSchema,
@@ -531,6 +532,7 @@ export {
   UpsertVariantParamSpecParamsSchema,
   UserClaimsSchema,
   UserLegalSchema,
+  UserRoleSchema,
   UserSchema,
 };
 export type AdminDataType = z.infer<typeof AdminDataSchema>;
@@ -653,6 +655,7 @@ export type {
 } from './firebase-functions/firestore';
 export type StatType = z.infer<typeof StatSchema>;
 export type TimestampType = z.infer<typeof TimestampSchema>;
+export type { UserRole } from './domain/user-role';
 export type {
   UpdateTaskVariantError,
   UpdateTaskVariantParams,
