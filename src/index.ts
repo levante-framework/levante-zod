@@ -61,6 +61,10 @@ import {
   UpsertVariantParamSpecParamsSchema,
 } from './firebase-functions/tasks/upsert-variant-param-spec';
 import {
+  CreateAdministratorErrorSchema,
+  CreateAdministratorParamsSchema,
+} from './firebase-functions/users/create-administrator';
+import {
   CreateUsersErrorSchema,
   CreateUsersParamsSchema,
 } from './firebase-functions/users/create-users';
@@ -450,6 +454,12 @@ const CreateOrgSchema = OrgSchema.pick({
 });
 
 export type { AddUsersCsv, AddUsersCsvHeader } from './csv/add-users-csv';
+export type { AdminRole, SuperAdminRole, UserRole } from './domain/user-role';
+export {
+  AdminRoleSchema,
+  SuperAdminRoleSchema,
+  UserRoleSchema,
+} from './domain/user-role';
 export {
   AddUsersCsvHeaderSchema,
   AddUsersCsvSchema,
@@ -463,6 +473,8 @@ export {
   ClaimsSchema,
   ClassSchema,
   CoarseLocationSchema,
+  CreateAdministratorErrorSchema,
+  CreateAdministratorParamsSchema,
   CreateClassSchema,
   CreateDistrictSchema,
   CreateGroupSchema,
@@ -557,6 +569,11 @@ export type {
   GetTasksParams,
   GetTasksResult,
 } from './firebase-functions/tasks/get-tasks';
+export type {
+  CreateAdministratorError,
+  CreateAdministratorParams,
+  CreateAdministratorResult,
+} from './firebase-functions/users/create-administrator';
 export type {
   CreateUsersError,
   CreateUsersParams,
