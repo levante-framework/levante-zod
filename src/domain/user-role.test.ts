@@ -5,7 +5,7 @@ import {
   AdminRoleSchema,
   ALL_SITE_ROLES,
   SuperAdminRoleSchema,
-  siteRoleSchema,
+  siteRole,
   UserRoleSchema,
 } from './user-role';
 
@@ -51,11 +51,11 @@ const $validSuperAdminRole = {
   siteId: 'any',
 };
 
-describe('siteRoleSchema', () => {
+describe('siteRole', () => {
   // The factory owns the site-scoped object logic (role membership, siteId,
   // optional siteName), so field-level validation is tested here once rather
   // than through each union that embeds it.
-  const schema = siteRoleSchema(ALL_SITE_ROLES);
+  const schema = siteRole(ALL_SITE_ROLES);
 
   it.prop({
     role: $allSiteRole,
@@ -75,7 +75,7 @@ describe('siteRoleSchema', () => {
   });
 
   it('rejects a role not in the provided list', () => {
-    const adminScopedSchema = siteRoleSchema(ADMIN_SITE_ROLES);
+    const adminScopedSchema = siteRole(ADMIN_SITE_ROLES);
     const result = adminScopedSchema.safeParse({
       ...$validSiteRole,
       role: 'participant',

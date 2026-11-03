@@ -15,7 +15,7 @@ export const ALL_SITE_ROLES = [...ADMIN_SITE_ROLES, 'participant'] as const;
  * Returns a schema for a site-scoped user role.
  * @param roles - The role names to include in the schema.
  */
-export const siteRoleSchema = <const T extends readonly string[]>(roles: T) =>
+export const siteRole = <const T extends readonly string[]>(roles: T) =>
   z.object({
     role: z.enum(roles),
     siteId: NonEmptyStringSchema,
@@ -41,7 +41,7 @@ export type SuperAdminRole = z.infer<typeof SuperAdminRoleSchema>;
 /** Schema for admin roles. */
 export const AdminRoleSchema = z.discriminatedUnion('role', [
   SuperAdminRoleSchema,
-  siteRoleSchema(ADMIN_SITE_ROLES),
+  siteRole(ADMIN_SITE_ROLES),
 ]);
 
 /** Inferred type of {@link AdminRoleSchema}. */
@@ -50,7 +50,7 @@ export type AdminRole = z.infer<typeof AdminRoleSchema>;
 /** Schema for user roles. */
 export const UserRoleSchema = z.discriminatedUnion('role', [
   SuperAdminRoleSchema,
-  siteRoleSchema(ALL_SITE_ROLES),
+  siteRole(ALL_SITE_ROLES),
 ]);
 
 /** Inferred type of {@link UserRoleSchema}. */
