@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { UserRoleSchema } from '../../domain/user-role';
+import { AdminRoleSchema } from '../../domain/user-role';
 import { NonEmptyStringSchema } from '../../shared/non-empty-string';
 import { makeTooBigIssue, makeTooSmallIssue } from '../../util/issues';
 import {
@@ -17,7 +17,7 @@ export const CreateAdministratorParamsSchema = z
       middle: NonEmptyStringSchema.optional(),
       last: NonEmptyStringSchema,
     }),
-    roles: z.array(UserRoleSchema),
+    roles: z.array(AdminRoleSchema),
   })
   .superRefine((data, ctx) => {
     // Roles array must contain exactly one role
