@@ -183,6 +183,43 @@ describe('LegacyClaimsSchema', () => {
     ]);
   });
 
+  it('rejects an empty siteRoles map', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: [],
+      siteNames: {},
+      siteRoles: {},
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'Must include at least one role',
+        path: ['siteRoles'],
+      },
+    ]);
+  });
+
+  it('rejects a site with an empty role array', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: [],
+      siteNames: {},
+      siteRoles: { 'site-123': [] },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_small',
+        inclusive: true,
+        minimum: 1,
+        origin: 'array',
+        message: 'Too small: expected array to have >=1 items',
+        path: ['siteRoles', 'site-123'],
+      },
+    ]);
+  });
+
   it('accepts siteRoles whose roles are all in rolesSet', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,

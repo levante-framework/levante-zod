@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
+import { makeTooSmallIssue } from '../util/issues';
 
 const ROLES = [
   'participant',
@@ -71,6 +72,28 @@ export const LegacyClaimsSchema = z
         });
       }
     });
+
+    // `siteRoles` must include at least one role, and no site may be empty.
+    if (Object.keys(data.siteRoles).length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Must include at least one role',
+        path: ['siteRoles'],
+        input: data.siteRoles,
+      });
+    }
+    for (const [siteId, roles] of Object.entries(data.siteRoles)) {
+      if (roles.length === 0) {
+        ctx.addIssue(
+          makeTooSmallIssue({
+            input: roles,
+            minimum: 1,
+            origin: 'array',
+            path: ['siteRoles', siteId],
+          }),
+        );
+      }
+    }
 
     // The super_admin role requires `super_admin` to be true.
     if (data.rolesSet.includes('super_admin') && data.super_admin !== true) {
