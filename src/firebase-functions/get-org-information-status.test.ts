@@ -6,27 +6,27 @@ import {
 } from './get-org-information-status';
 
 describe('GetOrgInformationStatusParamsSchema', () => {
-  it('accepts valid site props', () => {
+  it('accepts one site id', () => {
     expect(
       GetOrgInformationStatusParamsSchema.parse({
         orgType: 'site',
-        orgId: 'district-1',
+        orgIds: ['district-1'],
       }),
     ).toEqual({
       orgType: 'site',
-      orgId: 'district-1',
+      orgIds: ['district-1'],
     });
   });
 
-  it('accepts valid school props', () => {
+  it('accepts several school ids', () => {
     expect(
       GetOrgInformationStatusParamsSchema.parse({
         orgType: 'school',
-        orgId: 'school-1',
+        orgIds: ['school-1', 'school-2'],
       }),
     ).toEqual({
       orgType: 'school',
-      orgId: 'school-1',
+      orgIds: ['school-1', 'school-2'],
     });
   });
 
@@ -34,29 +34,29 @@ describe('GetOrgInformationStatusParamsSchema', () => {
     expect(
       GetOrgInformationStatusParamsSchema.parse({
         orgType: 'site',
-        orgId: '  district-1  ',
+        orgIds: ['  district-1  '],
       }),
     ).toEqual({
       orgType: 'site',
-      orgId: 'district-1',
+      orgIds: ['district-1'],
     });
   });
 
   it('strips unexpected props', () => {
     const result = GetOrgInformationStatusParamsSchema.parse({
       orgType: 'site',
-      orgId: 'district-1',
+      orgIds: ['district-1'],
       unexpected: 'bar',
     });
     expect(result).toEqual({
       orgType: 'site',
-      orgId: 'district-1',
+      orgIds: ['district-1'],
     });
   });
 
   it('rejects missing orgType', () => {
     const result = GetOrgInformationStatusParamsSchema.safeParse({
-      orgId: 'district-1',
+      orgIds: ['district-1'],
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
@@ -72,7 +72,7 @@ describe('GetOrgInformationStatusParamsSchema', () => {
   it('rejects invalid orgType', () => {
     const result = GetOrgInformationStatusParamsSchema.safeParse({
       orgType: 'district',
-      orgId: 'district-1',
+      orgIds: ['district-1'],
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
@@ -85,10 +85,28 @@ describe('GetOrgInformationStatusParamsSchema', () => {
     ]);
   });
 
-  it('rejects empty orgId', () => {
+  it('rejects an empty orgIds array', () => {
     const result = GetOrgInformationStatusParamsSchema.safeParse({
       orgType: 'site',
-      orgId: '   ',
+      orgIds: [],
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_small',
+        inclusive: true,
+        message: 'Too small: expected array to have >=1 items',
+        minimum: 1,
+        origin: 'array',
+        path: ['orgIds'],
+      },
+    ]);
+  });
+
+  it('rejects an empty orgId', () => {
+    const result = GetOrgInformationStatusParamsSchema.safeParse({
+      orgType: 'site',
+      orgIds: ['   '],
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
@@ -98,12 +116,28 @@ describe('GetOrgInformationStatusParamsSchema', () => {
         minimum: 1,
         origin: 'string',
         message: 'Too small: expected string to have >=1 characters',
-        path: ['orgId'],
+        path: ['orgIds', 0],
       },
     ]);
   });
 
-  it('rejects missing orgId', () => {
+  it('rejects a non-array orgIds', () => {
+    const result = GetOrgInformationStatusParamsSchema.safeParse({
+      orgType: 'site',
+      orgIds: 'district-1',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'array',
+        message: 'Invalid input: expected array, received string',
+        path: ['orgIds'],
+      },
+    ]);
+  });
+
+  it('rejects missing orgIds', () => {
     const result = GetOrgInformationStatusParamsSchema.safeParse({
       orgType: 'site',
     });
@@ -111,9 +145,9 @@ describe('GetOrgInformationStatusParamsSchema', () => {
     expect(result.error?.issues).toEqual([
       {
         code: 'invalid_type',
-        expected: 'string',
-        message: 'Invalid input: expected string, received undefined',
-        path: ['orgId'],
+        expected: 'array',
+        message: 'Invalid input: expected array, received undefined',
+        path: ['orgIds'],
       },
     ]);
   });
@@ -169,134 +203,34 @@ describe('GetOrgInformationStatusErrorSchema', () => {
     });
   });
 
-  describe('internal', () => {
-    const $code = 'internal';
-
-    it('accepts functions/internal/org-incomplete', () => {
-      const $message = 'Org incomplete';
-      const $details = {
-        code: 'org-incomplete',
-        type: 'school',
-        id: 'school-1',
-      };
-      const err = new FunctionsError($code, $message, $details);
-      const result = GetOrgInformationStatusErrorSchema.parse(err);
-      expect(result).toEqual({
-        name: 'FirebaseError',
-        code: `functions/${$code}`,
-        message: $message,
-        details: $details,
-      });
-    });
-
-    it('accepts functions/internal/unexpected-status', () => {
-      const $message = 'Unexpected status';
-      const $details = {
-        code: 'unexpected-status',
-        id: 'school-1',
-        status: 'archived',
-      };
-      const err = new FunctionsError($code, $message, $details);
-      const result = GetOrgInformationStatusErrorSchema.parse(err);
-      expect(result).toEqual({
-        name: 'FirebaseError',
-        code: `functions/${$code}`,
-        message: $message,
-        details: $details,
-      });
-    });
-
-    it('rejects bare functions/internal', () => {
-      const err = new FunctionsError($code, 'Org incomplete');
-      const result = GetOrgInformationStatusErrorSchema.safeParse(err);
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0]).toEqual({
-        expected: 'object',
-        code: 'invalid_type',
-        path: ['details'],
-        message: 'Invalid input: expected object, received undefined',
-      });
-    });
-
-    it('rejects functions/internal/foo', () => {
-      const err = new FunctionsError($code, 'Org incomplete', {
-        code: 'foo',
-        type: 'school',
-        id: 'school-1',
-      });
-      const result = GetOrgInformationStatusErrorSchema.safeParse(err);
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0]).toEqual({
-        code: 'invalid_union',
-        discriminator: 'code',
-        errors: [],
-        message:
-          "Invalid discriminator value. Expected 'org-incomplete' | 'unexpected-status'",
-        note: 'No matching discriminator',
-        options: ['org-incomplete', 'unexpected-status'],
-        path: ['details', 'code'],
-      });
-    });
-  });
-
-  describe('not-found', () => {
-    const $code = 'not-found';
-    const $message = 'Org not found';
-    const $details = {
-      code: 'org',
-      type: 'site',
-      id: 'org-1',
-    };
-
-    it('accepts functions/not-found/org', () => {
-      const err = new FunctionsError($code, $message, $details);
-      const result = GetOrgInformationStatusErrorSchema.parse(err);
-      expect(result).toEqual({
-        name: 'FirebaseError',
-        code: `functions/${$code}`,
-        message: $message,
-        details: $details,
-      });
-    });
-
-    it('rejects bare functions/not-found', () => {
-      const err = new FunctionsError($code, $message);
-      const result = GetOrgInformationStatusErrorSchema.safeParse(err);
-      expect(result.success).toBe(false);
-      expect(result.error?.issues.length).toBe(1);
-      expect(result.error?.issues[0]).toEqual({
-        expected: 'object',
-        code: 'invalid_type',
-        path: ['details'],
-        message: 'Invalid input: expected object, received undefined',
-      });
-    });
-
-    it('rejects functions/not-found/form-definition', () => {
-      const err = new FunctionsError($code, $message, {
-        code: 'form-definition',
-        id: 'siteInformation',
+  it.each(['not-found', 'internal'] as const)(
+    'rejects functions/%s',
+    (code) => {
+      const err = new FunctionsError(code, 'Org failed', {
+        code: 'org',
+        id: 'org-1',
       });
       const result = GetOrgInformationStatusErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
       expect(result.error?.issues).toEqual([
         {
-          code: 'invalid_value',
-          values: ['org'],
-          path: ['details', 'code'],
-          message: 'Invalid input: expected "org"',
-        },
-        {
-          code: 'invalid_type',
-          expected: 'string',
-          path: ['details', 'type'],
-          message: 'Invalid input: expected string, received undefined',
+          code: 'invalid_union',
+          discriminator: 'code',
+          errors: [],
+          message:
+            "Invalid discriminator value. Expected 'functions/failed-precondition' | 'functions/invalid-argument' | 'functions/permission-denied' | 'functions/unauthenticated'",
+          note: 'No matching discriminator',
+          options: [
+            'functions/failed-precondition',
+            'functions/invalid-argument',
+            'functions/permission-denied',
+            'functions/unauthenticated',
+          ],
+          path: ['code'],
         },
       ]);
-    });
-  });
+    },
+  );
 
   describe('common error codes', () => {
     it('accepts functions/invalid-argument/schema', () => {

@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
+import { makeTooSmallIssue } from '../util/issues';
 import {
   FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
@@ -8,10 +9,23 @@ import {
 } from './error';
 
 /** Parameters schema for `getOrgInformationStatus` Firebase Function. */
-export const GetOrgInformationStatusParamsSchema = z.object({
-  orgType: z.enum(['site', 'school']),
-  orgId: NonEmptyStringSchema,
-});
+export const GetOrgInformationStatusParamsSchema = z
+  .object({
+    orgType: z.enum(['site', 'school']),
+    orgIds: z.array(NonEmptyStringSchema),
+  })
+  .superRefine((data, ctx) => {
+    if (data.orgIds.length === 0) {
+      ctx.addIssue(
+        makeTooSmallIssue({
+          input: data.orgIds,
+          minimum: 1,
+          origin: 'array',
+          path: ['orgIds'],
+        }),
+      );
+    }
+  });
 
 /** Inferred type of {@link GetOrgInformationStatusParamsSchema}. */
 export type GetOrgInformationStatusParams = z.infer<
@@ -21,11 +35,19 @@ export type GetOrgInformationStatusParams = z.infer<
 /**
  * Result type for `getOrgInformationStatus` Firebase Function.
  * Progress is for the current registered form version only.
+ * A failed org is an error on that result item, not a thrown Functions error.
  */
 export type GetOrgInformationStatusResult = {
-  orgId: string;
   orgType: 'site' | 'school';
-  progress: 'not-started' | 'incomplete' | 'complete';
+  results: Array<
+    | { orgId: string; progress: 'not-started' | 'incomplete' | 'complete' }
+    | { orgId: string; error: { code: 'org' } }
+    | { orgId: string; error: { code: 'org-incomplete' } }
+    | {
+        orgId: string;
+        error: { code: 'unexpected-status'; status: string };
+      }
+  >;
 };
 
 /** Error schema for `getOrgInformationStatus` Firebase Function. */
@@ -38,29 +60,6 @@ export const GetOrgInformationStatusErrorSchema = z.discriminatedUnion('code', [
     }),
   }),
   InvalidArgumentErrorSchema,
-  FunctionsErrorSchema.extend({
-    code: z.literal('functions/internal'),
-    details: z.discriminatedUnion('code', [
-      z.object({
-        code: z.literal('org-incomplete'),
-        type: z.string(),
-        id: z.string(),
-      }),
-      z.object({
-        code: z.literal('unexpected-status'),
-        id: z.string(),
-        status: z.string(),
-      }),
-    ]),
-  }),
-  FunctionsErrorSchema.extend({
-    code: z.literal('functions/not-found'),
-    details: z.object({
-      code: z.literal('org'),
-      type: z.string(),
-      id: z.string(),
-    }),
-  }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 ]);
