@@ -591,6 +591,8 @@ export type {
 export type {
   SaveSurveyResponsesParams,
   SaveSurveyResponsesResult,
+  SurveyResponseScalar,
+  SurveyResponseValue,
 } from './firebase-functions/save-survey-responses';
 export type {
   GetTaskVariantRevisionsError,

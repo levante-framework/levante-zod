@@ -60,6 +60,12 @@ const SurveyUserTypeSchema = z
 /**
  * Parameters schema for the SurveyJS `saveSurveyResponses` callable.
  *
+ * Formalizing this schema in the first instance to understand the incoming
+ * changes to the survey payload; wiring it into the `saveSurveyResponses`
+ * callable is out of scope at the moment. This survey flow is slated for
+ * deprecation, so the schema may never be wired in. It exists to document the
+ * shape, not to validate anything in production yet.
+ *
  * The new player will append keyed responses through a separate callable.
  * This payload still has to accept a SurveyJS matrix object while both run.
  * Which question keys are legal is decided
