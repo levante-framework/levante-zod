@@ -12,15 +12,22 @@ const $nonObject = fc
 /** Arbitrary: an integer outside the inclusive [-1, 3] role range. */
 const $outOfRangeRole = fc.integer().filter((n) => n < -1 || n > 3);
 
+/** The set of valid role names, mirrored from the schema. */
+const ROLE_VALUES = [
+  'participant',
+  'research_assistant',
+  'admin',
+  'site_admin',
+  'super_admin',
+];
+
 /** Fixture: a valid legacy claims object with all fields present. */
 const $validLegacyClaims = {
-  admin: true,
-  roles: [{ siteId: 'site-123', role: 'admin', siteName: 'Example Site' }],
-  rolesSet: ['admin'],
+  rolesSet: ['admin', 'site_admin'],
   siteNames: { 'site-123': 'Example Site' },
-  siteRoles: { 'site-123': ['admin'] },
+  siteRoles: { 'site-123': ['admin'], 'site-456': ['site_admin'] },
   super_admin: false,
-  useNewPermissions: true,
+  useNewPermissions: true as const,
 };
 
 /** Fixture: a valid auth claims object. */
@@ -37,16 +44,18 @@ describe('LegacyClaimsSchema', () => {
     expect(result.data).toEqual($validLegacyClaims);
   });
 
-  it('accepts a claims object without optional fields', () => {
-    const {
-      admin: _admin,
-      super_admin: _superAdmin,
-      useNewPermissions: _useNewPermissions,
-      ...required
-    } = $validLegacyClaims;
-    const result = LegacyClaimsSchema.safeParse(required);
+  it('accepts a participant-only claims object without optional fields', () => {
+    // `admin`/`super_admin` are the only optional fields, and omitting `admin`
+    // is valid only when no non-participant role is present.
+    const claims = {
+      rolesSet: ['participant'],
+      siteNames: { 'site-123': 'Example Site' },
+      siteRoles: { 'site-123': ['participant'] },
+      useNewPermissions: true as const,
+    };
+    const result = LegacyClaimsSchema.safeParse(claims);
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(required);
+    expect(result.data).toEqual(claims);
   });
 
   it.prop({ v: $nonObject })('rejects a non-object input', ({ v }) => {
@@ -60,52 +69,127 @@ describe('LegacyClaimsSchema', () => {
     expect(result.error?.issues[0].path).toEqual([]);
   });
 
-  it('rejects a non-array roles', () => {
+  it('rejects an unknown rolesSet entry', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,
-      roles: 'nope',
+      rolesSet: ['wizard'],
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
       {
-        code: 'invalid_type',
-        expected: 'array',
-        message: 'Invalid input: expected array, received string',
-        path: ['roles'],
-      },
-    ]);
-  });
-
-  it('rejects a role missing siteName', () => {
-    const result = LegacyClaimsSchema.safeParse({
-      ...$validLegacyClaims,
-      roles: [{ siteId: 'site-123', role: 'admin' }],
-    });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_type',
-        expected: 'string',
-        message: 'Invalid input: expected string, received undefined',
-        path: ['roles', 0, 'siteName'],
-      },
-    ]);
-  });
-
-  it('rejects a non-string rolesSet entry', () => {
-    const result = LegacyClaimsSchema.safeParse({
-      ...$validLegacyClaims,
-      rolesSet: [1],
-    });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues).toEqual([
-      {
-        code: 'invalid_type',
-        expected: 'string',
-        message: 'Invalid input: expected string, received number',
+        code: 'invalid_value',
+        values: ROLE_VALUES,
+        message:
+          'Invalid option: expected one of "participant"|"research_assistant"|"admin"|"site_admin"|"super_admin"',
         path: ['rolesSet', 0],
       },
     ]);
+  });
+
+  it('rejects duplicate rolesSet entries', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: ['admin', 'admin'],
+      siteRoles: { 'site-123': ['admin'] },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'Must be unique',
+        path: ['rolesSet', 0],
+      },
+      {
+        code: 'custom',
+        message: 'Must be unique',
+        path: ['rolesSet', 1],
+      },
+    ]);
+  });
+
+  it('rejects a rolesSet role unused in siteRoles', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: ['admin', 'site_admin'],
+      siteRoles: { 'site-123': ['admin'] },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'Role must be used in siteRoles',
+        path: ['rolesSet', 1],
+      },
+    ]);
+  });
+
+  it('accepts super_admin declared under the "any" site key', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: true,
+      rolesSet: ['super_admin'],
+      siteRoles: { any: ['super_admin'] },
+      siteNames: { any: 'Any Site' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects super_admin role when super_admin flag is not true', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: false,
+      rolesSet: ['super_admin'],
+      siteRoles: { any: ['super_admin'] },
+      siteNames: { any: 'Any Site' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'super_admin must be true when rolesSet includes super_admin',
+        path: ['super_admin'],
+      },
+    ]);
+  });
+
+  it('rejects a siteNames key absent from siteRoles', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      siteNames: { 'site-123': 'Example Site', 'site-999': 'Orphan Site' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'Site must be present in siteRoles',
+        path: ['siteNames', 'site-999'],
+      },
+    ]);
+  });
+
+  it('rejects a siteRoles role absent from rolesSet', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: ['admin'],
+      siteRoles: { 'site-123': ['admin', 'site_admin'] },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'Role must be present in rolesSet',
+        path: ['siteRoles', 'site-123', 1],
+      },
+    ]);
+  });
+
+  it('accepts siteRoles whose roles are all in rolesSet', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      rolesSet: ['admin', 'site_admin'],
+      siteRoles: { 'site-123': ['admin'], 'site-456': ['site_admin'] },
+    });
+    expect(result.success).toBe(true);
   });
 });
 
