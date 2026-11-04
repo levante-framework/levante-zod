@@ -450,6 +450,8 @@ const CreateOrgSchema = OrgSchema.pick({
 });
 
 export type { AddUsersCsv, AddUsersCsvHeader } from './csv/add-users-csv';
+export type { AuthClaims, LegacyClaims } from './domain/auth-claims';
+export { AuthClaimsSchema, LegacyClaimsSchema } from './domain/auth-claims';
 export {
   AddUsersCsvHeaderSchema,
   AddUsersCsvSchema,
