@@ -28,6 +28,7 @@ import {
   SaveOrgInformationErrorSchema,
   SaveOrgInformationParamsSchema,
 } from './firebase-functions/save-org-information';
+import { SaveSurveyResponsesParamsSchema } from './firebase-functions/save-survey-responses';
 import {
   CreateTaskVariantErrorSchema,
   CreateTaskVariantParamsSchema,
@@ -512,6 +513,7 @@ export {
   ReadOrgSchema,
   SaveOrgInformationErrorSchema,
   SaveOrgInformationParamsSchema,
+  SaveSurveyResponsesParamsSchema,
   SchoolSchema,
   StatSchema,
   TimestampSchema,
@@ -586,6 +588,10 @@ export type {
   SaveOrgInformationParams,
   SaveOrgInformationResult,
 } from './firebase-functions/save-org-information';
+export type {
+  SaveSurveyResponsesParams,
+  SaveSurveyResponsesResult,
+} from './firebase-functions/save-survey-responses';
 export type {
   GetTaskVariantRevisionsError,
   GetTaskVariantRevisionsParams,
