@@ -85,6 +85,37 @@ describe('GetOrgInformationStatusParamsSchema', () => {
     ]);
   });
 
+  it('accepts 100 org ids', () => {
+    const orgIds = Array.from({ length: 100 }, (_, index) => `school-${index}`);
+    expect(
+      GetOrgInformationStatusParamsSchema.parse({
+        orgType: 'school',
+        orgIds,
+      }),
+    ).toEqual({
+      orgType: 'school',
+      orgIds,
+    });
+  });
+
+  it('rejects more than 100 org ids', () => {
+    const result = GetOrgInformationStatusParamsSchema.safeParse({
+      orgType: 'school',
+      orgIds: Array.from({ length: 101 }, (_, index) => `school-${index}`),
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'too_big',
+        inclusive: true,
+        maximum: 100,
+        message: 'Too big: expected array to have <=100 items',
+        origin: 'array',
+        path: ['orgIds'],
+      },
+    ]);
+  });
+
   it('rejects an empty orgIds array', () => {
     const result = GetOrgInformationStatusParamsSchema.safeParse({
       orgType: 'site',
@@ -156,13 +187,13 @@ describe('GetOrgInformationStatusParamsSchema', () => {
 describe('GetOrgInformationStatusErrorSchema', () => {
   describe('failed-precondition', () => {
     const $code = 'failed-precondition';
-    const $message = 'No current version';
+    const $message = 'Form definition has no registered version';
     const $details = {
-      code: 'no-current-version',
+      code: 'unregistered',
       id: 'siteInformation',
     };
 
-    it('accepts functions/failed-precondition/no-current-version', () => {
+    it('accepts functions/failed-precondition/unregistered', () => {
       const err = new FunctionsError($code, $message, $details);
       const result = GetOrgInformationStatusErrorSchema.parse(err);
       expect(result).toEqual({
@@ -186,9 +217,9 @@ describe('GetOrgInformationStatusErrorSchema', () => {
       });
     });
 
-    it('rejects functions/failed-precondition/unregistered', () => {
+    it('rejects functions/failed-precondition/no-current-version', () => {
       const err = new FunctionsError($code, $message, {
-        code: 'unregistered',
+        code: 'no-current-version',
         id: 'siteInformation',
       });
       const result = GetOrgInformationStatusErrorSchema.safeParse(err);
@@ -196,41 +227,75 @@ describe('GetOrgInformationStatusErrorSchema', () => {
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0]).toEqual({
         code: 'invalid_value',
-        values: ['no-current-version'],
+        values: ['unregistered'],
         path: ['details', 'code'],
-        message: 'Invalid input: expected "no-current-version"',
+        message: 'Invalid input: expected "unregistered"',
       });
     });
   });
 
-  it.each(['not-found', 'internal'] as const)(
-    'rejects functions/%s',
-    (code) => {
-      const err = new FunctionsError(code, 'Org failed', {
+  describe('not-found', () => {
+    const $code = 'not-found';
+    const $message = 'Form definition not found';
+    const $details = {
+      code: 'form-definition',
+      id: 'siteInformation',
+    };
+
+    it('accepts functions/not-found/form-definition', () => {
+      const err = new FunctionsError($code, $message, $details);
+      const result = GetOrgInformationStatusErrorSchema.parse(err);
+      expect(result).toEqual({
+        name: 'FirebaseError',
+        code: `functions/${$code}`,
+        message: $message,
+        details: $details,
+      });
+    });
+
+    it('rejects functions/not-found/org', () => {
+      const err = new FunctionsError($code, 'Org not found', {
         code: 'org',
         id: 'org-1',
       });
       const result = GetOrgInformationStatusErrorSchema.safeParse(err);
       expect(result.success).toBe(false);
-      expect(result.error?.issues).toEqual([
-        {
-          code: 'invalid_union',
-          discriminator: 'code',
-          errors: [],
-          message:
-            "Invalid discriminator value. Expected 'functions/failed-precondition' | 'functions/invalid-argument' | 'functions/permission-denied' | 'functions/unauthenticated'",
-          note: 'No matching discriminator',
-          options: [
-            'functions/failed-precondition',
-            'functions/invalid-argument',
-            'functions/permission-denied',
-            'functions/unauthenticated',
-          ],
-          path: ['code'],
-        },
-      ]);
-    },
-  );
+      expect(result.error?.issues.length).toBe(1);
+      expect(result.error?.issues[0]).toEqual({
+        code: 'invalid_value',
+        values: ['form-definition'],
+        path: ['details', 'code'],
+        message: 'Invalid input: expected "form-definition"',
+      });
+    });
+  });
+
+  it('rejects functions/internal', () => {
+    const err = new FunctionsError('internal', 'Org failed', {
+      code: 'org',
+      id: 'org-1',
+    });
+    const result = GetOrgInformationStatusErrorSchema.safeParse(err);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_union',
+        discriminator: 'code',
+        errors: [],
+        message:
+          "Invalid discriminator value. Expected 'functions/failed-precondition' | 'functions/invalid-argument' | 'functions/not-found' | 'functions/permission-denied' | 'functions/unauthenticated'",
+        note: 'No matching discriminator',
+        options: [
+          'functions/failed-precondition',
+          'functions/invalid-argument',
+          'functions/not-found',
+          'functions/permission-denied',
+          'functions/unauthenticated',
+        ],
+        path: ['code'],
+      },
+    ]);
+  });
 
   describe('common error codes', () => {
     it('accepts functions/invalid-argument/schema', () => {

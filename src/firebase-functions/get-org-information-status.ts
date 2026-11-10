@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { NonEmptyStringSchema } from '../shared/non-empty-string';
-import { makeTooSmallIssue } from '../util/issues';
+import { makeTooBigIssue, makeTooSmallIssue } from '../util/issues';
 import {
   FunctionsErrorSchema,
   InvalidArgumentErrorSchema,
@@ -20,6 +20,17 @@ export const GetOrgInformationStatusParamsSchema = z
         makeTooSmallIssue({
           input: data.orgIds,
           minimum: 1,
+          origin: 'array',
+          path: ['orgIds'],
+        }),
+      );
+      return;
+    }
+    if (data.orgIds.length > 100) {
+      ctx.addIssue(
+        makeTooBigIssue({
+          input: data.orgIds,
+          maximum: 100,
           origin: 'array',
           path: ['orgIds'],
         }),
@@ -55,11 +66,18 @@ export const GetOrgInformationStatusErrorSchema = z.discriminatedUnion('code', [
   FunctionsErrorSchema.extend({
     code: z.literal('functions/failed-precondition'),
     details: z.object({
-      code: z.literal('no-current-version'),
+      code: z.literal('unregistered'),
       id: z.string(),
     }),
   }),
   InvalidArgumentErrorSchema,
+  FunctionsErrorSchema.extend({
+    code: z.literal('functions/not-found'),
+    details: z.object({
+      code: z.literal('form-definition'),
+      id: z.string(),
+    }),
+  }),
   PermissionDeniedErrorSchema,
   UnauthenticatedErrorSchema,
 ]);
