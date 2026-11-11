@@ -16,22 +16,50 @@ const ComparisonOperatorSchema = z.enum([
 ]);
 
 /**
+ * User types the dashboard condition select stores. Labels are Child, Caregiver,
+ * and Teacher; the stored values are the ROAR types.
+ */
+const AssignmentUserTypeSchema = z.enum(['student', 'parent', 'teacher']);
+
+/**
+ * A legacy whole-year age. The dashboard select stores `"5"`; existing
+ * administration documents and the evaluator also allow the number `5`.
+ * Either form is kept as stored. Empty strings, free text, fractions, signs,
+ * and leading zeros are rejected.
+ */
+const WholeYearSchema = z
+  .union([z.string(), z.number()])
+  .superRefine((value, ctx) => {
+    if (typeof value === 'string' && /^(0|[1-9]\d*)$/.test(value)) return;
+    if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+      return;
+
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Expected a whole number of years',
+      path: [],
+      input: value,
+    });
+  });
+
+/**
  * One rule inside an assignment condition group.
  *
- * `userType` and whole-year `age` stay strings: the dashboard select stores
- * them that way. `ageMonths` is total months (`years * 12 + months`) and must
- * be an integer. A numeric string such as `"66"` is rejected.
+ * `userType` is one of the dashboard select values. Legacy `age` is a whole
+ * number of years, stored as a string or a number. `ageMonths` is total months
+ * (`years * 12 + months`) and must be an integer. A numeric string such as
+ * `"66"` is rejected.
  */
 export const AssignmentConditionRuleSchema = z.discriminatedUnion('field', [
   z.object({
     field: z.literal('userType'),
     op: EqualityOperatorSchema,
-    value: z.string(),
+    value: AssignmentUserTypeSchema,
   }),
   z.object({
     field: z.literal('age'),
     op: ComparisonOperatorSchema,
-    value: z.string(),
+    value: WholeYearSchema,
   }),
   z.object({
     field: z.literal('ageMonths'),
