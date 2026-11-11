@@ -9,6 +9,11 @@ import {
 } from './csv/link-users-csv';
 import { combineUsersCsvIssues } from './csv/util';
 import {
+  AssignmentConditionGroupSchema,
+  AssignmentConditionRuleSchema,
+  AssignmentConditionsSchema,
+} from './domain/assignment-conditions';
+import {
   FirebaseErrorSchema,
   FunctionsErrorSchema,
 } from './firebase-functions/error';
@@ -460,6 +465,9 @@ export {
   AssessmentSchema,
   AssignedOrgSchema,
   AssignmentAssessmentSchema,
+  AssignmentConditionGroupSchema,
+  AssignmentConditionRuleSchema,
+  AssignmentConditionsSchema,
   ClaimsSchema,
   ClassSchema,
   CoarseLocationSchema,
@@ -536,6 +544,11 @@ export type AssessmentConditionsType = z.infer<
   typeof AssessmentConditionsSchema
 >;
 export type AssessmentType = z.infer<typeof AssessmentSchema>;
+export type {
+  AssignmentConditionGroup,
+  AssignmentConditionRule,
+  AssignmentConditions,
+} from './domain/assignment-conditions';
 export type AssignedOrgType = z.infer<typeof AssignedOrgSchema>;
 export type AssignmentAssessmentType = z.infer<
   typeof AssignmentAssessmentSchema
