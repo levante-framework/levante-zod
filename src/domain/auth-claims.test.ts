@@ -82,6 +82,39 @@ describe('LegacyClaimsSchema', () => {
     ]);
   });
 
+  it('rejects a useNewPermissions that is not true', () => {
+    // Omitting `useNewPermissions` produces this same issue.
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      useNewPermissions: false,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_value',
+        values: [true],
+        message: 'Invalid input: expected true',
+        path: ['useNewPermissions'],
+      },
+    ]);
+  });
+
+  it('rejects a non-boolean super_admin', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: 'nope',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'boolean',
+        message: 'Invalid input: expected boolean, received string',
+        path: ['super_admin'],
+      },
+    ]);
+  });
+
   it('rejects duplicate rolesSet entries', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,
@@ -238,11 +271,12 @@ describe('LegacyClaimsSchema', () => {
     ]);
   });
 
-  it('accepts siteRoles whose roles are all in rolesSet', () => {
+  it('accepts a single site holding multiple roles', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,
       rolesSet: ['admin', 'site_admin'],
-      siteRoles: { 'site-123': ['admin'], 'site-456': ['site_admin'] },
+      siteNames: { 'site-123': 'Example Site' },
+      siteRoles: { 'site-123': ['admin', 'site_admin'] },
     });
     expect(result.success).toBe(true);
   });
@@ -316,6 +350,20 @@ describe('AuthClaimsSchema', () => {
     ]);
   });
 
+  it('rejects a missing isSuperAdmin', () => {
+    const { isSuperAdmin: _omitted, ...claims } = $validAuthClaims;
+    const result = AuthClaimsSchema.safeParse(claims);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'boolean',
+        message: 'Invalid input: expected boolean, received undefined',
+        path: ['isSuperAdmin'],
+      },
+    ]);
+  });
+
   it('rejects a role level above the maximum', () => {
     const result = AuthClaimsSchema.safeParse({
       ...$validAuthClaims,
@@ -380,6 +428,22 @@ describe('AuthClaimsSchema', () => {
         expected: 'int',
         format: 'safeint',
         message: 'Invalid input: expected int, received number',
+        path: ['siteRoles', 'site-123'],
+      },
+    ]);
+  });
+
+  it('rejects a non-number role level', () => {
+    const result = AuthClaimsSchema.safeParse({
+      ...$validAuthClaims,
+      siteRoles: { 'site-123': 'x' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'invalid_type',
+        expected: 'number',
+        message: 'Invalid input: expected number, received string',
         path: ['siteRoles', 'site-123'],
       },
     ]);
