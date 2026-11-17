@@ -1,6 +1,10 @@
 import { fc, it } from '@fast-check/vitest';
 import { describe, expect } from 'vitest';
-import { AuthClaimsSchema, LegacyClaimsSchema } from './auth-claims';
+import {
+  AuthClaimsSchema,
+  LEGACY_CLAIMS_ROLES,
+  LegacyClaimsSchema,
+} from './auth-claims';
 
 /** Arbitrary: a non-object value (primitives, incl. null and undefined). */
 const $nonObject = fc
@@ -11,15 +15,6 @@ const $nonObject = fc
 
 /** Arbitrary: an integer outside the inclusive [0, 3] role range. */
 const $outOfRangeRole = fc.integer().filter((n) => n < 0 || n > 3);
-
-/** The set of valid role names, mirrored from the schema. */
-const ROLE_VALUES = [
-  'participant',
-  'research_assistant',
-  'admin',
-  'site_admin',
-  'super_admin',
-];
 
 /** Fixture: a valid legacy claims object with all fields present. */
 const $validLegacyClaims = {
@@ -78,9 +73,10 @@ describe('LegacyClaimsSchema', () => {
     expect(result.error?.issues).toEqual([
       {
         code: 'invalid_value',
-        values: ROLE_VALUES,
-        message:
-          'Invalid option: expected one of "participant"|"research_assistant"|"admin"|"site_admin"|"super_admin"',
+        values: LEGACY_CLAIMS_ROLES,
+        message: `Invalid option: expected one of ${LEGACY_CLAIMS_ROLES.map(
+          (role) => `"${role}"`,
+        ).join('|')}`,
         path: ['rolesSet', 0],
       },
     ]);

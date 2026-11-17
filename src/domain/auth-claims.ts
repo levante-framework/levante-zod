@@ -2,7 +2,8 @@ import * as z from 'zod';
 import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
 import { makeTooSmallIssue } from '../util/issues';
 
-const ROLES = [
+/** Role names used by {@link LegacyClaimsSchema}. */
+export const LEGACY_CLAIMS_ROLES = [
   'participant',
   'research_assistant',
   'admin',
@@ -17,9 +18,9 @@ const ROLES = [
  */
 export const LegacyClaimsSchema = z
   .object({
-    rolesSet: z.array(z.enum(ROLES)),
+    rolesSet: z.array(z.enum(LEGACY_CLAIMS_ROLES)),
     siteNames: z.record(z.string(), z.string()),
-    siteRoles: z.record(z.string(), z.array(z.enum(ROLES))),
+    siteRoles: z.record(z.string(), z.array(z.enum(LEGACY_CLAIMS_ROLES))),
     useNewPermissions: z.literal(true),
     super_admin: z.boolean().optional(),
   })
