@@ -16,18 +16,31 @@ export const ALL_SITE_ROLES = [...ADMIN_SITE_ROLES, 'participant'] as const;
  * @param roles - The role names to include in the schema.
  */
 export const siteRole = <const T extends readonly string[]>(roles: T) =>
-  z.object({
-    role: z.enum(roles),
-    siteId: NonEmptyStringSchema,
-    // @AB: "`siteName` denormalizes the site's canonical name onto every role.
-    // This is a read convenience, but it can drift out of sync with the source
-    // of truth and must be updated everywhere when a site is renamed. Do we
-    // need to store it here at all, or should consumers resolve the name from
-    // `siteId` at read time? If we keep it, where does the authoritative name
-    // live and who keeps this copy consistent? Team discussion required before
-    // resolving."
-    siteName: NonEmptyStringSchema.optional(),
-  });
+  z
+    .object({
+      role: z.enum(roles),
+      siteId: NonEmptyStringSchema,
+      // @AB: "`siteName` denormalizes the site's canonical name onto every role.
+      // This is a read convenience, but it can drift out of sync with the source
+      // of truth and must be updated everywhere when a site is renamed. Do we
+      // need to store it here at all, or should consumers resolve the name from
+      // `siteId` at read time? If we keep it, where does the authoritative name
+      // live and who keeps this copy consistent? Team discussion required before
+      // resolving."
+      siteName: NonEmptyStringSchema.optional(),
+    })
+    .superRefine((data, ctx) => {
+      // `'any'` is reserved for `super_admin` (see `SuperAdminRoleSchema`), so
+      // site-scoped roles must not claim it.
+      if (data.siteId === 'any') {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'The "any" site is reserved for the super_admin role',
+          path: ['siteId'],
+          input: data.siteId,
+        });
+      }
+    });
 
 /** Schema for super admin role (not site-scoped). */
 export const SuperAdminRoleSchema = z.object({

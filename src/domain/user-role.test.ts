@@ -120,6 +120,18 @@ describe('siteRole', () => {
         expect(result.error?.issues[0].path).toEqual(['siteId']);
       },
     );
+
+    it('rejects a siteId of "any" (reserved for super_admin)', () => {
+      const result = schema.safeParse({ ...$validSiteRole, siteId: 'any' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'The "any" site is reserved for the super_admin role',
+          path: ['siteId'],
+        },
+      ]);
+    });
   });
 
   describe('invalid siteName', () => {
