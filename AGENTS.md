@@ -60,6 +60,8 @@ This is a pure TypeScript ESM library. It has two primary concerns:
 users: z.array(UserSchema).nonempty().max(1000)
 ```
 
+- **Write `custom` issues as an object literal; don't call `makeCustomIssue` internally** — Pass the literal straight to `ctx.addIssue`, e.g. `ctx.addIssue({ code: 'custom', message, path, input })`. `makeCustomIssue` is exported only for package consumers merging their own issues with ours.
+
 ## Testing
 
 ```

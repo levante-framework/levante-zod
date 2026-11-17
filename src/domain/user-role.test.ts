@@ -38,6 +38,9 @@ const $nonObject = fc
 /** Arbitrary: a non-string value (incl. `undefined`; `siteId` is required). */
 const $nonString = fc.anything().filter((v) => typeof v !== 'string');
 
+/** Arbitrary: a valid `siteId` (non-empty, and not the reserved `'any'`). */
+const $siteId = $nonEmptyString.filter((s) => s !== 'any');
+
 /** Fixture: a valid site-scoped role. */
 const $validSiteRole = {
   role: 'site_admin',
@@ -59,7 +62,7 @@ describe('siteRole', () => {
 
   it.prop({
     role: $allSiteRole,
-    siteId: $nonEmptyString,
+    siteId: $siteId,
     siteName: $nonEmptyString,
   })('accepts valid site-scoped roles', ({ role, siteId, siteName }) => {
     const result = schema.safeParse({ role, siteId, siteName });
@@ -120,6 +123,18 @@ describe('siteRole', () => {
         expect(result.error?.issues[0].path).toEqual(['siteId']);
       },
     );
+
+    it('rejects a siteId of "any" (reserved for super_admin)', () => {
+      const result = schema.safeParse({ ...$validSiteRole, siteId: 'any' });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'custom',
+          message: 'The "any" site is reserved for the super_admin role',
+          path: ['siteId'],
+        },
+      ]);
+    });
   });
 
   describe('invalid siteName', () => {
@@ -263,7 +278,7 @@ describe('AdminRoleSchema', () => {
 
   it.prop({
     role: $adminSiteRole,
-    siteId: $nonEmptyString,
+    siteId: $siteId,
     siteName: $nonEmptyString,
   })('accepts valid admin site-scoped roles', ({ role, siteId, siteName }) => {
     const result = AdminRoleSchema.safeParse({ role, siteId, siteName });
@@ -298,7 +313,7 @@ describe('UserRoleSchema', () => {
 
   it.prop({
     role: $allSiteRole,
-    siteId: $nonEmptyString,
+    siteId: $siteId,
     siteName: $nonEmptyString,
   })('accepts valid site-scoped roles', ({ role, siteId, siteName }) => {
     const result = UserRoleSchema.safeParse({ role, siteId, siteName });
