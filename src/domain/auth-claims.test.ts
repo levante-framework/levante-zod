@@ -9,8 +9,8 @@ const $nonObject = fc
     (v) => v === null || (typeof v !== 'object' && typeof v !== 'function'),
   );
 
-/** Arbitrary: an integer outside the inclusive [-1, 3] role range. */
-const $outOfRangeRole = fc.integer().filter((n) => n < -1 || n > 3);
+/** Arbitrary: an integer outside the inclusive [0, 3] role range. */
+const $outOfRangeRole = fc.integer().filter((n) => n < 0 || n > 3);
 
 /** The set of valid role names, mirrored from the schema. */
 const ROLE_VALUES = [
@@ -244,7 +244,7 @@ describe('AuthClaimsSchema', () => {
     expect(result.data).toEqual(claims);
   });
 
-  it.prop({ role: fc.integer({ min: -1, max: 3 }) })(
+  it.prop({ role: fc.integer({ min: 0, max: 3 }) })(
     'accepts every in-range role level',
     ({ role }) => {
       const result = AuthClaimsSchema.safeParse({
@@ -319,16 +319,16 @@ describe('AuthClaimsSchema', () => {
   it('rejects a role level below the minimum', () => {
     const result = AuthClaimsSchema.safeParse({
       ...$validAuthClaims,
-      siteRoles: { 'site-123': -2 },
+      siteRoles: { 'site-123': -1 },
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([
       {
         code: 'too_small',
         origin: 'number',
-        minimum: -1,
+        minimum: 0,
         inclusive: true,
-        message: 'Too small: expected number to be >=-1',
+        message: 'Too small: expected number to be >=0',
         path: ['siteRoles', 'site-123'],
       },
     ]);
@@ -344,7 +344,7 @@ describe('AuthClaimsSchema', () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues.length).toBe(1);
       expect(result.error?.issues[0].code).toEqual(
-        role < -1 ? 'too_small' : 'too_big',
+        role < 0 ? 'too_small' : 'too_big',
       );
       expect(result.error?.issues[0].path).toEqual(['siteRoles', 'site-123']);
     },

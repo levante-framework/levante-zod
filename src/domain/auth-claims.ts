@@ -113,8 +113,8 @@ export type LegacyClaims = z.infer<typeof LegacyClaimsSchema>;
 export const AuthClaimsSchema = z.object({
   claimsVersion: z.literal(1),
   isSuperAdmin: z.boolean(),
-  // -1: (no role), 0: participant, 1: research_assistant, 2: admin, 3: site_admin
-  siteRoles: z.record(z.string(), z.int().min(-1).max(3)),
+  // 0: participant, 1: research_assistant, 2: admin, 3: site_admin
+  siteRoles: z.record(z.string(), z.int().min(0).max(3)),
 });
 
 /** Inferred type for {@link AuthClaimsSchema}. */
