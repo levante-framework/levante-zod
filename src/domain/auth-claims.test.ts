@@ -199,6 +199,42 @@ describe('LegacyClaimsSchema', () => {
     ]);
   });
 
+  it('rejects a super_admin role under a non-"any" site key', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: true,
+      rolesSet: ['super_admin'],
+      siteRoles: { 'site-123': ['super_admin'] },
+      siteNames: { 'site-123': 'Example Site' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'super_admin role must be under the "any" site',
+        path: ['siteRoles', 'site-123', 0],
+      },
+    ]);
+  });
+
+  it('rejects a non-super_admin role under the "any" site key', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: false,
+      rolesSet: ['admin'],
+      siteRoles: { any: ['admin'] },
+      siteNames: { any: 'Any Site' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message: 'The "any" site is reserved for the super_admin role',
+        path: ['siteRoles', 'any', 0],
+      },
+    ]);
+  });
+
   it('rejects a siteNames key absent from siteRoles', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,

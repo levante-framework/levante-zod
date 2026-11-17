@@ -106,6 +106,31 @@ export const LegacyClaimsSchema = z
       }
     }
 
+    // The `super_admin` role is cross-site and must live under the `any` site
+    // key; conversely, the `any` key is reserved for `super_admin`. Enforcing
+    // both directions keeps the `any` convention aligned with `UserRoleSchema`.
+    for (const [siteId, roles] of Object.entries(data.siteRoles)) {
+      roles.forEach((role, idx) => {
+        const isSuperAdmin = role === 'super_admin';
+        const isAnyKey = siteId === 'any';
+        if (isSuperAdmin && !isAnyKey) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'super_admin role must be under the "any" site',
+            path: ['siteRoles', siteId, idx],
+            input: role,
+          });
+        } else if (!isSuperAdmin && isAnyKey) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'The "any" site is reserved for the super_admin role',
+            path: ['siteRoles', siteId, idx],
+            input: role,
+          });
+        }
+      });
+    }
+
     // The `super_admin` flag and the `super_admin` role must agree: the flag is
     // true exactly when `rolesSet` includes the role. If they diverge, readers
     // that trust the flag and readers that look for the role disagree about
