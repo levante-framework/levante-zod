@@ -34,13 +34,23 @@ export const LegacyClaimsSchema = z
       });
     }
 
-    // Every key in `siteNames` must be a key in `siteRoles`
+    // `siteNames` and `siteRoles` must have the same set of site keys.
     for (const siteId of Object.keys(data.siteNames)) {
       if (!(siteId in data.siteRoles)) {
         ctx.addIssue({
           code: 'custom',
           message: 'Site must be present in siteRoles',
           path: ['siteNames', siteId],
+          input: siteId,
+        });
+      }
+    }
+    for (const siteId of Object.keys(data.siteRoles)) {
+      if (!(siteId in data.siteNames)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Site must be present in siteNames',
+          path: ['siteRoles', siteId],
           input: siteId,
         });
       }
