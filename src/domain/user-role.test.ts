@@ -200,6 +200,58 @@ describe('SuperAdminRoleSchema', () => {
       },
     ]);
   });
+
+  // NB: unlike the site-scoped roles, `SuperAdminRoleSchema` is hand-written
+  // rather than built from the `siteRole` factory, so its optional `siteName`
+  // needs its own field-level coverage here.
+  describe('siteName', () => {
+    it.prop({ siteName: $nonEmptyString })(
+      'accepts a valid siteName',
+      ({ siteName }) => {
+        const result = SuperAdminRoleSchema.safeParse({
+          ...$validSuperAdminRole,
+          siteName,
+        });
+        expect(result.success).toBe(true);
+        expect(result.data).toEqual({ ...$validSuperAdminRole, siteName });
+      },
+    );
+
+    it('rejects an empty siteName', () => {
+      const result = SuperAdminRoleSchema.safeParse({
+        ...$validSuperAdminRole,
+        siteName: '',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues).toEqual([
+        {
+          code: 'too_small',
+          inclusive: true,
+          message: 'Too small: expected string to have >=1 characters',
+          origin: 'string',
+          minimum: 1,
+          path: ['siteName'],
+        },
+      ]);
+    });
+
+    it.prop({ siteName: $definedNonString })(
+      'rejects a non-string siteName',
+      ({ siteName }) => {
+        const result = SuperAdminRoleSchema.safeParse({
+          ...$validSuperAdminRole,
+          siteName,
+        });
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.length).toBe(1);
+        expect(result.error?.issues[0].code).toEqual('invalid_type');
+        expect(result.error?.issues[0].message).toMatch(
+          /^Invalid input: expected string/,
+        );
+        expect(result.error?.issues[0].path).toEqual(['siteName']);
+      },
+    );
+  });
 });
 
 describe('AdminRoleSchema', () => {

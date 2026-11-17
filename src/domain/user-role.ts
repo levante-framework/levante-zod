@@ -33,6 +33,7 @@ export const siteRole = <const T extends readonly string[]>(roles: T) =>
 export const SuperAdminRoleSchema = z.object({
   role: z.literal('super_admin'),
   siteId: z.literal('any'),
+  siteName: NonEmptyStringSchema.optional(),
 });
 
 /** Inferred type of {@link SuperAdminRoleSchema}. */
