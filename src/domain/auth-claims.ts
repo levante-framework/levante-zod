@@ -83,11 +83,11 @@ export const LegacyClaimsSchema = z
       }
     });
 
-    // `siteRoles` must include at least one role, and no site may be empty.
+    // `siteRoles` must include at least one site, and no site may be empty.
     if (Object.keys(data.siteRoles).length === 0) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Must include at least one role',
+        message: 'Must include at least one site',
         path: ['siteRoles'],
         input: data.siteRoles,
       });

@@ -216,7 +216,7 @@ describe('LegacyClaimsSchema', () => {
     expect(result.error?.issues).toEqual([
       {
         code: 'custom',
-        message: 'Must include at least one role',
+        message: 'Must include at least one site',
         path: ['siteRoles'],
       },
     ]);
