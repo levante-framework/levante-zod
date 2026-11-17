@@ -183,6 +183,22 @@ describe('LegacyClaimsSchema', () => {
     ]);
   });
 
+  it('rejects super_admin flag when rolesSet excludes super_admin', () => {
+    const result = LegacyClaimsSchema.safeParse({
+      ...$validLegacyClaims,
+      super_admin: true,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([
+      {
+        code: 'custom',
+        message:
+          'super_admin must not be true when rolesSet excludes super_admin',
+        path: ['super_admin'],
+      },
+    ]);
+  });
+
   it('rejects a siteNames key absent from siteRoles', () => {
     const result = LegacyClaimsSchema.safeParse({
       ...$validLegacyClaims,

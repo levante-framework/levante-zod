@@ -106,11 +106,23 @@ export const LegacyClaimsSchema = z
       }
     }
 
-    // The super_admin role requires `super_admin` to be true.
-    if (data.rolesSet.includes('super_admin') && data.super_admin !== true) {
+    // The `super_admin` flag and the `super_admin` role must agree: the flag is
+    // true exactly when `rolesSet` includes the role. If they diverge, readers
+    // that trust the flag and readers that look for the role disagree about
+    // whether the user is a super admin.
+    const hasSuperAdminRole = data.rolesSet.includes('super_admin');
+    if (hasSuperAdminRole && data.super_admin !== true) {
       ctx.addIssue({
         code: 'custom',
         message: 'super_admin must be true when rolesSet includes super_admin',
+        path: ['super_admin'],
+        input: data.super_admin,
+      });
+    } else if (!hasSuperAdminRole && data.super_admin === true) {
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'super_admin must not be true when rolesSet excludes super_admin',
         path: ['super_admin'],
         input: data.super_admin,
       });
