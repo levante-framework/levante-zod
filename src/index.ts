@@ -454,6 +454,12 @@ const CreateOrgSchema = OrgSchema.pick({
 });
 
 export type { AddUsersCsv, AddUsersCsvHeader } from './csv/add-users-csv';
+export type { AdminRole, SuperAdminRole, UserRole } from './domain/user-role';
+export {
+  AdminRoleSchema,
+  SuperAdminRoleSchema,
+  UserRoleSchema,
+} from './domain/user-role';
 export {
   AddUsersCsvHeaderSchema,
   AddUsersCsvSchema,
