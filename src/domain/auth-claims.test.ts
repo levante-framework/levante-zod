@@ -40,8 +40,8 @@ describe('LegacyClaimsSchema', () => {
   });
 
   it('accepts a participant-only claims object without optional fields', () => {
-    // `admin`/`super_admin` are the only optional fields, and omitting `admin`
-    // is valid only when no non-participant role is present.
+    // `super_admin` is the only optional field, and omitting it is valid only
+    // when `rolesSet` does not include the `super_admin` role.
     const claims = {
       rolesSet: ['participant'],
       siteNames: { 'site-123': 'Example Site' },
