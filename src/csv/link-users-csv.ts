@@ -4,6 +4,7 @@
 import * as z from 'zod';
 import { nonEmptyString } from '../shared/non-empty-string';
 import { findDuplicateIndexes } from '../util/find-duplicate-indexes';
+import { makeTooBigIssue } from '../util/issues';
 import { hasRequiredHeaders, ListableString } from './shared';
 
 /**
@@ -140,6 +141,20 @@ export const LinkUsersCsvSchema = z
     ),
   )
   .superRefine((data, ctx) => {
+    // Rows must not exceed 1000 users (mirrors LinkUsersParamsSchema so the
+    // client rejects oversized CSVs before submitting to the function).
+    if (data.length > 1000) {
+      ctx.addIssue(
+        makeTooBigIssue({
+          input: data,
+          maximum: 1000,
+          origin: 'array',
+          path: [],
+        }),
+      );
+      return;
+    }
+
     // Users must have unique ids
     for (const idx of findDuplicateIndexes(data.map((user) => user.id))) {
       ctx.addIssue({
