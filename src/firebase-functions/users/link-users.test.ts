@@ -499,10 +499,10 @@ describe('LinkUsersParamsSchema', () => {
       });
     });
 
-    it('rejects >1000 users', () => {
+    it('rejects >2000 users', () => {
       const result = LinkUsersParamsSchema.safeParse({
         ...$validParams,
-        users: Array.from({ length: 1001 }, (_, idx) => ({
+        users: Array.from({ length: 2001 }, (_, idx) => ({
           ...$validChild,
           id: `u${idx}`,
         })),
@@ -512,8 +512,8 @@ describe('LinkUsersParamsSchema', () => {
       expect(result.error?.issues[0]).toEqual({
         code: 'too_big',
         inclusive: true,
-        maximum: 1000,
-        message: 'Too big: expected array to have <=1000 items',
+        maximum: 2000,
+        message: 'Too big: expected array to have <=2000 items',
         origin: 'array',
         path: ['users'],
       });

@@ -670,8 +670,8 @@ describe('LinkUsersCsvSchema', () => {
     expect(result.error!.issues[0].path).toEqual([0, 'userType']);
   });
 
-  it('accepts exactly 1000 rows', () => {
-    const rows = Array.from({ length: 1000 }, (_, i) => ({
+  it('accepts exactly 2000 rows', () => {
+    const rows = Array.from({ length: 2000 }, (_, i) => ({
       ...$validAdultRow,
       id: `user-${i}`,
       userType: 'caregiver',
@@ -679,8 +679,8 @@ describe('LinkUsersCsvSchema', () => {
     expect(() => LinkUsersCsvSchema.parse(rows)).not.toThrow();
   });
 
-  it('rejects more than 1000 rows', () => {
-    const rows = Array.from({ length: 1001 }, (_, i) => ({
+  it('rejects more than 2000 rows', () => {
+    const rows = Array.from({ length: 2001 }, (_, i) => ({
       ...$validAdultRow,
       id: `user-${i}`,
       userType: 'caregiver',
@@ -691,8 +691,8 @@ describe('LinkUsersCsvSchema', () => {
       {
         code: 'too_big',
         inclusive: true,
-        maximum: 1000,
-        message: 'Too big: expected array to have <=1000 items',
+        maximum: 2000,
+        message: 'Too big: expected array to have <=2000 items',
         origin: 'array',
         path: [],
       },

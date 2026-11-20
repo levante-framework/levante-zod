@@ -105,12 +105,12 @@ export const LinkUsersParamsSchema = z
       return;
     }
 
-    // Users array must not exceed 1000 users
-    if (data.users.length > 1000) {
+    // Users array must not exceed 2000 users
+    if (data.users.length > 2000) {
       ctx.addIssue(
         makeTooBigIssue({
           input: data.users,
-          maximum: 1000,
+          maximum: 2000,
           origin: 'array',
           path: ['users'],
         }),

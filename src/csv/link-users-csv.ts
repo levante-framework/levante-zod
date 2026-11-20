@@ -141,13 +141,13 @@ export const LinkUsersCsvSchema = z
     ),
   )
   .superRefine((data, ctx) => {
-    // Rows must not exceed 1000 users (mirrors LinkUsersParamsSchema so the
+    // Rows must not exceed 2000 users (mirrors LinkUsersParamsSchema so the
     // client rejects oversized CSVs before submitting to the function).
-    if (data.length > 1000) {
+    if (data.length > 2000) {
       ctx.addIssue(
         makeTooBigIssue({
           input: data,
-          maximum: 1000,
+          maximum: 2000,
           origin: 'array',
           path: [],
         }),
