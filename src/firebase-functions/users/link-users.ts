@@ -105,12 +105,16 @@ export const LinkUsersParamsSchema = z
       return;
     }
 
-    // Users array must not exceed 1000 users
-    if (data.users.length > 1000) {
+    // Users array must not exceed 2000 users — double the create cap of 1000.
+    // Linking is cheap and short-lived, whereas create is longer-running and
+    // more timeout-prone. Clients can also pre-filter already-created users
+    // via the `uid` field, but can't filter already-linked users, so the full
+    // user history is sent here.
+    if (data.users.length > 2000) {
       ctx.addIssue(
         makeTooBigIssue({
           input: data.users,
-          maximum: 1000,
+          maximum: 2000,
           origin: 'array',
           path: ['users'],
         }),

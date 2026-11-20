@@ -670,6 +670,58 @@ describe('LinkUsersCsvSchema', () => {
     expect(result.error!.issues[0].path).toEqual([0, 'userType']);
   });
 
+  it('accepts exactly 2000 rows', () => {
+    const rows = Array.from({ length: 2000 }, (_, i) => ({
+      ...$validAdultRow,
+      id: `user-${i}`,
+      userType: 'caregiver',
+    }));
+    expect(() => LinkUsersCsvSchema.parse(rows)).not.toThrow();
+  });
+
+  it('rejects more than 2000 rows', () => {
+    const rows = Array.from({ length: 2001 }, (_, i) => ({
+      ...$validAdultRow,
+      id: `user-${i}`,
+      userType: 'caregiver',
+    }));
+    const result = LinkUsersCsvSchema.safeParse(rows);
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toEqual([
+      {
+        code: 'too_big',
+        inclusive: true,
+        maximum: 2000,
+        message: 'Too big: expected array to have <=2000 items',
+        origin: 'array',
+        path: [],
+      },
+    ]);
+  });
+
+  it('skips link resolution when oversized (only the too_big issue)', () => {
+    // A child row with an unresolvable link in an oversized file must not also
+    // emit link issues; the size check short-circuits like LinkUsersParamsSchema.
+    const rows = Array.from({ length: 2001 }, (_, i) => ({
+      ...$validChildRow,
+      id: `child-${i}`,
+      caregiverId: 'missing',
+      teacherId: '',
+    }));
+    const result = LinkUsersCsvSchema.safeParse(rows);
+    expect(result.success).toBe(false);
+    expect(result.error!.issues).toEqual([
+      {
+        code: 'too_big',
+        inclusive: true,
+        maximum: 2000,
+        message: 'Too big: expected array to have <=2000 items',
+        origin: 'array',
+        path: [],
+      },
+    ]);
+  });
+
   it('rejects rows w/ duplicate ids', () => {
     const result = LinkUsersCsvSchema.safeParse([
       { ...$validAdultRow, id: 'user-1', userType: 'caregiver' },
