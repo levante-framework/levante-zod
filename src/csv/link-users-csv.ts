@@ -164,8 +164,9 @@ export const LinkUsersCsvSchema = z
         input: data[idx].id,
       });
     }
-  })
-  .superRefine(hasResolvableLinks);
+
+    hasResolvableLinks(data, ctx);
+  });
 
 /** Inferred type of {@link LinkUsersCsvSchema}. */
 export type LinkUsersCsv = z.infer<typeof LinkUsersCsvSchema>;
